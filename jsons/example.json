@@ -1,0 +1,9 @@
+[
+    {
+        "key": "F1",
+        "description": "Hello, World!",
+        "code": [
+            "pyautogui.confirm('Hello, World!')"
+        ]
+    }
+]

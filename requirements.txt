@@ -1,0 +1,15 @@
+# HotKey — 热键自动化工具 依赖清单
+# 安装: pip install -r requirements.txt
+# 最低 Python 版本: 3.9
+
+# 全局热键捕获与模拟
+keyboard>=0.13.5
+
+# 系统托盘图标
+pystray>=0.19.4
+
+# 托盘图标图像处理（pystray 依赖）
+Pillow>=9.0.0
+
+# GUI 自动化（鼠标/键盘/屏幕操作）
+pyautogui>=0.9.53
