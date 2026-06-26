@@ -177,7 +177,7 @@ class MenuBar(tk.Menu):
         self._search_frame.place(x=x, y=SEARCH_HIDDEN_Y)
         self._search_frame.lift()
         self._move_to_visible()
-        self.master.update_idletasks()
+        self.master.update()
         self._search_entry.focus_set()
 
     def _create_search_widgets(self) -> None:

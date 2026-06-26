@@ -1,3 +1,3 @@
-./build
-./dist
-.HotKey.spec
+dist
+HotKey.spec
+CLAUDE.md

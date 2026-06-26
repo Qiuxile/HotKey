@@ -5,7 +5,6 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import List, Dict, Any, Optional, Protocol
 
-from hotkey.config import KEY_NAME_MAP, MODIFIER_MASKS, MODIFIER_KEYSYMS
 from hotkey.config import (
     COLOR_BG_MAIN, COLOR_BG_HEADER, COLOR_BG_SIDEBAR,
     COLOR_FG_PRIMARY, COLOR_FG_HEADER,
@@ -104,6 +103,8 @@ class HotKeyTree(ttk.Frame):
         if self._selected_index < 0 or self._selected_index >= len(self._hotkeys):
             return
 
+        from hotkey.key_recorder import KeyRecorder
+
         hotkey = self._hotkeys[self._selected_index]
         current_key = hotkey.get('key', '')
         current_desc = hotkey.get('description', '')
@@ -117,7 +118,6 @@ class HotKeyTree(ttk.Frame):
         dialog.configure(bg=COLOR_BG_MAIN)
 
         new_key = [current_key]
-        is_listening = [False]
 
         key_frame = ttk.Frame(dialog, padding=10)
         key_frame.pack(fill="x", padx=5)
@@ -134,42 +134,24 @@ class HotKeyTree(ttk.Frame):
         desc_entry.grid(row=0, column=1, sticky="ew", padx=5)
         desc_frame.grid_columnconfigure(1, weight=1)
 
-        def on_key_press(event: tk.Event) -> str:
-            if not is_listening[0]:
-                return "break"
-            if event.keysym in MODIFIER_KEYSYMS:
-                return "break"
-
-            keys = []
-            for mask, name in MODIFIER_MASKS.items():
-                if event.state & mask:
-                    keys.append(name)
-
-            key_name = event.keysym.lower()
-            key_name = KEY_NAME_MAP.get(key_name, key_name)
-            keys.append(key_name)
-
-            key_str = '+'.join(keys)
+        def on_key_recorded(key_str: str) -> None:
             key_entry.delete(0, tk.END)
             key_entry.insert(0, key_str)
             new_key[0] = key_str
-            return "break"
+
+        recorder = KeyRecorder(callback=on_key_recorded)
 
         def on_focus_in(event: tk.Event) -> None:
-            is_listening[0] = True
+            recorder.start_listening(dialog)
 
         def on_focus_out(event: tk.Event) -> None:
-            is_listening[0] = False
+            recorder.stop_listening(dialog)
 
         key_entry.bind('<FocusIn>', on_focus_in)
         key_entry.bind('<FocusOut>', on_focus_out)
-        dialog.bind_class('Toplevel', '<KeyPress>', on_key_press, add='+')
 
         def cleanup() -> None:
-            try:
-                dialog.unbind_class('Toplevel', '<KeyPress>')
-            except Exception:
-                pass
+            recorder.stop_listening(dialog)
 
         def confirm() -> None:
             key = new_key[0].strip()
@@ -231,9 +213,13 @@ class HotKeyTree(ttk.Frame):
         search_text = search_text.lower().strip()
         for item in self._tree.get_children():
             self._tree.delete(item)
+        idx = 0
         for hotkey in self._hotkeys:
             key = hotkey.get("key", "").lower()
             description = hotkey.get("description", "").lower()
             if not search_text or search_text in key or search_text in description:
+                tag = 'even' if idx % 2 == 0 else 'odd'
                 self._tree.insert("", tk.END,
-                                  values=(hotkey.get("key"), hotkey.get("description")))
+                                  values=(hotkey.get("key"), hotkey.get("description")),
+                                  tags=(tag,))
+                idx += 1

@@ -75,11 +75,18 @@ class HotKeyActuator:
             self.stop()
             icon.stop()
         elif item_str == '显示主窗口' and self._master:
-            self._gui_queue.put(lambda: self._master.deiconify())
-            self._gui_queue.put(lambda: self._master.lift())
-            self._gui_queue.put(lambda: self._master.focus_set())
+            self._gui_queue.put(lambda: self._restore_window())
         elif item_str == '隐藏主窗口' and self._master:
             self._gui_queue.put(lambda: self._master.withdraw())
+
+    def _restore_window(self) -> None:
+        """恢复主窗口显示并还原几何。"""
+        if self._app and hasattr(self._app, 'restore_geometry'):
+            self._app.restore_geometry()
+        if self._master:
+            self._master.deiconify()
+            self._master.lift()
+            self._master.focus_set()
 
     def _create_tray_menu(self) -> pystray.Menu:
         if self._master:

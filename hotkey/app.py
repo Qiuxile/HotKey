@@ -49,6 +49,8 @@ class App:
         self._has_editor = False
         self._cleaned_up = False
         self._drag_data = DragState()
+        self._configure_guard_id: str = ""
+        self._saved_geometry: str = ""
 
         self._setup_ui()
         self._setup_bindings()
@@ -68,6 +70,7 @@ class App:
         if self._cleaned_up:
             return
         self._cleaned_up = True
+        self._cleanup_callbacks()
         try:
             self.actuator.stop()
             if keyboard is not None:
@@ -83,7 +86,8 @@ class App:
                 func()
         except Exception:
             pass
-        self.root.after(100, self._poll_gui_queue)
+        if self.root.winfo_exists():
+            self.root.after(100, self._poll_gui_queue)
 
     def _setup_ui(self) -> None:
         self.root.geometry(f"{DEFAULT_WINDOW_WIDTH}x{DEFAULT_WINDOW_HEIGHT}")
@@ -326,21 +330,52 @@ class App:
         self.root.bind("<Control-F>", lambda e: self.menu_bar._toggle_search())
 
     def _on_root_configure(self, event: tk.Event) -> None:
-        """防止编辑器模式下窗口因 Tkinter 内部事件意外缩回窄模式。"""
-        if not self._has_editor:
-            return
+        """防止窗口因 Tkinter 内部事件意外缩小。"""
         if event.widget is not self.root:
             return
-        # 仅当宽度意外退回到窄模式附近时才自动恢复
-        if event.width < self._original_width + 50:
+        if event.width <= 1:
+            return
+        # 取消之前排队的回调，避免积压
+        self._cancel_configure_guard()
+
+        if self._has_editor:
+            expected_width = self._original_width + self._editor_width
+            if event.width < expected_width - 50:
+                self._configure_guard_id = self.root.after_idle(
+                    self._restore_wide_geometry)
+        else:
+            if event.width < self._original_width - 10:
+                self._configure_guard_id = self.root.after_idle(
+                    self._restore_narrow_geometry)
+
+    def _cancel_configure_guard(self) -> None:
+        """取消待处理的窗口大小恢复回调。"""
+        if self._configure_guard_id:
+            try:
+                self.root.after_cancel(self._configure_guard_id)
+            except Exception:
+                pass
+            self._configure_guard_id = ""
+
+    def _restore_narrow_geometry(self) -> None:
+        """恢复窄模式窗口（无编辑器）。"""
+        self._configure_guard_id = ""
+        if not self._has_editor:
+            self.root.geometry(
+                f"{self._original_width}x{DEFAULT_WINDOW_HEIGHT}")
+
+    def _restore_wide_geometry(self) -> None:
+        """恢复宽模式窗口（编辑器打开）。"""
+        self._configure_guard_id = ""
+        if self._has_editor:
             expected = self._original_width + self._editor_width
-            self.root.after_idle(lambda: self.root.geometry(
-                f"{expected}x{DEFAULT_WINDOW_HEIGHT}"))
+            self.root.geometry(f"{expected}x{DEFAULT_WINDOW_HEIGHT}")
 
     def open_code_editor(self, index: int) -> None:
         if index < 0 or index >= len(self.hotkey_tree.get_hotkeys()):
             return
 
+        self._cancel_configure_guard()
         self._current_editing_index = index
         hotkey = self.hotkey_tree.get_hotkeys()[index]
         self._has_editor = True
@@ -376,6 +411,7 @@ class App:
 
     def _close_code_editor(self) -> None:
         if self._code_editor_frame:
+            self._cancel_configure_guard()
             self._code_editor_frame.grid_remove()
             self._has_editor = False
             self._current_editing_index = -1
@@ -444,6 +480,8 @@ class App:
             self._code_text.insert(tk.INSERT, "1920, 1080")
 
     def add_hotkey_dialog(self) -> None:
+        from hotkey.key_recorder import KeyRecorder
+
         dialog = tk.Toplevel(self.root)
         dialog.title("添加热键")
         dialog.geometry("350x180")
@@ -452,7 +490,6 @@ class App:
         dialog.grab_set()
 
         current_key = [""]
-        is_listening = [False]
 
         key_frame = ttk.Frame(dialog, padding=10)
         key_frame.pack(fill="x", padx=5)
@@ -468,49 +505,29 @@ class App:
         desc_entry.grid(row=0, column=1, sticky="ew", padx=5)
         desc_frame.grid_columnconfigure(1, weight=1)
 
-        from hotkey.config import KEY_NAME_MAP, MODIFIER_MASKS, MODIFIER_KEYSYMS
-
-        def on_key_press(event: tk.Event) -> str:
-            if not is_listening[0]:
-                return "break"
-            if event.keysym in MODIFIER_KEYSYMS:
-                return "break"
-
-            keys = []
-            for mask, name in MODIFIER_MASKS.items():
-                if event.state & mask:
-                    keys.append(name)
-
-            key_name = event.keysym.lower()
-            key_name = KEY_NAME_MAP.get(key_name, key_name)
-            keys.append(key_name)
-
-            key_str = '+'.join(keys)
+        def on_key_recorded(key_str: str) -> None:
             key_entry.delete(0, tk.END)
             key_entry.insert(0, key_str)
             current_key[0] = key_str
-            return "break"
+
+        recorder = KeyRecorder(callback=on_key_recorded)
 
         def on_focus_in(event: tk.Event) -> None:
-            is_listening[0] = True
+            recorder.start_listening(dialog)
             key_entry.delete(0, tk.END)
             key_entry.insert(0, "现在按下按键...")
 
         def on_focus_out(event: tk.Event) -> None:
-            is_listening[0] = False
+            recorder.stop_listening(dialog)
             if not current_key[0]:
                 key_entry.delete(0, tk.END)
                 key_entry.insert(0, "点击此处设置按键")
 
         key_entry.bind('<FocusIn>', on_focus_in)
         key_entry.bind('<FocusOut>', on_focus_out)
-        dialog.bind_class('Toplevel', '<KeyPress>', on_key_press, add='+')
 
         def cleanup() -> None:
-            try:
-                dialog.unbind_class('Toplevel', '<KeyPress>')
-            except Exception:
-                pass
+            recorder.stop_listening(dialog)
 
         def confirm() -> None:
             key = current_key[0].strip()
@@ -607,6 +624,31 @@ class App:
         else:
             messagebox.showerror("启动失败", "无法启动热键监听")
 
+    def save_geometry(self) -> None:
+        """保存当前窗口几何，供托盘恢复时使用。"""
+        try:
+            self._saved_geometry = self.root.geometry()
+        except Exception:
+            pass
+
+    def restore_geometry(self) -> None:
+        """恢复之前保存的窗口几何。"""
+        if self._saved_geometry:
+            try:
+                self.root.geometry(self._saved_geometry)
+            except Exception:
+                pass
+
+    def _cleanup_callbacks(self) -> None:
+        """取消所有待处理回调。"""
+        self._cancel_configure_guard()
+        if self._drag_clear_timer:
+            try:
+                self.root.after_cancel(self._drag_clear_timer)
+            except Exception:
+                pass
+            self._drag_clear_timer = ""
+
     def _on_close(self) -> None:
         if self._is_listening:
             result = messagebox.askyesno(
@@ -616,11 +658,13 @@ class App:
                 "选择 \"否\" 关闭程序"
             )
             if result:
+                self.save_geometry()
                 self.root.withdraw()
                 logger.info("主窗口已隐藏，热键监听继续在托盘运行")
                 return
 
         logger.info("正在关闭程序...")
+        self._cleanup_callbacks()
         self.actuator.stop()
         self.root.destroy()
 
