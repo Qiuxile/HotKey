@@ -43,8 +43,8 @@ from hotkey.ui.widgets.title_bar import TitleBar
 
 logger = logging.getLogger("HotKey.Window")
 
-WINDOW_HEIGHT = 640
-NARROW_WIDTH = 820
+WINDOW_HEIGHT = 600
+NARROW_WIDTH = 400
 WIDE_WIDTH = 1240
 PREVIEW_ID = "__preview__"
 SETTINGS_OPEN_TABS = "open_scripts"
@@ -143,7 +143,7 @@ class MainWindow(QMainWindow):
 
     def _setup_chrome(self) -> None:
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
-        self.setMinimumSize(760, 520)
+        self.setMinimumSize(NARROW_WIDTH, 520)
 
         self.title_bar = TitleBar(self)
         self.title_bar.theme_clicked.connect(self._toggle_theme)
@@ -167,7 +167,7 @@ class MainWindow(QMainWindow):
         self.ui.menubar.setParent(None)
 
         self.ui.statusbar.addPermanentWidget(QSizeGrip(self), 0)
-        self.resize(1120, WINDOW_HEIGHT)
+        self.resize(NARROW_WIDTH, WINDOW_HEIGHT)
 
     # ---------------------------------------------------------------- 窗口缩放
 
@@ -788,11 +788,13 @@ class MainWindow(QMainWindow):
         self.ui.editorPanel.setVisible(visible)
         self.ui.actionToggleEditor.setChecked(visible)
         if visible:
+            self.setMinimumSize(760, 520)
             self.ui.centralSplitter.setSizes([NARROW_WIDTH, 750])
             self.resize(WIDE_WIDTH, WINDOW_HEIGHT)
             if self._editor_tabs:
                 self._activate_tab(self._active_tab)
         else:
+            self.setMinimumSize(NARROW_WIDTH, 520)
             self.resize(NARROW_WIDTH, WINDOW_HEIGHT)
 
     # ---------------------------------------------------------------- 运行/导出

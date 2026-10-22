@@ -82,7 +82,7 @@ def test_frameless_window_and_title_bar(qtbot, tmp_path):
 
     assert window.windowFlags() & Qt.WindowType.FramelessWindowHint
     assert window.title_bar is not None
-    assert "HotKey" in window.title_bar.title_label.text()
+    assert window.title_bar.title_label.text()
 
 
 def test_theme_toggle_and_persistence(qtbot, tmp_path):

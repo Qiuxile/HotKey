@@ -36,8 +36,9 @@ class TitleBar(QFrame):
         self.title_label = QLabel("HotKey", self)
         self.title_label.setObjectName("titleText")
         self.title_label.setMaximumWidth(TITLE_MAX_WIDTH)
+        self.title_label.setMinimumWidth(0)
         self.title_label.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+            QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
         )
         layout.addWidget(self.title_label)
 
@@ -131,10 +132,27 @@ class TitleBar(QFrame):
     def set_title(self, text: str) -> None:
         self._full_title = text
         self.title_label.setToolTip(text)
+        self._apply_title()
+
+    def _apply_title(self) -> None:
+        # 右侧固定控件大约占 350px，窄窗口优先保证菜单按钮可见
+        bar_width = self.width()
+        if bar_width < 200:
+            bar_width = self._window.width()
+        available = max(0, min(TITLE_MAX_WIDTH, bar_width - 350))
+        if available < 24:
+            self.title_label.setText("")
+            return
         metrics = QFontMetrics(self.title_label.font())
         self.title_label.setText(
-            metrics.elidedText(text, Qt.TextElideMode.ElideRight, TITLE_MAX_WIDTH)
+            metrics.elidedText(
+                self._full_title, Qt.TextElideMode.ElideRight, available
+            )
         )
+
+    def resizeEvent(self, event) -> None:  # noqa: N802
+        self._apply_title()
+        super().resizeEvent(event)
 
     def set_maximized(self, maximized: bool) -> None:
         icon = (
