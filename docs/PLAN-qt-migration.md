@@ -480,3 +480,23 @@ v1/v2 的纯脚本会迁移成一个「空」积木。
 
 新增/删除文件：新增 `ui/widgets/block_canvas.py`，删除 `ui/widgets/block_tree.py`。
 `pytest` 129 项通过。
+
+## 19. 单栏 + 函数 + 独立脚本（2026-10-22）
+
+按"回到一栏、增加函数和带返回值的判断、能直接生成 Python 文件"的要求调整：
+
+- 编辑器从画布改回**单栏竖向列表**（`BlockListEditor`）：
+  - 拖入/槽位沿用；顶层的 `▲`/`▼` 调整顺序，`✕` 删除
+  - 顺序即执行顺序，不再依赖坐标；配置里的 x/y 保留但不再使用
+- 新增「🧩 函数与数据」分类（13 个积木）：
+  - `定义函数 {name}（{params}）返回 {result}`：带「函数体」槽位，返回表达式生成最后一条 `return`
+  - `调用 {name}（{args}）存入 {variable}` / 纯调用 / `返回 {value}`
+  - 带返回值：比较、数学、随机数、图片是否存在、找图位置、像素颜色、鼠标坐标、屏幕尺寸
+  - `如果 {condition}` 用变量或表达式，配合上面的返回值积木
+- 新增「生成 .py」（菜单 `Ctrl+Shift+E` + 编辑器按钮）：
+  - `core/program.py` 把函数定义提前，其余流程放进 `main()`，带 `if __name__ == "__main__"` guard
+  - 生成的文件只依赖 Python + `pyautogui`，可以 `python 文件.py` 直接运行
+  - 导出前用 `compile()` 校验，参数没填完整会提示行号
+- 新增 `core/program.py`，删除 `ui/widgets/block_canvas.py`
+
+`pytest` 147 项通过。

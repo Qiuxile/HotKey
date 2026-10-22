@@ -1,7 +1,7 @@
 """主窗口冒烟测试。"""
 
 from hotkey.ui.main_window import MainWindow
-from hotkey.ui.widgets.block_canvas import BlockCanvasView
+from hotkey.ui.widgets.block_editor import BlockListEditor
 from hotkey.ui.widgets.statement_tree import StatementTree
 
 
@@ -22,10 +22,10 @@ def test_main_window_builds(qtbot, tmp_path):
 def test_promoted_widgets_are_used(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
 
-    assert isinstance(window.ui.blockCanvas, BlockCanvasView)
+    assert isinstance(window.ui.blockEditor, BlockListEditor)
     assert isinstance(window.ui.statementTree, StatementTree)
-    # 顶部「空」+ 5 个分类
-    assert window.ui.statementTree.topLevelItemCount() == 6
+    # 顶部「空」+ 6 个分类
+    assert window.ui.statementTree.topLevelItemCount() == 7
 
 
 def test_editor_toggle(qtbot, tmp_path):
@@ -68,7 +68,7 @@ def test_config_roundtrip_through_window(qtbot, tmp_path):
     assert entry.id == "fixed"
 
     window._open_editor_for_id("fixed")
-    blocks_ = window.ui.blockCanvas.blocks()
+    blocks_ = window.ui.blockEditor.blocks()
     assert len(blocks_) == 1
     assert blocks_[0].kind == "empty"
     assert blocks_[0].text == "x = 1"

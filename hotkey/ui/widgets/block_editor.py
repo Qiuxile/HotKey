@@ -1,10 +1,9 @@
-"""Scratch 风格积木画布：自由定位、容器槽位、拖放。"""
+"""单栏积木编辑器：竖向列表、容器槽位、常驻参数输入框。"""
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, QRegularExpression, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPen
-from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtCore import QRegularExpression, Qt, Signal
+from PySide6.QtGui import QColor, QPainter, QPen, QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -22,12 +21,20 @@ from hotkey.core.models import Block
 from hotkey.ui.widgets.statement_tree import SNIPPET_MIME
 
 EMPTY_KIND = "empty"
-GRID = 20
-CANVAS_SIZE = (2600, 1800)
+
+
+def body_of(widget: QWidget) -> "BodyArea | None":
+    """找到积木所在的槽位（嵌套积木的父级是槽位内部 host）。"""
+    parent = widget.parent()
+    while parent is not None:
+        if isinstance(parent, BodyArea):
+            return parent
+        parent = parent.parent()
+    return None
 
 
 class BodyArea(QFrame):
-    """容器积木里的一个槽位（重复内容 / 那么 / 否则）。"""
+    """容器积木里的槽位（函数体 / 那么 / 否则 / 重复内容）。"""
 
     def __init__(self, owner: "BlockWidget", index: int, label: str) -> None:
         super().__init__(owner)
@@ -50,7 +57,12 @@ class BodyArea(QFrame):
         self._hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._hint)
 
-        self._layout = layout
+        self._host = QWidget(self)
+        self._child_layout = QVBoxLayout(self._host)
+        self._child_layout.setContentsMargins(0, 0, 0, 0)
+        self._child_layout.setSpacing(6)
+        layout.addWidget(self._host)
+
         self.setStyleSheet(
             "QFrame#blockBody {"
             "  background: rgba(255, 255, 255, 0.55);"
@@ -59,19 +71,46 @@ class BodyArea(QFrame):
             "}"
         )
 
+    @property
+    def editor(self):
+        return self.owner.editor
+
     def add_widget(self, widget: "BlockWidget") -> None:
         self._hint.hide()
-        self._layout.addWidget(widget)
+        self._child_layout.addWidget(widget)
         self._widgets.append(widget)
+        widget.show()
+        self.owner.refresh_size()
+
+    def insert_after(self, anchor: "BlockWidget", widget: "BlockWidget") -> None:
+        index = self._widgets.index(anchor) + 1
+        self._widgets.insert(index, widget)
+        self._child_layout.insertWidget(index, widget)
+        self._hint.hide()
         widget.show()
         self.owner.refresh_size()
 
     def remove_widget(self, widget: "BlockWidget") -> None:
         if widget in self._widgets:
             self._widgets.remove(widget)
-        self._layout.removeWidget(widget)
+        self._child_layout.removeWidget(widget)
         if not self._widgets:
             self._hint.show()
+        self.owner.refresh_size()
+
+    def move_widget(self, widget: "BlockWidget", delta: int) -> None:
+        index = self._widgets.index(widget)
+        target = index + delta
+        if not 0 <= target < len(self._widgets):
+            return
+        self._widgets[index], self._widgets[target] = (
+            self._widgets[target],
+            self._widgets[index],
+        )
+        for child in self._widgets:
+            self._child_layout.removeWidget(child)
+        for position, child in enumerate(self._widgets):
+            self._child_layout.insertWidget(position, child)
         self.owner.refresh_size()
 
     def blocks(self) -> list[Block]:
@@ -93,45 +132,17 @@ class BodyArea(QFrame):
         payload = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
             "utf-8", errors="replace"
         )
-        self.owner.canvas.add_snippet(payload, body=self)
+        self.editor.add_snippet(payload, body=self)
         event.acceptProposedAction()
 
 
-class DragHeader(QFrame):
-    def __init__(self, owner: "BlockWidget") -> None:
-        super().__init__(owner)
-        self.owner = owner
-        self.setObjectName("blockHeader")
-
-    def mousePressEvent(self, event) -> None:  # noqa: N802
-        if event.button() == Qt.MouseButton.LeftButton and self.owner.is_top_level():
-            self.owner.start_drag(event.globalPosition().toPoint())
-            event.accept()
-            return
-        super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event) -> None:  # noqa: N802
-        if self.owner.is_dragging:
-            self.owner.drag_to(event.globalPosition().toPoint())
-            event.accept()
-            return
-        super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event) -> None:  # noqa: N802
-        if self.owner.is_dragging:
-            self.owner.finish_drag()
-            event.accept()
-            return
-        super().mouseReleaseEvent(event)
-
-
 class BlockWidget(QFrame):
-    """画布上的一块积木。"""
+    """单栏里的一个积木。"""
 
-    def __init__(self, block: Block, canvas: "BlockCanvas") -> None:
+    def __init__(self, block: Block, editor: "BlockListEditor") -> None:
         super().__init__()
         self.block = block
-        self.canvas = canvas
+        self.editor = editor
         self.snippet = (
             None if block.kind == EMPTY_KIND else catalog.snippet(block.kind)
         )
@@ -142,8 +153,6 @@ class BlockWidget(QFrame):
 
         self._fields: dict[str, QLineEdit] = {}
         self.bodies: list[BodyArea] = []
-        self._dragging = False
-        self._drag_offset = QPoint()
 
         self.setObjectName("blockWidget")
         self.setMinimumWidth(320)
@@ -153,7 +162,8 @@ class BlockWidget(QFrame):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        self.header = DragHeader(self)
+        self.header = QFrame(self)
+        self.header.setObjectName("blockHeader")
         header_layout = QHBoxLayout(self.header)
         header_layout.setContentsMargins(10, 5, 8, 5)
         header_layout.setSpacing(5)
@@ -163,12 +173,23 @@ class BlockWidget(QFrame):
         else:
             self._build_snippet(header_layout, self.snippet)
 
+        for symbol, delta in (("▲", -1), ("▼", 1)):
+            button = QToolButton(self.header)
+            button.setText(symbol)
+            button.setToolTip("上移" if delta < 0 else "下移")
+            button.setAutoRaise(True)
+            button.setFixedSize(22, 22)
+            button.clicked.connect(
+                lambda _checked=False, d=delta: self.editor.move_block(self, d)
+            )
+            header_layout.addWidget(button)
+
         delete_button = QToolButton(self.header)
         delete_button.setText("✕")
         delete_button.setToolTip("删除这块积木")
         delete_button.setAutoRaise(True)
         delete_button.setFixedSize(22, 22)
-        delete_button.clicked.connect(lambda: self.canvas.delete_block(self))
+        delete_button.clicked.connect(lambda: self.editor.delete_block(self))
         header_layout.addWidget(delete_button)
         root.addWidget(self.header)
 
@@ -243,11 +264,11 @@ class BlockWidget(QFrame):
         self.block.params[name] = text
         if self.snippet is not None:
             self.block.text = self.snippet.render(self.block.params)
-        self.canvas.changed.emit()
+        self.editor.changed.emit()
 
     def _on_code_changed(self, text: str) -> None:
         self.block.text = text
-        self.canvas.changed.emit()
+        self.editor.changed.emit()
 
     def field(self, name: str) -> QLineEdit | None:
         return self._fields.get(name)
@@ -258,58 +279,22 @@ class BlockWidget(QFrame):
     def to_block(self) -> Block:
         children = self.bodies[0].blocks() if self.bodies else []
         else_children = self.bodies[1].blocks() if len(self.bodies) > 1 else []
-        top_level = self.is_top_level()
         return Block(
             kind=self.block.kind,
             text=self.block.text,
             params=dict(self.block.params),
             children=children,
             else_children=else_children,
-            x=float(self.x()) if top_level else 0.0,
-            y=float(self.y()) if top_level else 0.0,
         )
-
-    # ---------------------------------------------------------------- 拖动
-
-    def is_top_level(self) -> bool:
-        return self.parent() is self.canvas
 
     def refresh_size(self) -> None:
         layout = self.layout()
         if layout is not None:
             layout.activate()
         self.adjustSize()
-        parent = self.parent()
-        if isinstance(parent, BodyArea):
-            parent.owner.refresh_size()
-
-    @property
-    def is_dragging(self) -> bool:
-        return self._dragging
-
-    def start_drag(self, global_position: QPoint) -> None:
-        if not self.is_top_level():
-            return
-        self._drag_offset = global_position - self.mapToGlobal(QPoint(0, 0))
-        self._dragging = True
-        self.raise_()
-
-    def drag_to(self, global_position: QPoint) -> None:
-        if not self._dragging:
-            return
-        position = self.canvas.mapFromGlobal(global_position - self._drag_offset)
-        x = max(0, min(position.x(), self.canvas.width() - self.width()))
-        y = max(0, min(position.y(), self.canvas.height() - self.height()))
-        self.move(x, y)
-
-    def finish_drag(self) -> None:
-        if not self._dragging:
-            return
-        self._dragging = False
-        x = round(self.x() / GRID) * GRID
-        y = round(self.y() / GRID) * GRID
-        self.move(max(0, x), max(0, y))
-        self.canvas.changed.emit()
+        body = body_of(self)
+        if body is not None:
+            body.owner.refresh_size()
 
     # ---------------------------------------------------------------- 拖放
 
@@ -327,16 +312,7 @@ class BlockWidget(QFrame):
         payload = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
             "utf-8", errors="replace"
         )
-        parent = self.parent()
-        if isinstance(parent, BodyArea):
-            self.canvas.add_snippet(payload, body=parent)
-        elif self.bodies:
-            self.canvas.add_snippet(payload, body=self.bodies[0])
-        else:
-            position = self.canvas.mapFromGlobal(
-                event.globalPosition().toPoint()
-            ) - QPoint(30, 12)
-            self.canvas.add_snippet(payload, pos=position)
+        self.editor.add_snippet(payload, after=self)
         event.acceptProposedAction()
 
     # ---------------------------------------------------------------- 绘制
@@ -353,112 +329,11 @@ class BlockWidget(QFrame):
         painter.end()
 
 
-class BlockCanvas(QWidget):
-    changed = Signal()
-
-    def __init__(self, parent=None) -> None:
-        super().__init__(parent)
+class _DropHost(QWidget):
+    def __init__(self, editor: "BlockListEditor") -> None:
+        super().__init__()
+        self.editor = editor
         self.setAcceptDrops(True)
-        self.setMinimumSize(*CANVAS_SIZE)
-        self.resize(*CANVAS_SIZE)
-        self._top: list[BlockWidget] = []
-
-    # ---------------------------------------------------------------- 增删
-
-    def add_block(
-        self,
-        block: Block,
-        pos: QPoint | None = None,
-        body: BodyArea | None = None,
-    ) -> BlockWidget:
-        widget = BlockWidget(block, self)
-
-        if body is not None:
-            body.add_widget(widget)
-        else:
-            widget.setParent(self)
-            widget.show()
-            widget.move(pos if pos is not None else self._next_position())
-            self._top.append(widget)
-
-        widget.adjustSize()
-        return widget
-
-    def add_snippet(
-        self,
-        snippet_id: str,
-        pos: QPoint | None = None,
-        body: BodyArea | None = None,
-    ) -> BlockWidget:
-        block = self._new_block(snippet_id)
-        widget = self.add_block(block, pos, body)
-        self.changed.emit()
-        return widget
-
-    def _new_block(self, snippet_id: str) -> Block:
-        if snippet_id == EMPTY_KIND:
-            return Block(kind=EMPTY_KIND, text="")
-        snippet = catalog.snippet(snippet_id)
-        params = snippet.blank_values()
-        return Block(
-            kind=snippet_id,
-            text=snippet.render(params),
-            params=params,
-        )
-
-    def _next_position(self) -> QPoint:
-        if not self._top:
-            return QPoint(40, 40)
-        bottom = max(widget.y() + widget.height() for widget in self._top)
-        return QPoint(40, bottom + 16)
-
-    def delete_block(self, widget: BlockWidget) -> None:
-        parent = widget.parent()
-        if isinstance(parent, BodyArea):
-            parent.remove_widget(widget)
-        elif widget in self._top:
-            self._top.remove(widget)
-        widget.deleteLater()
-        self.changed.emit()
-
-    # ---------------------------------------------------------------- 读写
-
-    def load_blocks(self, blocks: list[Block]) -> None:
-        for widget in self._top:
-            widget.deleteLater()
-        self._top.clear()
-
-        y = 40
-        for block in blocks:
-            widget = self._build_widget(block)
-            widget.setParent(self)
-            widget.show()
-            x = int(block.x) if block.x else 40
-            top = int(block.y) if block.y else y
-            widget.move(x, top)
-            self._top.append(widget)
-            y = max(y, top + widget.height() + 16)
-
-    def _build_widget(self, block: Block) -> BlockWidget:
-        widget = BlockWidget(block, self)
-        for index, body in enumerate(widget.bodies):
-            children = block.children if index == 0 else block.else_children
-            for child in children:
-                body.add_widget(self._build_widget(child))
-        widget.adjustSize()
-        return widget
-
-    def blocks(self) -> list[Block]:
-        ordered = sorted(self._top, key=lambda widget: (widget.y(), widget.x()))
-        return [widget.to_block() for widget in ordered]
-
-    def showEvent(self, event) -> None:  # noqa: N802
-        # 隐藏状态下创建时，布局可能还没有算上子块尺寸，显示后统一重算
-        super().showEvent(event)
-        for widget in self._top:
-            widget.refresh_size()
-
-    # ---------------------------------------------------------------- 拖放
 
     def dragEnterEvent(self, event) -> None:  # noqa: N802
         if event.mimeData().hasFormat(SNIPPET_MIME):
@@ -474,62 +349,159 @@ class BlockCanvas(QWidget):
         payload = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
             "utf-8", errors="replace"
         )
-        position = event.position().toPoint() - QPoint(20, 12)
-        self.add_snippet(payload, pos=position)
+        self.editor.add_snippet(payload)
         event.acceptProposedAction()
 
-    # ---------------------------------------------------------------- 绘制
 
-    def paintEvent(self, event) -> None:  # noqa: N802
-        painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor("#f7f9fc"))
-
-        pen = QPen(QColor("#e8edf5"))
-        pen.setWidth(1)
-        painter.setPen(pen)
-        for x in range(0, self.width(), GRID):
-            painter.drawLine(x, 0, x, self.height())
-        for y in range(0, self.height(), GRID):
-            painter.drawLine(0, y, self.width(), y)
-
-        if not self._top:
-            painter.setPen(QColor("#94a3b8"))
-            font = painter.font()
-            font.setPointSize(12)
-            painter.setFont(font)
-            painter.drawText(
-                self.rect().adjusted(0, 120, 0, 0),
-                Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
-                "从左侧拖入积木，开始搭建脚本",
-            )
-        painter.end()
-
-
-class BlockCanvasView(QScrollArea):
-    """带滚动条的画布容器（在 Designer 里提升为这个类）。"""
+class BlockListEditor(QScrollArea):
+    """单栏积木列表（在 Designer 里提升为这个类）。"""
 
     changed = Signal()
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.canvas = BlockCanvas(self)
-        self.setWidget(self.canvas)
-        self.setWidgetResizable(False)
+        self._host = _DropHost(self)
+        self._layout = QVBoxLayout(self._host)
+        self._layout.setContentsMargins(10, 10, 10, 10)
+        self._layout.setSpacing(8)
+        self._layout.addStretch(1)
+        self._blocks: list[BlockWidget] = []
+
+        self.setWidget(self._host)
+        self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.canvas.resize(*CANVAS_SIZE)
-        self.canvas.changed.connect(self.changed.emit)
 
-    def load_blocks(self, blocks: list[Block]) -> None:
-        self.canvas.load_blocks(blocks)
+    # ---------------------------------------------------------------- 增删
 
-    def blocks(self) -> list[Block]:
-        return self.canvas.blocks()
+    def add_block(
+        self,
+        block: Block,
+        body: BodyArea | None = None,
+        after: BlockWidget | None = None,
+    ) -> BlockWidget:
+        widget = BlockWidget(block, self)
+
+        if body is not None:
+            body.add_widget(widget)
+        elif after is not None:
+            owning = body_of(after)
+            if owning is not None:
+                owning.insert_after(after, widget)
+            elif after in self._blocks:
+                index = self._blocks.index(after) + 1
+                self._blocks.insert(index, widget)
+                self._attach_top(widget)
+                self._relayout()
+        else:
+            self._blocks.append(widget)
+            self._attach_top(widget)
+            self._relayout()
+
+        widget.adjustSize()
+        widget.refresh_size()
+        return widget
+
+    def _attach_top(self, widget: BlockWidget) -> None:
+        widget.setParent(self._host)
+        widget.show()
+
+    def _relayout(self) -> None:
+        for widget in self._blocks:
+            self._layout.removeWidget(widget)
+        for index, widget in enumerate(self._blocks):
+            self._layout.insertWidget(index, widget)
 
     def add_snippet(
         self,
         snippet_id: str,
-        pos: QPoint | None = None,
         body: BodyArea | None = None,
+        after: BlockWidget | None = None,
     ) -> BlockWidget:
-        return self.canvas.add_snippet(snippet_id, pos, body)
+        block = self._new_block(snippet_id)
+        widget = self.add_block(block, body, after)
+        self.changed.emit()
+        return widget
+
+    def _new_block(self, snippet_id: str) -> Block:
+        if snippet_id == EMPTY_KIND:
+            return Block(kind=EMPTY_KIND, text="")
+        snippet = catalog.snippet(snippet_id)
+        params = snippet.blank_values()
+        return Block(
+            kind=snippet_id,
+            text=snippet.render(params),
+            params=params,
+        )
+
+    def delete_block(self, widget: BlockWidget) -> None:
+        owning = body_of(widget)
+        if owning is not None:
+            owning.remove_widget(widget)
+        elif widget in self._blocks:
+            self._blocks.remove(widget)
+        widget.deleteLater()
+        self._relayout()
+        self.changed.emit()
+
+    def move_block(self, widget: BlockWidget, delta: int) -> None:
+        owning = body_of(widget)
+        if owning is not None:
+            owning.move_widget(widget, delta)
+            self.changed.emit()
+            return
+
+        if widget not in self._blocks:
+            return
+        index = self._blocks.index(widget)
+        target = index + delta
+        if not 0 <= target < len(self._blocks):
+            return
+        self._blocks[index], self._blocks[target] = (
+            self._blocks[target],
+            self._blocks[index],
+        )
+        self._relayout()
+        self.changed.emit()
+
+    # ---------------------------------------------------------------- 读写
+
+    def load_blocks(self, blocks: list[Block]) -> None:
+        for widget in self._blocks:
+            widget.deleteLater()
+        self._blocks.clear()
+
+        for block in blocks:
+            widget = self._build_widget(block)
+            self._blocks.append(widget)
+            self._attach_top(widget)
+        self._relayout()
+
+        for widget in self._blocks:
+            widget.refresh_size()
+
+    def _build_widget(self, block: Block) -> BlockWidget:
+        widget = BlockWidget(block, self)
+        for index, body in enumerate(widget.bodies):
+            children = block.children if index == 0 else block.else_children
+            for child in children:
+                body.add_widget(self._build_widget(child))
+        widget.adjustSize()
+        return widget
+
+    def blocks(self) -> list[Block]:
+        return [widget.to_block() for widget in self._blocks]
+
+    def clear(self) -> None:
+        for widget in self._blocks:
+            widget.deleteLater()
+        self._blocks.clear()
+
+    def dropEvent(self, event) -> None:  # noqa: N802
+        if not event.mimeData().hasFormat(SNIPPET_MIME):
+            return
+        payload = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
+            "utf-8", errors="replace"
+        )
+        self.add_snippet(payload)
+        event.acceptProposedAction()

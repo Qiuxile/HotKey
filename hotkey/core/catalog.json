@@ -4,6 +4,7 @@
     { "id": "mouse", "label": "🖱️ 鼠标操作", "color": "#dbeafe", "accent": "#3b82f6" },
     { "id": "keyboard", "label": "⌨️ 键盘操作", "color": "#dcfce7", "accent": "#22c55e" },
     { "id": "screen", "label": "🖥️ 屏幕操作", "color": "#ede9fe", "accent": "#8b5cf6" },
+    { "id": "logic", "label": "🧩 函数与数据", "color": "#fef9c3", "accent": "#ca8a04" },
     { "id": "dialog", "label": "💬 弹窗交互", "color": "#ffedd5", "accent": "#f97316" },
     { "id": "flow", "label": "⏱️ 流程控制", "color": "#fee2e2", "accent": "#ef4444" }
   ],
@@ -294,6 +295,141 @@
       "block": true,
       "slots": ["内容"],
       "hidden": true
+    },
+    {
+      "id": "logic_set",
+      "category": "logic",
+      "label": "设置变量 {name} 为 {value}",
+      "code": "{name} = {value}",
+      "params": [
+        { "name": "name", "placeholder": "变量名", "kind": "code", "width": 100 },
+        { "name": "value", "placeholder": "值或表达式", "kind": "code", "width": 170 }
+      ]
+    },
+    {
+      "id": "logic_compare",
+      "category": "logic",
+      "label": "比较 {left} {operator} {right} 存入 {variable}",
+      "code": "{variable} = ({left} {operator} {right})",
+      "params": [
+        { "name": "left", "placeholder": "左值", "kind": "code", "width": 90 },
+        { "name": "operator", "placeholder": "==、>、<", "kind": "code", "width": 60 },
+        { "name": "right", "placeholder": "右值", "kind": "code", "width": 90 },
+        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
+      ]
+    },
+    {
+      "id": "logic_math",
+      "category": "logic",
+      "label": "计算 {expression} 存入 {variable}",
+      "code": "{variable} = {expression}",
+      "params": [
+        { "name": "expression", "placeholder": "表达式，如 x + 1", "kind": "code", "width": 170 },
+        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
+      ]
+    },
+    {
+      "id": "logic_random",
+      "category": "logic",
+      "label": "随机整数 {low} 到 {high} 存入 {variable}",
+      "code": "{variable} = random.randint({low}, {high})",
+      "params": [
+        { "name": "low", "placeholder": "最小值", "kind": "number", "width": 60 },
+        { "name": "high", "placeholder": "最大值", "kind": "number", "width": 60 },
+        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
+      ]
+    },
+    {
+      "id": "logic_func_def",
+      "category": "logic",
+      "label": "定义函数 {name}（参数 {params}）返回 {result}",
+      "code": "def {name}({params}):",
+      "block": true,
+      "slots": ["函数体"],
+      "params": [
+        { "name": "name", "placeholder": "函数名", "kind": "code", "width": 90 },
+        { "name": "params", "placeholder": "参数，如 a, b", "kind": "code", "width": 120 },
+        { "name": "result", "placeholder": "返回表达式，可留空", "kind": "code", "width": 150 }
+      ]
+    },
+    {
+      "id": "logic_func_call",
+      "category": "logic",
+      "label": "调用 {name}（{args}）存入 {variable}",
+      "code": "{variable} = {name}({args})",
+      "params": [
+        { "name": "name", "placeholder": "函数名", "kind": "code", "width": 90 },
+        { "name": "args", "placeholder": "实参", "kind": "code", "width": 130 },
+        { "name": "variable", "placeholder": "返回值变量", "kind": "code", "width": 100 }
+      ]
+    },
+    {
+      "id": "logic_func_plain",
+      "category": "logic",
+      "label": "调用 {name}（{args}）",
+      "code": "{name}({args})",
+      "params": [
+        { "name": "name", "placeholder": "函数名", "kind": "code", "width": 90 },
+        { "name": "args", "placeholder": "实参", "kind": "code", "width": 170 }
+      ]
+    },
+    {
+      "id": "logic_return",
+      "category": "logic",
+      "label": "返回 {value}",
+      "code": "return {value}",
+      "params": [
+        { "name": "value", "placeholder": "返回值", "kind": "code", "width": 170 }
+      ]
+    },
+    {
+      "id": "logic_exists",
+      "category": "logic",
+      "label": "图片 {image} 是否存在存入 {variable}",
+      "code": "{variable} = pyautogui.locateOnScreen({image}) is not None",
+      "params": [
+        { "name": "image", "placeholder": "图片路径", "kind": "text", "width": 140 },
+        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
+      ]
+    },
+    {
+      "id": "logic_locate",
+      "category": "logic",
+      "label": "查找图片 {image} 位置存入 {variable}",
+      "code": "{variable} = pyautogui.locateCenterOnScreen({image})",
+      "params": [
+        { "name": "image", "placeholder": "图片路径", "kind": "text", "width": 140 },
+        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
+      ]
+    },
+    {
+      "id": "logic_pixel",
+      "category": "logic",
+      "label": "坐标（{x}, {y}）颜色存入 {variable}",
+      "code": "{variable} = pyautogui.pixel({x}, {y})",
+      "params": [
+        { "name": "x", "placeholder": "x", "kind": "number", "width": 56 },
+        { "name": "y", "placeholder": "y", "kind": "number", "width": 56 },
+        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
+      ]
+    },
+    {
+      "id": "logic_mouse_pos",
+      "category": "logic",
+      "label": "读取鼠标坐标存入 {variable}",
+      "code": "{variable} = pyautogui.position()",
+      "params": [
+        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 100 }
+      ]
+    },
+    {
+      "id": "logic_screen_size",
+      "category": "logic",
+      "label": "读取屏幕尺寸存入 {variable}",
+      "code": "{variable} = pyautogui.size()",
+      "params": [
+        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 100 }
+      ]
     }
   ]
 }

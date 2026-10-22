@@ -152,7 +152,7 @@
              <number>8</number>
             </property>
             <item>
-             <widget class="BlockCanvasView" name="blockCanvas"/>
+             <widget class="BlockListEditor" name="blockEditor"/>
             </item>
             <item>
              <layout class="QHBoxLayout" name="editorToolbar">
@@ -198,6 +198,13 @@
                </widget>
               </item>
               <item>
+               <widget class="QPushButton" name="btnExportPython">
+                <property name="text">
+                 <string>生成 .py</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QPushButton" name="btnSaveScript">
                 <property name="text">
                  <string>保存</string>
@@ -238,6 +245,7 @@
     </property>
     <addaction name="actionImport"/>
     <addaction name="actionExport"/>
+    <addaction name="actionExportPython"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -277,6 +285,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionExportPython">
+   <property name="text">
+    <string>导出 Python 文件...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+E</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -341,9 +357,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BlockCanvasView</class>
+   <class>BlockListEditor</class>
    <extends>QScrollArea</extends>
-   <header>hotkey.ui.widgets.block_canvas</header>
+   <header>hotkey.ui.widgets.block_editor</header>
   </customwidget>
   <customwidget>
    <class>StatementTree</class>

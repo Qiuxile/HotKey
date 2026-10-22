@@ -7,10 +7,36 @@ from hotkey.core.models import Block
 
 
 def test_catalog_shape():
-    assert len(catalog.SNIPPETS) == 37
-    assert len(catalog.CATEGORIES) == 5
+    assert len(catalog.SNIPPETS) == 50
+    assert len(catalog.CATEGORIES) == 6
     ids = [snippet.id for snippet in catalog.SNIPPETS]
     assert len(ids) == len(set(ids))
+
+
+def test_logic_category_has_function_and_value_blocks():
+    logic = [snippet for snippet in catalog.SNIPPETS if snippet.category == "logic"]
+    assert len(logic) == 13
+
+    definition = catalog.snippet("logic_func_def")
+    assert definition.block is True
+    assert definition.slots == ("函数体",)
+    assert [param.name for param in definition.params] == [
+        "name",
+        "params",
+        "result",
+    ]
+
+
+def test_return_value_blocks_generate_code():
+    exists = catalog.snippet("logic_exists")
+    assert exists.code_for_values({"image": "a.png", "variable": "found"}) == (
+        "found = pyautogui.locateOnScreen('a.png') is not None"
+    )
+
+    compare = catalog.snippet("logic_compare")
+    assert compare.code_for_values(
+        {"left": "x", "operator": ">", "right": "0", "variable": "ok"}
+    ) == "ok = (x > 0)"
 
 
 def test_container_slots_and_hidden_blocks():

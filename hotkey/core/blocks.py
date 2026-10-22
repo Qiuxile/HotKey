@@ -6,14 +6,17 @@ from hotkey.core import catalog
 from hotkey.core.models import Block
 
 
+def _flatten(children: list[Block]) -> list[str]:
+    lines: list[str] = []
+    for child in children:
+        code = block_code(child)
+        if code:
+            lines.extend(code.splitlines())
+    return lines
+
+
 def _body_code(children: list[Block]) -> str:
-    child_codes = [block_code(child) for child in children]
-    lines = [
-        line
-        for child_code in child_codes
-        if child_code
-        for line in child_code.splitlines()
-    ]
+    lines = _flatten(children)
     if not lines:
         return catalog.INDENT + "pass"
     return "\n".join(catalog.INDENT + line for line in lines)
@@ -36,6 +39,18 @@ def block_code(block: Block) -> str:
 
     if not snippet.block:
         return code
+
+    if block.kind == "logic_func_def":
+        lines = _flatten(block.children)
+        result = block.params.get("result", "").strip()
+        if result:
+            lines.append(f"return {result}")
+        body = (
+            "\n".join(catalog.INDENT + line for line in lines)
+            if lines
+            else catalog.INDENT + "pass"
+        )
+        return f"{code}\n{body}"
 
     then_body = _body_code(block.children)
     if len(snippet.slots) >= 2 and block.else_children:

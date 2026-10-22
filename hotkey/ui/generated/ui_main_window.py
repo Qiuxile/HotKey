@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QHBoxLayout, QHe
     QSplitter, QStatusBar, QTableView, QTreeWidgetItem,
     QVBoxLayout, QWidget)
 
-from hotkey.ui.widgets.block_canvas import BlockCanvasView
+from hotkey.ui.widgets.block_editor import BlockListEditor
 from hotkey.ui.widgets.statement_tree import StatementTree
 
 class Ui_MainWindow(object):
@@ -35,6 +35,8 @@ class Ui_MainWindow(object):
         self.actionImport.setObjectName(u"actionImport")
         self.actionExport = QAction(MainWindow)
         self.actionExport.setObjectName(u"actionExport")
+        self.actionExportPython = QAction(MainWindow)
+        self.actionExportPython.setObjectName(u"actionExportPython")
         self.actionQuit = QAction(MainWindow)
         self.actionQuit.setObjectName(u"actionQuit")
         self.actionNew = QAction(MainWindow)
@@ -109,10 +111,10 @@ class Ui_MainWindow(object):
         self.editorColumn = QVBoxLayout()
         self.editorColumn.setSpacing(8)
         self.editorColumn.setObjectName(u"editorColumn")
-        self.blockCanvas = BlockCanvasView(self.editorPanel)
-        self.blockCanvas.setObjectName(u"blockCanvas")
+        self.blockEditor = BlockListEditor(self.editorPanel)
+        self.blockEditor.setObjectName(u"blockEditor")
 
-        self.editorColumn.addWidget(self.blockCanvas)
+        self.editorColumn.addWidget(self.blockEditor)
 
         self.editorToolbar = QHBoxLayout()
         self.editorToolbar.setObjectName(u"editorToolbar")
@@ -139,6 +141,11 @@ class Ui_MainWindow(object):
         self.btnRunOnce.setObjectName(u"btnRunOnce")
 
         self.editorToolbar.addWidget(self.btnRunOnce)
+
+        self.btnExportPython = QPushButton(self.editorPanel)
+        self.btnExportPython.setObjectName(u"btnExportPython")
+
+        self.editorToolbar.addWidget(self.btnExportPython)
 
         self.btnSaveScript = QPushButton(self.editorPanel)
         self.btnSaveScript.setObjectName(u"btnSaveScript")
@@ -183,6 +190,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuAction.menuAction())
         self.menuFile.addAction(self.actionImport)
         self.menuFile.addAction(self.actionExport)
+        self.menuFile.addAction(self.actionExportPython)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionQuit)
         self.menuEdit.addAction(self.actionNew)
@@ -207,6 +215,10 @@ class Ui_MainWindow(object):
         self.actionExport.setText(QCoreApplication.translate("MainWindow", u"\u5bfc\u51fa...", None))
 #if QT_CONFIG(shortcut)
         self.actionExport.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Shift+S", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionExportPython.setText(QCoreApplication.translate("MainWindow", u"\u5bfc\u51fa Python \u6587\u4ef6...", None))
+#if QT_CONFIG(shortcut)
+        self.actionExportPython.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Shift+E", None))
 #endif // QT_CONFIG(shortcut)
         self.actionQuit.setText(QCoreApplication.translate("MainWindow", u"\u9000\u51fa", None))
 #if QT_CONFIG(shortcut)
@@ -242,6 +254,7 @@ class Ui_MainWindow(object):
         self.btnCaptureColor.setText(QCoreApplication.translate("MainWindow", u"\U0001f58d \U0000590d\U00005236\U0000989c\U00008272", None))
         self.btnScreenSize.setText(QCoreApplication.translate("MainWindow", u"\U0001f4d0 \U0000590d\U00005236\U00005c3a\U00005bf8", None))
         self.btnRunOnce.setText(QCoreApplication.translate("MainWindow", u"\u8bd5\u8fd0\u884c", None))
+        self.btnExportPython.setText(QCoreApplication.translate("MainWindow", u"\u751f\u6210 .py", None))
         self.btnSaveScript.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))
         self.btnCloseEditor.setText(QCoreApplication.translate("MainWindow", u"\u5173\u95ed", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"\u6587\u4ef6", None))

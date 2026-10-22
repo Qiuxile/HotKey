@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QTimer, Qt, Signal
@@ -22,6 +23,7 @@ from hotkey.core import keymap, storage, validator
 from hotkey.core.blocks import blocks_to_code
 from hotkey.core.hotkey_service import HotkeyService
 from hotkey.core.models import Block, HotKey, IssueLevel
+from hotkey.core.program import render_program
 from hotkey.core.runner import ScriptRunner
 from hotkey.ui.generated.ui_main_window import Ui_MainWindow
 from hotkey.ui.hotkey_model import HotKeyFilterProxy, HotKeyTableModel
@@ -115,6 +117,7 @@ class MainWindow(QMainWindow):
         self.ui.actionDelete.triggered.connect(self._delete_selected)
         self.ui.actionImport.triggered.connect(self._import_config)
         self.ui.actionExport.triggered.connect(self._export_config)
+        self.ui.actionExportPython.triggered.connect(self._export_python)
         self.ui.actionSearch.triggered.connect(self._focus_search)
         self.ui.actionToggleEditor.triggered.connect(self._toggle_editor)
         self.ui.actionStart.triggered.connect(self._start_listening)
@@ -126,13 +129,13 @@ class MainWindow(QMainWindow):
         table.customContextMenuRequested.connect(self._show_context_menu)
 
         self.ui.btnSaveScript.clicked.connect(self._save_blocks)
+        self.ui.btnExportPython.clicked.connect(self._export_python)
         self.ui.btnRunOnce.clicked.connect(self._run_once)
         self.ui.btnCloseEditor.clicked.connect(lambda: self._set_editor_visible(False))
         self.ui.btnCapturePos.clicked.connect(self._capture_coordinate)
         self.ui.btnCaptureColor.clicked.connect(self._capture_color)
         self.ui.btnScreenSize.clicked.connect(self._insert_screen_size)
-        self.ui.blockCanvas.changed.connect(self._on_blocks_changed)
-
+        self.ui.blockEditor.changed.connect(self._on_blocks_changed)
         self._signals.triggered.connect(self._execute_hotkey)
         self._signals.started.connect(self._on_script_started)
         self._signals.finished.connect(self._on_script_finished)
@@ -332,10 +335,10 @@ class MainWindow(QMainWindow):
         self.ui.lblEditing.setText(
             f"操作编辑 · {keymap.keyboard_to_qt(entry.key)}（参数直接填在积木里）"
         )
-        self.ui.blockCanvas.load_blocks(blocks)
+        self.ui.blockEditor.load_blocks(blocks)
         self._blocks_dirty = False
         self._set_editor_visible(True)
-        self.ui.blockCanvas.setFocus()
+        self.ui.blockEditor.setFocus()
 
     def _toggle_editor(self) -> None:
         self._set_editor_visible(self.ui.editorPanel.isHidden())
@@ -363,7 +366,7 @@ class MainWindow(QMainWindow):
         if row is None:
             return
 
-        blocks = self.ui.blockCanvas.blocks()
+        blocks = self.ui.blockEditor.blocks()
         script = blocks_to_code(blocks)
         issues = validator.validate(script)
         errors = [issue for issue in issues if issue.level is IssueLevel.ERROR]
@@ -386,7 +389,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"已保存 {len(blocks)} 个积木", 3000)
 
     def _run_once(self) -> None:
-        script = blocks_to_code(self.ui.blockCanvas.blocks())
+        script = blocks_to_code(self.ui.blockEditor.blocks())
         if not script.strip():
             self.statusBar().showMessage("积木栏是空的", 3000)
             return
@@ -600,6 +603,62 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "导出失败", str(exc))
             return
         self.statusBar().showMessage(f"已导出到 {path}", 5000)
+
+    def _export_python(self) -> None:
+        row = self._model.row_of(self._current_id) if self._current_id else None
+        if row is None:
+            row = self._selected_source_row()
+        if row is None:
+            QMessageBox.information(
+                self, "导出 Python", "请先选中一个热键，或双击打开它的积木。"
+            )
+            return
+
+        entry = self._model.entry(row)
+        blocks = (
+            self.ui.blockEditor.blocks()
+            if self._current_id == entry.id
+            else entry.blocks
+        )
+        if not blocks:
+            QMessageBox.information(self, "导出 Python", "这个热键还没有积木。")
+            return
+
+        source = render_program(blocks)
+        try:
+            compile(source, "<export>", "exec")
+        except SyntaxError as exc:
+            QMessageBox.critical(
+                self,
+                "无法生成",
+                "生成的脚本有语法错误（通常是变量名或参数没填完整）：\n"
+                f"第 {exc.lineno} 行：{exc.msg}",
+            )
+            return
+
+        name = re.sub(r"[^0-9A-Za-z_\-]+", "_", entry.key).strip("_") or "hotkey"
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "导出 Python 文件",
+            str(self._default_dir() / f"{name}.py"),
+            "Python 文件 (*.py);;所有文件 (*)",
+        )
+        if not path:
+            return
+
+        target = Path(path)
+        try:
+            target.write_text(source, encoding="utf-8", newline="\n")
+        except OSError as exc:
+            QMessageBox.critical(self, "导出失败", str(exc))
+            return
+
+        self.statusBar().showMessage(f"已生成 {target}", 8000)
+        QMessageBox.information(
+            self,
+            "已生成",
+            f"已生成 {target.name}。\n\n可以直接运行：\npython \"{target}\"",
+        )
 
     def _save_now(self) -> None:
         self._save_timer.stop()

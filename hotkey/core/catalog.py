@@ -90,7 +90,9 @@ class Snippet:
 
         parts: list[str] = []
         for literal, field, _spec, _conversion in string.Formatter().parse(self.label):
-            parts.append(re.escape(literal))
+            stripped = literal.strip()
+            if stripped:
+                parts.append(re.escape(stripped))
             if field:
                 parts.append(f"(?P<{field}>.*?)")
 
