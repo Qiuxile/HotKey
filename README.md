@@ -294,7 +294,7 @@ HotKey/
 │       ├── recorder.py
 │       ├── theme.py         # 深/浅色调色板与 QSS 渲染
 │       └── theme.qss        # 使用 $变量 的 QSS 模板
-├── tests/                   # pytest + pytest-qt（159 项）
+├── tests/                   # pytest + pytest-qt（160 项）
 ├── tools/build_ui.ps1       # .ui -> generated/ui_*.py
 └── legacy/                  # 旧 Tk 实现（仅参考）
 ```

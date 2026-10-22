@@ -555,8 +555,8 @@ v1/v2 的纯脚本会迁移成一个「空」积木。
   应用图标改成深色圆角 + 终端 `>_` 符号
 - **工具栏上移**：复制坐标/颜色/尺寸、试运行、生成 .py、保存、关闭从积木下方
   移到积木上方，和标签页一起构成顶部工具区
-- **四边缩放**：`QApplication` 事件过滤器在鼠标按下时检测 6px 边缘，调用
-  `windowHandle().startSystemResize()`；保留右下角 `QSizeGrip`
+- **四边缩放**：`QApplication` 事件过滤器在鼠标按下时检测 6px 边缘，进入手动
+  resize 模式（`grabMouse` + 改 `geometry`）；保留右下角 `QSizeGrip`
 - 深色模式积木文字全部走 `$text`，参数输入框走 `$input_bg`，去掉写死的深色文字
 
-`pytest` 159 项通过。
+`pytest` 160 项通过。

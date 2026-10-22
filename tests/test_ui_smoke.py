@@ -51,8 +51,8 @@ def test_titlebar_has_menu_and_toolbar_is_above_blocks(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
     window.show()
 
-    assert window.ui.menubar.parent() is window.title_bar
-    assert window.ui.menubar.isVisible()
+    assert len(window.title_bar.menu_bar.actions()) == 3
+    assert window.title_bar.menu_bar.isVisible()
     window._set_editor_visible(True)
     qtbot.wait(10)
     toolbar_y = window.ui.btnCapturePos.mapTo(window, QPoint(0, 0)).y()
@@ -79,6 +79,19 @@ def test_resize_edges(qtbot, tmp_path):
         window._cursor_for_edges(Qt.Edge.LeftEdge)
         == Qt.CursorShape.SizeHorCursor
     )
+
+
+def test_manual_resize_geometry(qtbot, tmp_path):
+    window = make_window(qtbot, tmp_path)
+    window.setGeometry(100, 100, 800, 600)
+    window._resize_geometry = window.geometry()
+    window._resize_origin = QPoint(900, 700)
+    window._resize_edges = Qt.Edge.RightEdge | Qt.Edge.BottomEdge
+
+    window._apply_resize(QPoint(950, 760))
+
+    assert window.geometry().width() == 850
+    assert window.geometry().height() == 660
 
 
 def test_script_roundtrip_through_window(qtbot, tmp_path):

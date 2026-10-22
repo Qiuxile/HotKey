@@ -47,6 +47,15 @@ class TitleBar(QFrame):
         layout.addLayout(self._menu_row)
         layout.addStretch(1)
 
+        self.menu_bar = QMenuBar(self)
+        self.menu_bar.setObjectName("titleMenuBar")
+        self.menu_bar.setNativeMenuBar(False)
+        self.menu_bar.setFixedHeight(28)
+        self.menu_bar.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
+        )
+        self._menu_row.addWidget(self.menu_bar)
+
         self.theme_button = QToolButton(self)
         self.theme_button.setObjectName("titleTheme")
         self.theme_button.setText("深色")
@@ -91,19 +100,6 @@ class TitleBar(QFrame):
         button.setToolTip(tooltip)
         button.setAutoRaise(True)
         return button
-
-    # ---------------------------------------------------------------- 菜单
-
-    def attach_menu(self, menu_bar: QMenuBar) -> None:
-        menu_bar.setParent(self)
-        menu_bar.setNativeMenuBar(False)
-        menu_bar.setFixedHeight(28)
-        menu_bar.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
-        )
-        self._menu_row.addWidget(menu_bar)
-        menu_bar.show()
-        self._menu_row.activate()
 
     # ---------------------------------------------------------------- 状态
 
