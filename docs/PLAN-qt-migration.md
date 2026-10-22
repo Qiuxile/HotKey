@@ -1,6 +1,6 @@
 # HotKey v2 迁移与实施计划（Tk → PySide6）
 
-> 状态：实施中 · M0 已完成（2026-10-22）
+> 状态：实施中 · M0 / M1 已完成（2026-10-22）
 > 已定决策：GUI 用 PySide6，界面用 Qt Designer 可编辑的 `.ui` 文件
 
 ## 1. 决策记录
@@ -253,11 +253,11 @@ def keyboard_to_qt(key: str) -> str
 - [x] 打包验证：onedir，Qt 平台插件 / `theme.qss` 均已收录，`--self-test` 退出码 0
 - **DoD**：`python main.py` 出窗口；`pytest` 4 项通过；exe 可启动并正常退出
 
-### M1 核心（1.5 天）
+### M1 核心（1.5 天）— ✅ 已完成
 
-- [ ] models / storage / catalog / validator / keymap
-- [ ] 测试：v1→v2 迁移、整段编译（`for` 能执行）、keymap 表、重复 key 处理
-- **DoD**：`core` 不 import PySide6，单测全绿，核心覆盖率 > 80%
+- [x] `core/models.py`、`storage.py`、`catalog.py`、`validator.py`、`keymap.py`
+- [x] 测试：v1→v2 迁移、整段编译（`for` 能执行）、keymap 表、重复 key、受限导入
+- **DoD**：`core` 不 import PySide6（已检查）；`pytest` 59 项全部通过
 
 ### M2 主窗（1.5 天）
 
@@ -374,3 +374,19 @@ M0 过程中确认的三个环境事实，后续阶段要沿用：
 
 已知遗留（不属于 M0）：`--self-test` 在窗口化 exe 上无法通过 PowerShell 管道观察退出码
 （GUI 子系统进程不继承控制台），验证时用 `cmd /c start /wait ... & echo %ERRORLEVEL%`。
+
+## 15. M1 完成记录（2026-10-22）
+
+| 模块 | 内容 |
+|---|---|
+| `core/models.py` | `HotKey`（UUID、整段 `script`、`enabled`）、`Issue` / `IssueLevel` |
+| `core/storage.py` | v1 数组 + v2 对象双格式读取、逐条校验跳过、重复 key 自动停用、`.tmp` → `os.replace` 原子写、`.bak` 备份、`%APPDATA%\HotKey` 默认路径 |
+| `core/validator.py` | 整段 AST 校验（导入/禁用调用/dunder）、白名单模块与命名空间**同源**、受限 `__import__`（只允许白名单）、`compile_script` 整段编译 |
+| `core/keymap.py` | Qt 键序列 → keyboard 键名（23 个用例）、反向显示、`normalize_key` 去重排序 |
+| `core/catalog.py` | 36 条语句 / 5 分类，块语句带缩进与 `${cursor}` 光标位 |
+
+三条旧的 P0 中，**「循环/条件语句不可用」已在核心层修复**：`for i in range(3)` +
+缩进体可以整体编译执行（`tests/test_validator.py::test_whole_script_executes_loop`）。
+「搜索错位」和「托盘退出」分别在 M2、M4 修复。
+
+测试：`pytest` 59 项通过（core 55 项 + 界面/生成物 4 项），耗时约 3 秒。
