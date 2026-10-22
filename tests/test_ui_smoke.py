@@ -52,7 +52,7 @@ def test_script_roundtrip_through_window(qtbot, tmp_path):
     from hotkey.core.models import Block, HotKey
 
     storage.save(
-        tmp_path / "demo.json",
+        tmp_path / "demo.hk",
         [
             HotKey(
                 key="ctrl+1",

@@ -10,7 +10,7 @@ from hotkey.ui.main_window import MainWindow
 
 
 def make_script(tmp_path, name, key="", blocks=None):
-    path = tmp_path / f"{name}.json"
+    path = tmp_path / f"{name}.hk"
     storage.save(
         path,
         [

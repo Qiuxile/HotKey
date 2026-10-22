@@ -254,12 +254,12 @@ class MainWindow(QMainWindow):
         return self._model.entry(row) if row is not None else None
 
     def _new_script(self) -> None:
-        default = self._library.directory / "新脚本.json"
+        default = self._library.directory / "新脚本.hk"
         path, _ = QFileDialog.getSaveFileName(
             self,
             "新建脚本",
             str(default),
-            "JSON 脚本 (*.json);;所有文件 (*)",
+            "HotKey 脚本 (*.hk);;所有文件 (*)",
         )
         if not path:
             return
@@ -272,8 +272,8 @@ class MainWindow(QMainWindow):
                 f"脚本必须直接保存在脚本目录里：\n{self._library.directory}",
             )
             return
-        if target.suffix.lower() != ".json":
-            target = target.with_suffix(".json")
+        if target.suffix.lower() != ".hk":
+            target = target.with_suffix(".hk")
 
         for entry in self._model.entries():
             if entry.path is not None and entry.path.resolve() == target.resolve():
@@ -305,7 +305,7 @@ class MainWindow(QMainWindow):
             self,
             "导入脚本",
             str(self._library.directory),
-            "JSON 脚本 (*.json);;所有文件 (*)",
+            "HotKey 脚本 (*.hk *.json);;所有文件 (*)",
         )
         if not path:
             return

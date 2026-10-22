@@ -8,7 +8,7 @@
 
 ## 功能
 
-- **一个脚本一个文件**：每个脚本是 `jsons/` 里的独立 JSON，互不影响
+- **一个脚本一个文件**：每个脚本是 `jsons/` 里的独立 `.hk` 文件（内容是 JSON），互不影响
 - **脚本库列表**：左侧列出全部脚本、热键和启用状态，双击在右侧打开
 - **多标签编辑**：右侧可同时打开多个脚本，标签切换、关闭、拖动排序，带 `*` 表示未保存
 - **热键可选**：脚本可以没有热键，只手动运行或导出；`F5` 注册所有有热键的启用脚本
@@ -172,11 +172,11 @@ python ctrl_alt_f10.py
 
 ## 脚本文件
 
-**一个热键一个脚本文件，一个脚本一个 JSON。**
+**一个热键一个脚本文件，一个脚本一个 `.hk` 文件。**
 
-默认目录：程序旁边的 `jsons/`。如果那里不可写（例如装在 Program Files），会回退到配置目录下的 `jsons/`，日志在配置目录的 `logs/hotkey.log`。
+默认目录：程序旁边的 `jsons/`（例如 `jsons/填写表单.hk`）。如果那里不可写（例如装在 Program Files），会回退到配置目录下的 `jsons/`，日志在配置目录的 `logs/hotkey.log`。
 
-单个脚本文件的内容（内部沿用 v5 文档，数组里只有一个元素）：
+`.hk` 只是自定义后缀，内容仍然是 JSON。单个脚本文件的内容（内部沿用 v5 文档，数组里只有一个元素）：
 
 ```json
 {
@@ -200,6 +200,7 @@ python ctrl_alt_f10.py
 - 文件名就是脚本名；左侧列表显示文件名、热键和启用状态
 - 主题、打开的标签等设置保存在配置目录的 `settings.ini`
 - 旧版 `hotkeys.json`（一个文件多个热键）会在首次启动时自动拆成单脚本文件，旧文件改名为 `hotkeys.json.migrated`
+- 旧版 `.json` 脚本会自动改名为 `.hk`；导入时仍然兼容 `.json`
 
 ## 快捷键
 
@@ -268,7 +269,7 @@ HotKey/
 ├── main.py                  # 入口（--self-test）
 ├── main_tk.py               # 旧版 Tk 入口
 ├── HotKey.spec              # PyInstaller onedir 配置
-├── jsons/                   # 脚本库：一个脚本一个 JSON
+├── jsons/                   # 脚本库：一个脚本一个 .hk 文件（JSON 内容）
 ├── hotkey/
 │   ├── app.py               # 启动、日志、单实例
 │   ├── core/                # 不依赖 Qt，可独立测试
@@ -292,7 +293,7 @@ HotKey/
 │       ├── recorder.py
 │       ├── theme.py         # 深/浅色调色板与 QSS 渲染
 │       └── theme.qss        # 使用 $变量 的 QSS 模板
-├── tests/                   # pytest + pytest-qt（156 项）
+├── tests/                   # pytest + pytest-qt（157 项）
 ├── tools/build_ui.ps1       # .ui -> generated/ui_*.py
 └── legacy/                  # 旧 Tk 实现（仅参考）
 ```

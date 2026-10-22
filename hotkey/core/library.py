@@ -10,6 +10,8 @@ from hotkey.core import storage
 from hotkey.core.models import HotKey
 
 INVALID_NAME = re.compile(r'[<>:"/\\|?*\x00-\x1f]+')
+SCRIPT_SUFFIX = ".hk"
+LEGACY_SUFFIX = ".json"
 
 
 def app_root() -> Path:
@@ -51,14 +53,13 @@ class ScriptLibrary:
     def load(self) -> list[HotKey]:
         self.warnings = []
         self.directory.mkdir(parents=True, exist_ok=True)
+        self._migrate_extensions()
         self._migrate_legacy()
 
         scripts: list[HotKey] = []
         seen_keys: dict[str, HotKey] = {}
 
-        for path in sorted(self.directory.glob("*.json")):
-            if path.name == "hotkeys.json":
-                continue
+        for path in self._script_paths():
             try:
                 entries, warnings = storage.load_document(
                     path, allow_empty_key=True
@@ -94,6 +95,38 @@ class ScriptLibrary:
         scripts.sort(key=lambda script: script.name.lower())
         return scripts
 
+    def _script_paths(self) -> list[Path]:
+        paths = [
+            path
+            for path in self.directory.glob(f"*{SCRIPT_SUFFIX}")
+            if path.is_file()
+        ]
+        # 兼容改名失败或手工放进来的旧 .json 脚本；hotkeys.json 是旧配置
+        paths.extend(
+            path
+            for path in self.directory.glob(f"*{LEGACY_SUFFIX}")
+            if path.is_file() and path.name != "hotkeys.json"
+        )
+        return sorted(paths)
+
+    def _migrate_extensions(self) -> None:
+        renamed = 0
+        for path in sorted(self.directory.glob(f"*{LEGACY_SUFFIX}")):
+            if path.name == "hotkeys.json":
+                continue
+            target = path.with_suffix(SCRIPT_SUFFIX)
+            if target.exists():
+                continue
+            try:
+                path.replace(target)
+                renamed += 1
+            except OSError:
+                continue
+        if renamed:
+            self.warnings.append(
+                f"已把 {renamed} 个脚本从 .json 改名为 {SCRIPT_SUFFIX}"
+            )
+
     def _migrate_legacy(self) -> None:
         candidates = [self.directory / "hotkeys.json"]
         try:
@@ -107,9 +140,7 @@ class ScriptLibrary:
             return
 
         existing_ids: set[str] = set()
-        for path in self.directory.glob("*.json"):
-            if path.name == "hotkeys.json":
-                continue
+        for path in self._script_paths():
             try:
                 entries, _warnings = storage.load_document(
                     path, allow_empty_key=True
@@ -151,10 +182,10 @@ class ScriptLibrary:
 
     def unique_path(self, name: str) -> Path:
         stem = safe_stem(name)
-        candidate = self.directory / f"{stem}.json"
+        candidate = self.directory / f"{stem}{SCRIPT_SUFFIX}"
         index = 2
         while candidate.exists():
-            candidate = self.directory / f"{stem}-{index}.json"
+            candidate = self.directory / f"{stem}-{index}{SCRIPT_SUFFIX}"
             index += 1
         return candidate
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QRegularExpression, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPen, QRegularExpressionValidator
+from PySide6.QtGui import QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -65,9 +65,7 @@ class BodyArea(QFrame):
 
         self.setStyleSheet(
             "QFrame#blockBody {"
-            "  background: rgba(255, 255, 255, 0.55);"
             f" border-left: 3px solid {owner.accent};"
-            " border-radius: 4px;"
             "}"
         )
 
@@ -157,6 +155,11 @@ class BlockWidget(QFrame):
         self.setObjectName("blockWidget")
         self.setMinimumWidth(320)
         self.setAcceptDrops(True)
+        self.setStyleSheet(
+            "QFrame#blockWidget {"
+            f" border-left: 4px solid {self.accent};"
+            "}"
+        )
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -252,7 +255,6 @@ class BlockWidget(QFrame):
                 self._fields[segment.name] = edit
             else:
                 label = QLabel(segment, self.header)
-                label.setStyleSheet("background: transparent; color: #1f2937;")
                 layout.addWidget(label)
 
         if not has_growing_field:
@@ -314,19 +316,6 @@ class BlockWidget(QFrame):
         )
         self.editor.add_snippet(payload, after=self)
         event.acceptProposedAction()
-
-    # ---------------------------------------------------------------- 绘制
-
-    def paintEvent(self, event) -> None:  # noqa: N802
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        color = self.category.color if self.category else "#f1f5f9"
-        painter.setBrush(QColor(color))
-        pen = QPen(QColor(self.accent))
-        pen.setWidth(2)
-        painter.setPen(pen)
-        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 8, 8)
-        painter.end()
 
 
 class _DropHost(QWidget):
