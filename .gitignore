@@ -27,3 +27,6 @@ jsons/.hotkey/
 
 # 本地 agent 说明（不随仓库分发）
 CLAUDE.md
+
+# 脚本自动备份
+jsons/*.bak
