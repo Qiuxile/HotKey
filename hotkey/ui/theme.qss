@@ -57,6 +57,24 @@ QToolButton#titleClose:hover {
     background-color: $danger;
 }
 
+QToolButton#titleMenuButton {
+    background: transparent;
+    color: $text;
+    border: 0;
+    border-radius: 4px;
+    font-size: 10pt;
+    padding: 0 10px;
+}
+
+QToolButton#titleMenuButton:hover {
+    background-color: $surface_alt;
+}
+
+QToolButton#titleMenuButton::menu-indicator {
+    image: none;
+    width: 0;
+}
+
 QMenuBar {
     background: transparent;
     color: $text;

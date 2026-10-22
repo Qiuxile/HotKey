@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
-    QMenuBar,
+    QMenu,
     QSizePolicy,
     QStyle,
     QToolButton,
@@ -43,18 +43,11 @@ class TitleBar(QFrame):
 
         self._menu_row = QHBoxLayout()
         self._menu_row.setContentsMargins(0, 0, 0, 0)
-        self._menu_row.setSpacing(0)
+        self._menu_row.setSpacing(2)
         layout.addLayout(self._menu_row)
         layout.addStretch(1)
 
-        self.menu_bar = QMenuBar(self)
-        self.menu_bar.setObjectName("titleMenuBar")
-        self.menu_bar.setNativeMenuBar(False)
-        self.menu_bar.setFixedHeight(28)
-        self.menu_bar.setSizePolicy(
-            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
-        )
-        self._menu_row.addWidget(self.menu_bar)
+        self.menu_buttons: list[QToolButton] = []
 
         self.theme_button = QToolButton(self)
         self.theme_button.setObjectName("titleTheme")
@@ -100,6 +93,29 @@ class TitleBar(QFrame):
         button.setToolTip(tooltip)
         button.setAutoRaise(True)
         return button
+
+    # ---------------------------------------------------------------- 菜单
+
+    def attach_menus(self, menus: list[QMenu]) -> None:
+        for menu in menus:
+            # 先脱离旧 QMenuBar，避免它被销毁时把菜单一起带走
+            menu.setParent(self)
+            button = QToolButton(self)
+            button.setObjectName("titleMenuButton")
+            button.setText(menu.title())
+            button.setMenu(menu)
+            button.setPopupMode(
+                QToolButton.ToolButtonPopupMode.InstantPopup
+            )
+            button.setToolButtonStyle(
+                Qt.ToolButtonStyle.ToolButtonTextOnly
+            )
+            button.setFixedHeight(28)
+            button.setAutoRaise(True)
+            self._menu_row.addWidget(button)
+            self.menu_buttons.append(button)
+            # QMenu 作为子控件时可能被自动显示，压住标题栏；保持弹出式隐藏
+            menu.hide()
 
     # ---------------------------------------------------------------- 状态
 

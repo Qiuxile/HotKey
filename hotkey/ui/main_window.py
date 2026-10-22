@@ -155,12 +155,12 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.title_bar)
         self.setMenuWidget(chrome)
 
-        # 不用 QMainWindow 自带的菜单栏：把菜单搬进标题栏里的独立 QMenuBar
-        for menu in (self.ui.menuFile, self.ui.menuEdit, self.ui.menuAction):
-            self.title_bar.menu_bar.addMenu(menu)
+        # 不用 QMainWindow 自带的菜单栏：每个菜单放进标题栏的按钮
+        self.title_bar.attach_menus(
+            [self.ui.menuFile, self.ui.menuEdit, self.ui.menuAction]
+        )
         self.ui.menubar.hide()
         self.ui.menubar.setParent(None)
-        self.title_bar.menu_bar.show()
 
         self.ui.statusbar.addPermanentWidget(QSizeGrip(self), 0)
         self.resize(1120, WINDOW_HEIGHT)

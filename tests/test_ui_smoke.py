@@ -51,8 +51,12 @@ def test_titlebar_has_menu_and_toolbar_is_above_blocks(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
     window.show()
 
-    assert len(window.title_bar.menu_bar.actions()) == 3
-    assert window.title_bar.menu_bar.isVisible()
+    assert len(window.title_bar.menu_buttons) == 3
+    assert all(button.isVisible() for button in window.title_bar.menu_buttons)
+    window.title_bar.menu_buttons[0].click()
+    qtbot.wait(10)
+    assert window.ui.menuFile.isVisible()
+    window.ui.menuFile.hide()
     window._set_editor_visible(True)
     qtbot.wait(10)
     toolbar_y = window.ui.btnCapturePos.mapTo(window, QPoint(0, 0)).y()
