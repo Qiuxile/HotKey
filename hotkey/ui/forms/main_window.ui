@@ -152,28 +152,28 @@
              <number>8</number>
             </property>
             <item>
-             <widget class="ScriptEditor" name="scriptEditor"/>
+             <widget class="BlockTree" name="blockTree"/>
             </item>
             <item>
              <layout class="QHBoxLayout" name="editorToolbar">
               <item>
                <widget class="QPushButton" name="btnCapturePos">
                 <property name="text">
-                 <string>🎯 捕获坐标</string>
+                 <string>🎯 复制坐标</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="btnCaptureColor">
                 <property name="text">
-                 <string>🖍 捕获颜色</string>
+                 <string>🖍 复制颜色</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="btnScreenSize">
                 <property name="text">
-                 <string>📐 屏幕尺寸</string>
+                 <string>📐 复制尺寸</string>
                 </property>
                </widget>
               </item>
@@ -341,9 +341,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ScriptEditor</class>
-   <extends>QPlainTextEdit</extends>
-   <header>hotkey.ui.widgets.script_editor</header>
+   <class>BlockTree</class>
+   <extends>QTreeWidget</extends>
+   <header>hotkey.ui.widgets.block_tree</header>
   </customwidget>
   <customwidget>
    <class>StatementTree</class>

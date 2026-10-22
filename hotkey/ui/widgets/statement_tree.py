@@ -1,4 +1,4 @@
-"""操作面板树：分类 + 可拖拽语句。"""
+"""操作面板树：分类 + 可拖拽积木 + 顶部「空」块。"""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QAbstractItemView, QTreeWidget, QTreeWidgetItem
 from hotkey.core import catalog
 
 SNIPPET_MIME = "application/x-hotkey-snippet"
+EMPTY_KIND = "empty"
 
 
 class StatementTree(QTreeWidget):
@@ -22,6 +23,11 @@ class StatementTree(QTreeWidget):
         self._populate()
 
     def _populate(self) -> None:
+        empty_item = QTreeWidgetItem(["空"])
+        empty_item.setData(0, Qt.ItemDataRole.UserRole, EMPTY_KIND)
+        empty_item.setToolTip(0, "拖入右侧后自己填写代码")
+        self.addTopLevelItem(empty_item)
+
         grouped = catalog.snippets_by_category()
         for category, label in catalog.CATEGORIES:
             top = QTreeWidgetItem([label])
@@ -29,16 +35,14 @@ class StatementTree(QTreeWidget):
             for snippet in grouped.get(category, []):
                 child = QTreeWidgetItem([snippet.label])
                 child.setData(0, Qt.ItemDataRole.UserRole, snippet.id)
-                child.setToolTip(
-                    0, snippet.template.replace(catalog.CURSOR_MARKER, "")
-                )
+                child.setToolTip(0, snippet.blank_text())
                 top.addChild(child)
             self.addTopLevelItem(top)
             top.setExpanded(True)
 
     def startDrag(self, supported_actions) -> None:  # noqa: N802 - Qt 接口
         item = self.currentItem()
-        if item is None or item.parent() is None:
+        if item is None:
             return
         snippet_id = item.data(0, Qt.ItemDataRole.UserRole)
         if not snippet_id:

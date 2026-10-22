@@ -8,10 +8,11 @@ import shutil
 from pathlib import Path
 from typing import Any, Iterable
 
+from hotkey.core.blocks import blocks_to_code
 from hotkey.core.keymap import normalize_key
-from hotkey.core.models import HotKey, new_id
+from hotkey.core.models import Block, HotKey, new_id
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 CONFIG_DIR_NAME = "HotKey"
 FILE_NAME = "hotkeys.json"
 
@@ -131,6 +132,26 @@ def parse_document(data: Any) -> tuple[list[HotKey], list[str]]:
         script, from_v1 = _coerce_script(entry)
         migrated += int(from_v1)
 
+        blocks: list[Block] = []
+        has_blocks_key = "blocks" in entry
+        raw_blocks = entry.get("blocks")
+        if isinstance(raw_blocks, list):
+            for block_index, block_data in enumerate(raw_blocks):
+                try:
+                    blocks.append(Block.from_dict(block_data))
+                except ValueError:
+                    warnings.append(
+                        f"第{index + 1}条的第{block_index + 1}个积木格式错误，已忽略"
+                    )
+        elif raw_blocks is not None:
+            warnings.append(f"第{index + 1}条的 blocks 不是数组，已忽略")
+
+        if blocks:
+            script = blocks_to_code(blocks)
+        elif script and not has_blocks_key:
+            # v1/v2 只有脚本文本：放进一个空白积木里，用户仍然可以继续拖拽
+            blocks = [Block(kind="empty", text=script)]
+
         raw_id = entry.get("id")
         entry_id = raw_id if isinstance(raw_id, str) and raw_id else new_id()
 
@@ -144,6 +165,7 @@ def parse_document(data: Any) -> tuple[list[HotKey], list[str]]:
             script=script,
             enabled=enabled,
             id=entry_id,
+            blocks=blocks,
         )
 
         if key in seen:
@@ -188,10 +210,15 @@ def load(path: Path | None = None) -> list[HotKey]:
 def save(path: Path, hotkeys: Iterable[HotKey]) -> None:
     """原子写入：先写 .tmp，再替换，并保留一份 .bak。"""
     target = Path(path)
-    payload = {
-        "version": SCHEMA_VERSION,
-        "hotkeys": [hotkey.to_dict() for hotkey in hotkeys],
-    }
+    entries = []
+    for hotkey in hotkeys:
+        data = hotkey.to_dict()
+        # 积木是唯一事实来源，脚本字段始终由积木重新生成
+        if hotkey.blocks:
+            data["script"] = blocks_to_code(hotkey.blocks)
+        entries.append(data)
+
+    payload = {"version": SCHEMA_VERSION, "hotkeys": entries}
 
     try:
         target.parent.mkdir(parents=True, exist_ok=True)

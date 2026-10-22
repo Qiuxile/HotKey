@@ -19,8 +19,9 @@ from PySide6.QtWidgets import (
 )
 
 from hotkey.core import keymap, storage, validator
+from hotkey.core.blocks import blocks_to_code
 from hotkey.core.hotkey_service import HotkeyService
-from hotkey.core.models import HotKey, IssueLevel
+from hotkey.core.models import Block, HotKey, IssueLevel
 from hotkey.core.runner import ScriptRunner
 from hotkey.ui.generated.ui_main_window import Ui_MainWindow
 from hotkey.ui.hotkey_model import HotKeyFilterProxy, HotKeyTableModel
@@ -123,12 +124,16 @@ class MainWindow(QMainWindow):
         table.doubleClicked.connect(self._open_editor_from_index)
         table.customContextMenuRequested.connect(self._show_context_menu)
 
-        self.ui.btnSaveScript.clicked.connect(self._save_script)
+        self.ui.btnSaveScript.clicked.connect(self._save_blocks)
         self.ui.btnRunOnce.clicked.connect(self._run_once)
         self.ui.btnCloseEditor.clicked.connect(lambda: self._set_editor_visible(False))
         self.ui.btnCapturePos.clicked.connect(self._capture_coordinate)
         self.ui.btnCaptureColor.clicked.connect(self._capture_color)
         self.ui.btnScreenSize.clicked.connect(self._insert_screen_size)
+        self.ui.blockTree.changed.connect(self._on_blocks_changed)
+        self.ui.blockTree.message.connect(
+            lambda text: self.statusBar().showMessage(text, 5000)
+        )
 
         self._signals.triggered.connect(self._execute_hotkey)
         self._signals.started.connect(self._on_script_started)
@@ -321,10 +326,17 @@ class MainWindow(QMainWindow):
             return
         entry = self._model.entry(row)
         self._current_id = hotkey_id
-        self.ui.lblEditing.setText(f"操作编辑 · {keymap.keyboard_to_qt(entry.key)}")
-        self.ui.scriptEditor.setPlainText(entry.script)
+
+        blocks = entry.blocks
+        if not blocks and entry.script.strip():
+            blocks = [Block(kind="empty", text=entry.script)]
+
+        self.ui.lblEditing.setText(
+            f"操作编辑 · {keymap.keyboard_to_qt(entry.key)} · 空格编辑所选积木"
+        )
+        self.ui.blockTree.load_blocks(blocks)
         self._set_editor_visible(True)
-        self.ui.scriptEditor.setFocus()
+        self.ui.blockTree.setFocus()
 
     def _toggle_editor(self) -> None:
         self._set_editor_visible(self.ui.editorPanel.isHidden())
@@ -339,14 +351,18 @@ class MainWindow(QMainWindow):
             self._current_id = None
             self.resize(NARROW_WIDTH, WINDOW_HEIGHT)
 
-    def _save_script(self) -> None:
+    def _on_blocks_changed(self) -> None:
+        self.statusBar().showMessage("积木已修改，点「保存」写入热键", 3000)
+
+    def _save_blocks(self) -> None:
         if self._current_id is None:
             return
         row = self._model.row_of(self._current_id)
         if row is None:
             return
 
-        script = self.ui.scriptEditor.toPlainText().replace("\r\n", "\n").rstrip()
+        blocks = self.ui.blockTree.blocks()
+        script = blocks_to_code(blocks)
         issues = validator.validate(script)
         errors = [issue for issue in issues if issue.level is IssueLevel.ERROR]
         if errors:
@@ -354,28 +370,32 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(
                 self,
                 "无法保存",
-                "脚本存在问题，已阻止保存：\n\n" + detail,
+                "积木组合出的脚本有问题（通常是参数没填）：\n\n" + detail,
             )
             return
 
         entry = self._model.entry(row)
+        entry.blocks = blocks
         entry.script = script
         self._model.touch(row)
         self._schedule_save()
         self._reload_service()
-        self.statusBar().showMessage("代码已保存", 3000)
+        self.statusBar().showMessage(f"已保存 {len(blocks)} 个积木", 3000)
 
     def _run_once(self) -> None:
-        script = self.ui.scriptEditor.toPlainText().rstrip()
+        script = blocks_to_code(self.ui.blockTree.blocks())
         if not script.strip():
-            self.statusBar().showMessage("编辑器是空的", 3000)
+            self.statusBar().showMessage("积木栏是空的", 3000)
             return
         self._runner.submit(PREVIEW_ID, script)
         self.statusBar().showMessage("试运行中…", 3000)
 
-    def _insert_text(self, text: str) -> None:
-        self.ui.scriptEditor.insertPlainText(text)
-        self.ui.scriptEditor.setFocus()
+    def _copy_value(self, text: str, label: str) -> None:
+        QApplication.clipboard().setText(text)
+        self.statusBar().showMessage(
+            f"{label} {text} 已复制；选中积木按空格编辑，再粘贴进去",
+            8000,
+        )
 
     def _capture_coordinate(self) -> None:
         self.statusBar().showMessage("3 秒后捕获鼠标坐标，请把鼠标移到目标位置…", 3500)
@@ -390,7 +410,7 @@ class MainWindow(QMainWindow):
             logger.warning("捕获坐标失败: %s", exc)
             self.statusBar().showMessage("捕获失败：需要安装 pyautogui", 5000)
             return
-        self._insert_text(f"{x}, {y}")
+        self._copy_value(f"{x}, {y}", "坐标")
 
     def _capture_color(self) -> None:
         self.statusBar().showMessage("3 秒后捕获像素颜色，请把鼠标移到目标位置…", 3500)
@@ -406,7 +426,7 @@ class MainWindow(QMainWindow):
             logger.warning("捕获颜色失败: %s", exc)
             self.statusBar().showMessage("捕获失败：需要安装 pyautogui", 5000)
             return
-        self._insert_text(f"({r}, {g}, {b})")
+        self._copy_value(f"({r}, {g}, {b})", "颜色")
 
     def _insert_screen_size(self) -> None:
         try:
@@ -415,7 +435,7 @@ class MainWindow(QMainWindow):
             width, height = pyautogui.size()
         except Exception:  # noqa: BLE001
             width, height = 1920, 1080
-        self._insert_text(f"{width}, {height}")
+        self._copy_value(f"{width}, {height}", "屏幕尺寸")
 
     # ---------------------------------------------------------------- 监听
 

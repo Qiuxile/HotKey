@@ -1,6 +1,9 @@
-"""core/catalog 的单元测试：数量、模板可编译性、块语句光标位置。"""
+"""积木目录：中文模板、参数解析、代码生成。"""
 
-from hotkey.core import catalog
+import pytest
+
+from hotkey.core import blocks, catalog
+from hotkey.core.models import Block
 
 
 def test_catalog_shape():
@@ -15,32 +18,72 @@ def test_every_snippet_belongs_to_known_category():
     assert all(snippet.category in known for snippet in catalog.SNIPPETS)
 
 
-def test_non_block_templates_compile():
-    for snippet in catalog.SNIPPETS:
-        if snippet.block:
-            continue
-        text, _ = snippet.render()
-        compile(text, f"<{snippet.id}>", "exec")
+def test_blank_text_leaves_parameters_empty():
+    snippet = catalog.snippet("mouse_move_to")
+    assert snippet.blank_text() == "移动鼠标到（, ）"
+    assert snippet.parse(snippet.blank_text()) == {"x": "", "y": ""}
 
 
-def test_block_snippets_render_indent_and_cursor():
-    for snippet in catalog.SNIPPETS:
-        if not snippet.block:
-            continue
-        text, offset = snippet.render()
-        assert text.rstrip().endswith(":")
-        assert text.endswith(catalog.INDENT)
-        assert offset == len(text)
-        assert "${" not in text
+def test_parameter_parsing_and_code_generation():
+    snippet = catalog.snippet("mouse_move_to")
+    text = "移动鼠标到（800, 600）"
+
+    assert snippet.parse(text) == {"x": "800", "y": "600"}
+    assert snippet.code_for_text(text) == "pyautogui.moveTo(800, 600)"
 
 
-def test_grouped_by_category_covers_everything():
-    grouped = catalog.snippets_by_category()
-    counted = sum(len(items) for items in grouped.values())
-    assert counted == len(catalog.SNIPPETS)
-    assert list(grouped) == [category for category, _ in catalog.CATEGORIES]
+def test_quoted_parameters_are_escaped():
+    snippet = catalog.snippet("dialog_alert")
+    code = snippet.code_for_text("弹出提示：他说'你好'")
+    assert code == "pyautogui.alert(\"他说'你好'\")"
 
 
-def test_lookup_helpers():
-    assert catalog.snippet("flow_for_3").block is True
-    assert catalog.category_label("flow") == "⏱️ 流程控制"
+def test_fixed_snippet_only_accepts_its_own_label():
+    snippet = catalog.snippet("mouse_click")
+    assert snippet.parse("单击鼠标左键") == {}
+    assert snippet.parse("改成别的") is None
+    assert snippet.code_for_text("单击鼠标左键") == "pyautogui.click()"
+
+
+def test_unknown_parameter_text_is_rejected():
+    snippet = catalog.snippet("mouse_move_to")
+    assert snippet.parse("移动鼠标到 800, 600") is None
+
+
+def test_block_snippets():
+    for_id = "flow_for_3"
+    assert catalog.is_container(for_id)
+    assert not catalog.is_container("mouse_click")
+    assert not catalog.is_container("empty")
+
+
+def test_blocks_to_code_nests_children():
+    tree = [
+        catalog.snippet("mouse_click"),
+    ]
+    assert tree[0].code_for_text(tree[0].blank_text()) == "pyautogui.click()"
+
+    code = blocks.blocks_to_code(
+        [
+            Block("flow_for_3", "重复执行 3 次", [
+                Block("mouse_click", "单击鼠标左键"),
+            ]),
+            Block("empty", "x = 1"),
+        ]
+    )
+    assert "for i in range(3):" in code
+    assert "    pyautogui.click()" in code
+    assert code.endswith("x = 1")
+
+
+def test_empty_block_without_code_is_ignored():
+    assert blocks.blocks_to_code([Block("empty", "空")]) == ""
+    assert blocks.blocks_to_code([Block("empty", "")]) == ""
+
+
+@pytest.mark.parametrize("snippet", catalog.SNIPPETS, ids=lambda s: s.id)
+def test_templates_are_consistent(snippet):
+    text = snippet.blank_text()
+    assert snippet.parse(text) is not None
+    if not snippet.fields():
+        assert snippet.code_for_text(text)

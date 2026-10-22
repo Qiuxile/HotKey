@@ -34,11 +34,48 @@ def new_id() -> str:
 
 
 @dataclass
+class Block:
+    """右侧积木栏里的一块。
+
+    ``kind`` 是 ``catalog.Snippet.id``；空白积木用 ``"empty"``，
+    此时 ``text`` 就是用户自己写的 Python 代码。
+    """
+
+    kind: str
+    text: str = ""
+    children: list["Block"] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "kind": self.kind,
+            "text": self.text,
+            "children": [child.to_dict() for child in self.children],
+        }
+
+    @classmethod
+    def from_dict(cls, data: Any) -> "Block":
+        if not isinstance(data, dict):
+            raise ValueError("block 必须是对象")
+        kind = data.get("kind")
+        text = data.get("text", "")
+        if not isinstance(kind, str) or not kind:
+            raise ValueError("block.kind 无效")
+        if not isinstance(text, str):
+            raise ValueError("block.text 无效")
+
+        children_data = data.get("children", [])
+        if not isinstance(children_data, list):
+            raise ValueError("block.children 必须是数组")
+        children = [cls.from_dict(child) for child in children_data]
+        return cls(kind=kind, text=text, children=children)
+
+
+@dataclass
 class HotKey:
     """一条热键配置。
 
-    ``script`` 是整段脚本（不再是按行拆分的列表），这样 ``for`` / ``if``
-    这类多行结构才能被正确编译和执行。
+    ``blocks`` 是右侧的积木结构，``script`` 是由积木生成的整段脚本文本。
+    ``script`` 保留是为了执行、兼容旧配置和导出；界面以 ``blocks`` 为准。
     """
 
     key: str
@@ -46,6 +83,7 @@ class HotKey:
     script: str = ""
     enabled: bool = True
     id: str = field(default_factory=new_id)
+    blocks: list[Block] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -54,4 +92,5 @@ class HotKey:
             "description": self.description,
             "script": self.script,
             "enabled": self.enabled,
+            "blocks": [block.to_dict() for block in self.blocks],
         }

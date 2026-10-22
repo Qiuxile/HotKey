@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QHBoxLayout, QHe
     QSplitter, QStatusBar, QTableView, QTreeWidgetItem,
     QVBoxLayout, QWidget)
 
-from hotkey.ui.widgets.script_editor import ScriptEditor
+from hotkey.ui.widgets.block_tree import BlockTree
 from hotkey.ui.widgets.statement_tree import StatementTree
 
 class Ui_MainWindow(object):
@@ -109,10 +109,10 @@ class Ui_MainWindow(object):
         self.editorColumn = QVBoxLayout()
         self.editorColumn.setSpacing(8)
         self.editorColumn.setObjectName(u"editorColumn")
-        self.scriptEditor = ScriptEditor(self.editorPanel)
-        self.scriptEditor.setObjectName(u"scriptEditor")
+        self.blockTree = BlockTree(self.editorPanel)
+        self.blockTree.setObjectName(u"blockTree")
 
-        self.editorColumn.addWidget(self.scriptEditor)
+        self.editorColumn.addWidget(self.blockTree)
 
         self.editorToolbar = QHBoxLayout()
         self.editorToolbar.setObjectName(u"editorToolbar")
@@ -238,9 +238,9 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(shortcut)
         self.searchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22\u70ed\u952e...", None))
         self.lblEditing.setText(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c\u7f16\u8f91", None))
-        self.btnCapturePos.setText(QCoreApplication.translate("MainWindow", u"\U0001f3af \U00006355\U000083b7\U00005750\U00006807", None))
-        self.btnCaptureColor.setText(QCoreApplication.translate("MainWindow", u"\U0001f58d \U00006355\U000083b7\U0000989c\U00008272", None))
-        self.btnScreenSize.setText(QCoreApplication.translate("MainWindow", u"\U0001f4d0 \U00005c4f\U00005e55\U00005c3a\U00005bf8", None))
+        self.btnCapturePos.setText(QCoreApplication.translate("MainWindow", u"\U0001f3af \U0000590d\U00005236\U00005750\U00006807", None))
+        self.btnCaptureColor.setText(QCoreApplication.translate("MainWindow", u"\U0001f58d \U0000590d\U00005236\U0000989c\U00008272", None))
+        self.btnScreenSize.setText(QCoreApplication.translate("MainWindow", u"\U0001f4d0 \U0000590d\U00005236\U00005c3a\U00005bf8", None))
         self.btnRunOnce.setText(QCoreApplication.translate("MainWindow", u"\u8bd5\u8fd0\u884c", None))
         self.btnSaveScript.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))
         self.btnCloseEditor.setText(QCoreApplication.translate("MainWindow", u"\u5173\u95ed", None))
