@@ -1,6 +1,6 @@
 """主窗口冒烟测试。"""
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 
 from hotkey.ui.main_window import MainWindow
 from hotkey.ui.widgets.block_editor import BlockListEditor
@@ -45,6 +45,40 @@ def test_editor_toggle(qtbot, tmp_path):
     window._set_editor_visible(False)
     assert window.ui.editorPanel.isHidden()
     assert not window.ui.actionToggleEditor.isChecked()
+
+
+def test_titlebar_has_menu_and_toolbar_is_above_blocks(qtbot, tmp_path):
+    window = make_window(qtbot, tmp_path)
+    window.show()
+
+    assert window.ui.menubar.parent() is window.title_bar
+    assert window.ui.menubar.isVisible()
+    window._set_editor_visible(True)
+    qtbot.wait(10)
+    toolbar_y = window.ui.btnCapturePos.mapTo(window, QPoint(0, 0)).y()
+    editor_y = window.ui.blockEditor.mapTo(window, QPoint(0, 0)).y()
+    assert toolbar_y < editor_y
+
+
+def test_resize_edges(qtbot, tmp_path):
+    window = make_window(qtbot, tmp_path)
+    window.resize(800, 600)
+    window.show()
+
+    top_left = window._edges_at(QPoint(1, 1))
+    assert top_left & Qt.Edge.LeftEdge
+    assert top_left & Qt.Edge.TopEdge
+    assert window._cursor_for_edges(top_left) == Qt.CursorShape.SizeFDiagCursor
+
+    bottom_right = window._edges_at(QPoint(799, 599))
+    assert bottom_right & Qt.Edge.RightEdge
+    assert bottom_right & Qt.Edge.BottomEdge
+
+    assert not window._edges_at(QPoint(400, 300))
+    assert (
+        window._cursor_for_edges(Qt.Edge.LeftEdge)
+        == Qt.CursorShape.SizeHorCursor
+    )
 
 
 def test_script_roundtrip_through_window(qtbot, tmp_path):

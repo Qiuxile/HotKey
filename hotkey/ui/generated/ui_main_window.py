@@ -129,11 +129,6 @@ class Ui_MainWindow(object):
         self.editorColumn = QVBoxLayout()
         self.editorColumn.setSpacing(8)
         self.editorColumn.setObjectName(u"editorColumn")
-        self.blockEditor = BlockListEditor(self.editorPanel)
-        self.blockEditor.setObjectName(u"blockEditor")
-
-        self.editorColumn.addWidget(self.blockEditor)
-
         self.editorToolbar = QHBoxLayout()
         self.editorToolbar.setObjectName(u"editorToolbar")
         self.btnCapturePos = QPushButton(self.editorPanel)
@@ -177,6 +172,11 @@ class Ui_MainWindow(object):
 
 
         self.editorColumn.addLayout(self.editorToolbar)
+
+        self.blockEditor = BlockListEditor(self.editorPanel)
+        self.blockEditor.setObjectName(u"blockEditor")
+
+        self.editorColumn.addWidget(self.blockEditor)
 
 
         self.editorBody.addLayout(self.editorColumn)
@@ -278,9 +278,9 @@ class Ui_MainWindow(object):
         self.searchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22\u70ed\u952e...", None))
         self.btnNewScript.setText(QCoreApplication.translate("MainWindow", u"\uff0b \u65b0\u5efa\u811a\u672c", None))
         self.lblEditing.setText(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c\u7f16\u8f91", None))
-        self.btnCapturePos.setText(QCoreApplication.translate("MainWindow", u"\U0001f3af \U0000590d\U00005236\U00005750\U00006807", None))
-        self.btnCaptureColor.setText(QCoreApplication.translate("MainWindow", u"\U0001f58d \U0000590d\U00005236\U0000989c\U00008272", None))
-        self.btnScreenSize.setText(QCoreApplication.translate("MainWindow", u"\U0001f4d0 \U0000590d\U00005236\U00005c3a\U00005bf8", None))
+        self.btnCapturePos.setText(QCoreApplication.translate("MainWindow", u"\u590d\u5236\u5750\u6807", None))
+        self.btnCaptureColor.setText(QCoreApplication.translate("MainWindow", u"\u590d\u5236\u989c\u8272", None))
+        self.btnScreenSize.setText(QCoreApplication.translate("MainWindow", u"\u590d\u5236\u5c3a\u5bf8", None))
         self.btnRunOnce.setText(QCoreApplication.translate("MainWindow", u"\u8bd5\u8fd0\u884c", None))
         self.btnExportPython.setText(QCoreApplication.translate("MainWindow", u"\u751f\u6210 .py", None))
         self.btnSaveScript.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))

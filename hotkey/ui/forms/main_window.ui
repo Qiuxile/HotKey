@@ -172,28 +172,25 @@
              <number>8</number>
             </property>
             <item>
-             <widget class="BlockListEditor" name="blockEditor"/>
-            </item>
-            <item>
              <layout class="QHBoxLayout" name="editorToolbar">
               <item>
                <widget class="QPushButton" name="btnCapturePos">
                 <property name="text">
-                 <string>🎯 复制坐标</string>
+                 <string>复制坐标</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="btnCaptureColor">
                 <property name="text">
-                 <string>🖍 复制颜色</string>
+                 <string>复制颜色</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="btnScreenSize">
                 <property name="text">
-                 <string>📐 复制尺寸</string>
+                 <string>复制尺寸</string>
                 </property>
                </widget>
               </item>
@@ -239,6 +236,9 @@
                </widget>
               </item>
              </layout>
+            </item>
+            <item>
+             <widget class="BlockListEditor" name="blockEditor"/>
             </item>
            </layout>
           </item>

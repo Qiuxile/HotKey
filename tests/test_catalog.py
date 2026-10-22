@@ -53,7 +53,7 @@ def test_categories_have_colors():
     for category in catalog.CATEGORIES:
         assert category.color.startswith("#")
         assert category.accent.startswith("#")
-    assert catalog.category("mouse").label == "🖱️ 鼠标操作"
+    assert catalog.category("mouse").label == "鼠标操作"
 
 
 def test_segments_split_label_and_params():

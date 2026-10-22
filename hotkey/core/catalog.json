@@ -1,12 +1,12 @@
 {
   "version": 1,
   "categories": [
-    { "id": "mouse", "label": "🖱️ 鼠标操作", "color": "#dbeafe", "accent": "#3b82f6" },
-    { "id": "keyboard", "label": "⌨️ 键盘操作", "color": "#dcfce7", "accent": "#22c55e" },
-    { "id": "screen", "label": "🖥️ 屏幕操作", "color": "#ede9fe", "accent": "#8b5cf6" },
-    { "id": "logic", "label": "🧩 函数与数据", "color": "#fef9c3", "accent": "#ca8a04" },
-    { "id": "dialog", "label": "💬 弹窗交互", "color": "#ffedd5", "accent": "#f97316" },
-    { "id": "flow", "label": "⏱️ 流程控制", "color": "#fee2e2", "accent": "#ef4444" }
+    { "id": "mouse", "label": "鼠标操作", "color": "#dbeafe", "accent": "#3b82f6" },
+    { "id": "keyboard", "label": "键盘操作", "color": "#dcfce7", "accent": "#22c55e" },
+    { "id": "screen", "label": "屏幕操作", "color": "#ede9fe", "accent": "#8b5cf6" },
+    { "id": "logic", "label": "函数与数据", "color": "#fef9c3", "accent": "#ca8a04" },
+    { "id": "dialog", "label": "弹窗交互", "color": "#ffedd5", "accent": "#f97316" },
+    { "id": "flow", "label": "流程控制", "color": "#fee2e2", "accent": "#ef4444" }
   ],
   "blocks": [
     {

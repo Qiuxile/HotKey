@@ -1,9 +1,21 @@
-"""无边框窗口的自定义标题栏。"""
+"""无边框窗口的自定义标题栏（菜单并入同一行）。"""
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QToolButton, QWidget
+from PySide6.QtCore import QPoint, QSize, Qt, Signal
+from PySide6.QtGui import QFontMetrics
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMenuBar,
+    QSizePolicy,
+    QStyle,
+    QToolButton,
+    QWidget,
+)
+
+TITLE_MAX_WIDTH = 300
 
 
 class TitleBar(QFrame):
@@ -14,63 +26,108 @@ class TitleBar(QFrame):
         self.setObjectName("titleBar")
         self.setFixedHeight(40)
         self._window = window
+        self._full_title = "HotKey"
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 0, 8, 0)
-        layout.setSpacing(6)
-
-        icon = QLabel("HK", self)
-        icon.setObjectName("titleIcon")
-        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(icon)
+        layout.setContentsMargins(12, 0, 8, 0)
+        layout.setSpacing(8)
+        self._layout = layout
 
         self.title_label = QLabel("HotKey", self)
         self.title_label.setObjectName("titleText")
+        self.title_label.setMaximumWidth(TITLE_MAX_WIDTH)
+        self.title_label.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred
+        )
         layout.addWidget(self.title_label)
+
+        self._menu_row = QHBoxLayout()
+        self._menu_row.setContentsMargins(0, 0, 0, 0)
+        self._menu_row.setSpacing(0)
+        layout.addLayout(self._menu_row)
         layout.addStretch(1)
 
         self.theme_button = QToolButton(self)
-        self.theme_button.setObjectName("titleButton")
-        self.theme_button.setToolTip("切换深色 / 浅色主题")
+        self.theme_button.setObjectName("titleTheme")
+        self.theme_button.setText("深色")
+        self.theme_button.setToolTip("切换到深色主题")
+        self.theme_button.setFixedSize(52, 28)
         self.theme_button.clicked.connect(self.theme_clicked.emit)
         layout.addWidget(self.theme_button)
 
-        self.min_button = QToolButton(self)
-        self.min_button.setObjectName("titleButton")
-        self.min_button.setText("—")
-        self.min_button.setToolTip("最小化")
+        self.min_button = self._make_button(
+            QStyle.StandardPixmap.SP_TitleBarMinButton, "最小化"
+        )
         self.min_button.clicked.connect(self._window.showMinimized)
         layout.addWidget(self.min_button)
 
-        self.max_button = QToolButton(self)
-        self.max_button.setObjectName("titleButton")
-        self.max_button.setText("□")
-        self.max_button.setToolTip("最大化 / 还原")
+        self.max_button = self._make_button(
+            QStyle.StandardPixmap.SP_TitleBarMaxButton, "最大化"
+        )
         self.max_button.clicked.connect(self._toggle_maximized)
         layout.addWidget(self.max_button)
 
-        self.close_button = QToolButton(self)
-        self.close_button.setObjectName("titleClose")
-        self.close_button.setText("✕")
-        self.close_button.setToolTip("关闭")
+        self.close_button = self._make_button(
+            QStyle.StandardPixmap.SP_TitleBarCloseButton, "关闭", close=True
+        )
         self.close_button.clicked.connect(self._window.close)
         layout.addWidget(self.close_button)
 
         self._manual_drag = False
         self._drag_offset = QPoint()
 
+    def _make_button(
+        self,
+        icon: QStyle.StandardPixmap,
+        tooltip: str,
+        *,
+        close: bool = False,
+    ) -> QToolButton:
+        button = QToolButton(self)
+        button.setObjectName("titleClose" if close else "titleButton")
+        button.setIcon(self.style().standardIcon(icon))
+        button.setIconSize(QSize(14, 14))
+        button.setFixedSize(36, 28)
+        button.setToolTip(tooltip)
+        button.setAutoRaise(True)
+        return button
+
+    # ---------------------------------------------------------------- 菜单
+
+    def attach_menu(self, menu_bar: QMenuBar) -> None:
+        menu_bar.setParent(self)
+        menu_bar.setNativeMenuBar(False)
+        menu_bar.setFixedHeight(28)
+        menu_bar.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
+        )
+        self._menu_row.addWidget(menu_bar)
+        menu_bar.show()
+        self._menu_row.activate()
+
     # ---------------------------------------------------------------- 状态
 
     def set_title(self, text: str) -> None:
-        self.title_label.setText(text)
+        self._full_title = text
+        self.title_label.setToolTip(text)
+        metrics = QFontMetrics(self.title_label.font())
+        self.title_label.setText(
+            metrics.elidedText(text, Qt.TextElideMode.ElideRight, TITLE_MAX_WIDTH)
+        )
 
     def set_maximized(self, maximized: bool) -> None:
-        self.max_button.setText("❐" if maximized else "□")
+        icon = (
+            QStyle.StandardPixmap.SP_TitleBarNormalButton
+            if maximized
+            else QStyle.StandardPixmap.SP_TitleBarMaxButton
+        )
+        self.max_button.setIcon(self.style().standardIcon(icon))
+        self.max_button.setToolTip("还原" if maximized else "最大化")
 
     def set_theme_dark(self, dark: bool) -> None:
-        self.theme_button.setText("☀" if dark else "🌙")
+        self.theme_button.setText("浅色" if dark else "深色")
         self.theme_button.setToolTip(
-            "切换浅色主题" if dark else "切换深色主题"
+            "切换到浅色主题" if dark else "切换到深色主题"
         )
 
     # ---------------------------------------------------------------- 拖动

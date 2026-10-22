@@ -8,8 +8,8 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QObject, QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
+from PySide6.QtCore import QEvent, QObject, QPoint, QTimer, Qt, Signal
+from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -117,6 +117,9 @@ class MainWindow(QMainWindow):
         )
 
         self._setup_chrome()
+        app = QApplication.instance()
+        if app is not None:
+            app.installEventFilter(self)
         self._configure_table()
         self._connect_signals()
         self._load_library()
@@ -146,13 +149,67 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.title_bar)
-        self.ui.menubar.setParent(chrome)
-        self.ui.menubar.show()
-        layout.addWidget(self.ui.menubar)
         self.setMenuWidget(chrome)
+        self.title_bar.attach_menu(self.ui.menubar)
 
         self.ui.statusbar.addPermanentWidget(QSizeGrip(self), 0)
         self.resize(1120, WINDOW_HEIGHT)
+
+    # ---------------------------------------------------------------- 窗口缩放
+
+    def _edges_at(self, pos: QPoint) -> Qt.Edge:
+        if self.isMaximized() or self.isFullScreen():
+            return Qt.Edge(0)
+        border = 6
+        edges = Qt.Edge(0)
+        if pos.x() < border:
+            edges |= Qt.Edge.LeftEdge
+        elif pos.x() >= self.width() - border:
+            edges |= Qt.Edge.RightEdge
+        if pos.y() < border:
+            edges |= Qt.Edge.TopEdge
+        elif pos.y() >= self.height() - border:
+            edges |= Qt.Edge.BottomEdge
+        return edges
+
+    @staticmethod
+    def _cursor_for_edges(edges: Qt.Edge) -> Qt.CursorShape:
+        left = bool(edges & Qt.Edge.LeftEdge)
+        right = bool(edges & Qt.Edge.RightEdge)
+        top = bool(edges & Qt.Edge.TopEdge)
+        bottom = bool(edges & Qt.Edge.BottomEdge)
+        if (left and top) or (right and bottom):
+            return Qt.CursorShape.SizeFDiagCursor
+        if (right and top) or (left and bottom):
+            return Qt.CursorShape.SizeBDiagCursor
+        if left or right:
+            return Qt.CursorShape.SizeHorCursor
+        if top or bottom:
+            return Qt.CursorShape.SizeVerCursor
+        return Qt.CursorShape.ArrowCursor
+
+    def eventFilter(self, watched, event) -> bool:  # noqa: N802
+        if isinstance(watched, QWidget) and watched.window() is self:
+            if (
+                event.type() == QEvent.Type.MouseButtonPress
+                and event.button() == Qt.MouseButton.LeftButton
+            ):
+                edges = self._edges_at(
+                    watched.mapTo(self, event.position().toPoint())
+                )
+                if edges:
+                    handle = self.windowHandle()
+                    if handle is not None and handle.startSystemResize(edges):
+                        return True
+            elif event.type() == QEvent.Type.MouseMove:
+                edges = self._edges_at(
+                    watched.mapTo(self, event.position().toPoint())
+                )
+                if edges:
+                    self.setCursor(self._cursor_for_edges(edges))
+                else:
+                    self.unsetCursor()
+        return super().eventFilter(watched, event)
 
     def _init_theme(self) -> None:
         dark = theme_module.current_theme() == "dark"
@@ -1019,12 +1076,22 @@ class MainWindow(QMainWindow):
         pixmap.fill(Qt.GlobalColor.transparent)
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setBrush(QColor("#4a8fe7"))
+
         painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor("#151628"))
         painter.drawRoundedRect(2, 2, 60, 60, 14, 14)
-        painter.setPen(QColor("#ffffff"))
-        painter.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "HK")
+
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor("#7F7FD5"), 3))
+        painter.drawRoundedRect(5, 5, 54, 54, 11, 11)
+
+        pen = QPen(QColor("#E5E5F7"), 5)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+        painter.drawLine(18, 21, 30, 31)
+        painter.drawLine(30, 31, 18, 41)
+        painter.drawLine(35, 43, 47, 43)
         painter.end()
         return QIcon(pixmap)
 
