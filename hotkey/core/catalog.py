@@ -36,6 +36,8 @@ class Snippet:
     code: str
     params: tuple[Param, ...] = ()
     block: bool = False
+    slots: tuple[str, ...] = ()
+    hidden: bool = False
 
     # ---------------------------------------------------------------- 渲染
 
@@ -72,7 +74,7 @@ class Snippet:
         formatted: dict[str, str] = {}
         for param in self.params:
             raw = values.get(param.name, "")
-            if param.kind == "number":
+            if param.kind in ("number", "code"):
                 formatted[param.name] = str(raw).strip()
             else:
                 formatted[param.name] = repr(str(raw))
@@ -129,6 +131,8 @@ def _load_catalog(path: Path = CATALOG_PATH) -> tuple[tuple[Category, ...], tupl
             code=item["code"],
             params=params,
             block=bool(item.get("block", False)),
+            slots=tuple(item.get("slots", ())),
+            hidden=bool(item.get("hidden", False)),
         )
 
         fields = [

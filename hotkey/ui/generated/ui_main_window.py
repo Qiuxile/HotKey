@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QHBoxLayout, QHe
     QSplitter, QStatusBar, QTableView, QTreeWidgetItem,
     QVBoxLayout, QWidget)
 
-from hotkey.ui.widgets.block_tree import BlockTree
+from hotkey.ui.widgets.block_canvas import BlockCanvasView
 from hotkey.ui.widgets.statement_tree import StatementTree
 
 class Ui_MainWindow(object):
@@ -109,10 +109,10 @@ class Ui_MainWindow(object):
         self.editorColumn = QVBoxLayout()
         self.editorColumn.setSpacing(8)
         self.editorColumn.setObjectName(u"editorColumn")
-        self.blockTree = BlockTree(self.editorPanel)
-        self.blockTree.setObjectName(u"blockTree")
+        self.blockCanvas = BlockCanvasView(self.editorPanel)
+        self.blockCanvas.setObjectName(u"blockCanvas")
 
-        self.editorColumn.addWidget(self.blockTree)
+        self.editorColumn.addWidget(self.blockCanvas)
 
         self.editorToolbar = QHBoxLayout()
         self.editorToolbar.setObjectName(u"editorToolbar")

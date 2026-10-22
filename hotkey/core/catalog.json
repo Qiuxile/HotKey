@@ -267,14 +267,33 @@
       "category": "flow",
       "label": "重复执行 3 次",
       "code": "for i in range(3):",
-      "block": true
+      "block": true,
+      "slots": ["重复内容"]
+    },
+    {
+      "id": "flow_if_else",
+      "category": "flow",
+      "label": "如果 {condition} 那么",
+      "code": "if {condition}:",
+      "block": true,
+      "params": [
+        {
+          "name": "condition",
+          "placeholder": "条件，例如 x > 0",
+          "kind": "code",
+          "width": 180
+        }
+      ],
+      "slots": ["那么", "否则"]
     },
     {
       "id": "flow_if",
       "category": "flow",
       "label": "如果条件成立（True）",
       "code": "if True:",
-      "block": true
+      "block": true,
+      "slots": ["内容"],
+      "hidden": true
     }
   ]
 }

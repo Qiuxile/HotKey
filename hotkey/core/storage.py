@@ -13,7 +13,7 @@ from hotkey.core.blocks import blocks_to_code
 from hotkey.core.keymap import normalize_key
 from hotkey.core.models import Block, HotKey, new_id
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 CONFIG_DIR_NAME = "HotKey"
 FILE_NAME = "hotkeys.json"
 
@@ -88,6 +88,8 @@ def _coerce_script(entry: dict[str, Any]) -> tuple[str, bool]:
 def _hydrate_block(block: Block) -> None:
     """补齐参数：v3 只有 text，v4 之后用 params。"""
     for child in block.children:
+        _hydrate_block(child)
+    for child in block.else_children:
         _hydrate_block(child)
 
     if block.kind == "empty":

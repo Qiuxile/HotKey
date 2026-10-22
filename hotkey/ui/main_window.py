@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
         self._current_id: str | None = None
         self._listening = False
         self._quitting = False
+        self._blocks_dirty = False
         self._tray: QSystemTrayIcon | None = None
         self._tray_start = None
         self._tray_stop = None
@@ -130,10 +131,7 @@ class MainWindow(QMainWindow):
         self.ui.btnCapturePos.clicked.connect(self._capture_coordinate)
         self.ui.btnCaptureColor.clicked.connect(self._capture_color)
         self.ui.btnScreenSize.clicked.connect(self._insert_screen_size)
-        self.ui.blockTree.changed.connect(self._on_blocks_changed)
-        self.ui.blockTree.message.connect(
-            lambda text: self.statusBar().showMessage(text, 5000)
-        )
+        self.ui.blockCanvas.changed.connect(self._on_blocks_changed)
 
         self._signals.triggered.connect(self._execute_hotkey)
         self._signals.started.connect(self._on_script_started)
@@ -334,9 +332,10 @@ class MainWindow(QMainWindow):
         self.ui.lblEditing.setText(
             f"操作编辑 · {keymap.keyboard_to_qt(entry.key)}（参数直接填在积木里）"
         )
-        self.ui.blockTree.load_blocks(blocks)
+        self.ui.blockCanvas.load_blocks(blocks)
+        self._blocks_dirty = False
         self._set_editor_visible(True)
-        self.ui.blockTree.setFocus()
+        self.ui.blockCanvas.setFocus()
 
     def _toggle_editor(self) -> None:
         self._set_editor_visible(self.ui.editorPanel.isHidden())
@@ -349,10 +348,13 @@ class MainWindow(QMainWindow):
             self.resize(WIDE_WIDTH, WINDOW_HEIGHT)
         else:
             self._current_id = None
+            self._blocks_dirty = False
             self.resize(NARROW_WIDTH, WINDOW_HEIGHT)
 
     def _on_blocks_changed(self) -> None:
-        self.statusBar().showMessage("积木已修改，点「保存」写入热键", 3000)
+        if not self._blocks_dirty:
+            self.statusBar().showMessage("积木已修改，点「保存」写入热键", 3000)
+            self._blocks_dirty = True
 
     def _save_blocks(self) -> None:
         if self._current_id is None:
@@ -361,7 +363,7 @@ class MainWindow(QMainWindow):
         if row is None:
             return
 
-        blocks = self.ui.blockTree.blocks()
+        blocks = self.ui.blockCanvas.blocks()
         script = blocks_to_code(blocks)
         issues = validator.validate(script)
         errors = [issue for issue in issues if issue.level is IssueLevel.ERROR]
@@ -378,12 +380,13 @@ class MainWindow(QMainWindow):
         entry.blocks = blocks
         entry.script = script
         self._model.touch(row)
+        self._blocks_dirty = False
         self._schedule_save()
         self._reload_service()
         self.statusBar().showMessage(f"已保存 {len(blocks)} 个积木", 3000)
 
     def _run_once(self) -> None:
-        script = blocks_to_code(self.ui.blockTree.blocks())
+        script = blocks_to_code(self.ui.blockCanvas.blocks())
         if not script.strip():
             self.statusBar().showMessage("积木栏是空的", 3000)
             return

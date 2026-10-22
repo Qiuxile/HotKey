@@ -84,30 +84,19 @@ QLabel#lblEditing {
     color: #1a2332;
 }
 
-QTreeWidget#blockTree {
+QScrollArea#blockCanvas {
     background-color: #f7f9fc;
     border: 1px solid #d5dce6;
     border-radius: 4px;
-    outline: 0;
 }
 
-QTreeWidget#blockTree::item {
-    background: transparent;
-    border: 0;
-    padding: 2px 0;
-}
-
-QTreeWidget#blockTree::item:selected {
-    background: transparent;
-}
-
-QFrame#blockRow QLabel {
+QFrame#blockWidget QLabel {
     background: transparent;
     color: #1f2937;
     font-size: 10pt;
 }
 
-QFrame#blockRow QLineEdit {
+QFrame#blockWidget QLineEdit {
     background-color: #ffffff;
     border: 1px solid #c7d2e0;
     border-radius: 4px;
@@ -117,17 +106,31 @@ QFrame#blockRow QLineEdit {
     selection-background-color: #4a8fe7;
 }
 
-QFrame#blockRow QToolButton {
+QFrame#blockWidget QToolButton {
     background: transparent;
     color: #64748b;
     border: 0;
     font-size: 12pt;
 }
 
-QFrame#blockRow QToolButton:hover {
+QFrame#blockWidget QToolButton:hover {
     background: #ffffff80;
     color: #dc2626;
     border-radius: 4px;
+}
+
+QLabel#bodyLabel {
+    color: #475569;
+    font-size: 9pt;
+    font-weight: bold;
+}
+
+QLabel#bodyHint {
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px dashed #cbd5e1;
+    border-radius: 4px;
+    padding: 6px;
 }
 
 QTreeWidget {

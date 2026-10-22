@@ -152,7 +152,7 @@
              <number>8</number>
             </property>
             <item>
-             <widget class="BlockTree" name="blockTree"/>
+             <widget class="BlockCanvasView" name="blockCanvas"/>
             </item>
             <item>
              <layout class="QHBoxLayout" name="editorToolbar">
@@ -341,9 +341,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>BlockTree</class>
-   <extends>QTreeWidget</extends>
-   <header>hotkey.ui.widgets.block_tree</header>
+   <class>BlockCanvasView</class>
+   <extends>QScrollArea</extends>
+   <header>hotkey.ui.widgets.block_canvas</header>
   </customwidget>
   <customwidget>
    <class>StatementTree</class>

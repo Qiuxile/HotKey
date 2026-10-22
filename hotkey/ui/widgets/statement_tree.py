@@ -33,6 +33,8 @@ class StatementTree(QTreeWidget):
             top = QTreeWidgetItem([category.label])
             top.setFlags(Qt.ItemFlag.ItemIsEnabled)
             for snippet in grouped.get(category.id, []):
+                if snippet.hidden:
+                    continue
                 display = snippet.render(snippet.blank_values())
                 child = QTreeWidgetItem([display])
                 child.setData(0, Qt.ItemDataRole.UserRole, snippet.id)

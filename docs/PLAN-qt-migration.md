@@ -455,3 +455,28 @@ v1/v2 的纯脚本会迁移成一个「空」积木。
 坐标/颜色/尺寸按钮复制到剪贴板，直接粘到积木输入框里。
 
 `pytest` 126 项通过。
+
+## 18. 画布式积木（2026-10-22）
+
+用户要求"像编程猫一样，在大地图里拖拽积木"，因此在 v4 基础上重做编辑器：
+
+- `BlockCanvasView`（QScrollArea）里放 2600×1800 的 `BlockCanvas`，画网格背景
+- 顶层积木绝对定位，拖标题栏即可移动，按 20px 网格吸附
+- 容器积木（重复执行 / 如果）用 `BodyArea` 槽位承载子积木，槽位高度随子块自动增长
+- 判断块改为「如果 {条件} 那么 … 否则 …」，一个积木两个槽位，
+  第一个槽 -> `children`，第二个槽 -> `else_children`
+- 积木位置随配置保存（`Block.x/y`），重新打开后回到原位
+- 顶层积木按 `(y, x)` 决定执行顺序；容器内按放入顺序
+
+数据模型升级到 v5：
+
+```json
+{"kind": "flow_if_else", "params": {"condition": "x > 0"},
+ "children": [...], "else_children": [...], "x": 120, "y": 200}
+```
+
+`catalog.json` 增加 `slots`（槽位名）和 `hidden`（隐藏旧积木），
+`kind: "code"` 的参数原样插入代码（用于 if 条件）。
+
+新增/删除文件：新增 `ui/widgets/block_canvas.py`，删除 `ui/widgets/block_tree.py`。
+`pytest` 129 项通过。

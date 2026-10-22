@@ -186,3 +186,38 @@ def test_save_derives_script_from_blocks(tmp_path):
     data = json.loads(path.read_text(encoding="utf-8"))
 
     assert data["hotkeys"][0]["script"] == "pyautogui.click()"
+
+
+def test_positions_and_else_branch_roundtrip(tmp_path):
+    from hotkey.core.models import Block
+
+    path = tmp_path / "hotkeys.json"
+    hotkey = HotKey(
+        key="f1",
+        id="fixed",
+        blocks=[
+            Block(
+                "flow_if_else",
+                params={"condition": "x > 0"},
+                children=[Block("mouse_click")],
+                else_children=[Block("mouse_double_click")],
+                x=120,
+                y=80,
+            )
+        ],
+    )
+
+    storage.save(path, [hotkey])
+    loaded, _ = storage.load_document(path)
+    block = loaded[0].blocks[0]
+
+    assert block.x == 120
+    assert block.y == 80
+    assert block.children[0].kind == "mouse_click"
+    assert block.else_children[0].kind == "mouse_double_click"
+    assert loaded[0].script == (
+        "if x > 0:\n"
+        "    pyautogui.click()\n"
+        "else:\n"
+        "    pyautogui.doubleClick()"
+    )

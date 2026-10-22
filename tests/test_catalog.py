@@ -7,10 +7,20 @@ from hotkey.core.models import Block
 
 
 def test_catalog_shape():
-    assert len(catalog.SNIPPETS) == 36
+    assert len(catalog.SNIPPETS) == 37
     assert len(catalog.CATEGORIES) == 5
     ids = [snippet.id for snippet in catalog.SNIPPETS]
     assert len(ids) == len(set(ids))
+
+
+def test_container_slots_and_hidden_blocks():
+    assert catalog.snippet("flow_for_3").slots == ("重复内容",)
+    assert catalog.snippet("flow_if").hidden is True
+
+    if_else = catalog.snippet("flow_if_else")
+    assert if_else.slots == ("那么", "否则")
+    assert if_else.params[0].kind == "code"
+    assert if_else.code_for_values({"condition": "x > 0"}) == "if x > 0:"
 
 
 def test_categories_have_colors():

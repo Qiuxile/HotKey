@@ -46,6 +46,9 @@ class Block:
     text: str = ""
     params: dict[str, str] = field(default_factory=dict)
     children: list["Block"] = field(default_factory=list)
+    else_children: list["Block"] = field(default_factory=list)
+    x: float = 0.0
+    y: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -53,6 +56,9 @@ class Block:
             "text": self.text,
             "params": dict(self.params),
             "children": [child.to_dict() for child in self.children],
+            "else_children": [child.to_dict() for child in self.else_children],
+            "x": self.x,
+            "y": self.y,
         }
 
     @classmethod
@@ -79,7 +85,23 @@ class Block:
         if not isinstance(children_data, list):
             raise ValueError("block.children 必须是数组")
         children = [cls.from_dict(child) for child in children_data]
-        return cls(kind=kind, text=text, params=params, children=children)
+
+        else_data = data.get("else_children", [])
+        if not isinstance(else_data, list):
+            raise ValueError("block.else_children 必须是数组")
+        else_children = [cls.from_dict(child) for child in else_data]
+
+        x = float(data.get("x", 0.0) or 0.0)
+        y = float(data.get("y", 0.0) or 0.0)
+        return cls(
+            kind=kind,
+            text=text,
+            params=params,
+            children=children,
+            else_children=else_children,
+            x=x,
+            y=y,
+        )
 
 
 @dataclass
