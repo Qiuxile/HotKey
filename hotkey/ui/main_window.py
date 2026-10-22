@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-import re
 from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
+from PySide6.QtCore import QEvent, QModelIndex, QObject, QPoint, QSize, QTimer, Qt, Signal
+from PySide6.QtGui import QCloseEvent, QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -39,6 +38,7 @@ from hotkey.ui import theme as theme_module
 from hotkey.ui.generated.ui_main_window import Ui_MainWindow
 from hotkey.ui.hotkey_model import HotKeyFilterProxy, HotKeyTableModel
 from hotkey.ui.recorder import HotKeyDialog
+from hotkey.ui.widgets.frameless_resize import FramelessResizer
 from hotkey.ui.widgets.title_bar import TitleBar
 
 logger = logging.getLogger("HotKey.Window")
@@ -46,13 +46,14 @@ logger = logging.getLogger("HotKey.Window")
 WINDOW_HEIGHT = 600
 NARROW_WIDTH = 400
 WIDE_WIDTH = 1240
-PREVIEW_ID = "__preview__"
 SETTINGS_OPEN_TABS = "open_scripts"
 SETTINGS_ACTIVE_TAB = "active_script"
 
 
 @dataclass
 class EditorTab:
+    """右侧一个编辑标签的内存状态。"""
+
     hotkey_id: str
     blocks: list[Block] = field(default_factory=list)
     dirty: bool = False
@@ -67,6 +68,8 @@ class _Signals(QObject):
 
 
 class MainWindow(QMainWindow):
+    """脚本库 + 编辑标签 + 全局热键 + 托盘。"""
+
     def __init__(
         self,
         library_dir: Path | None = None,
@@ -99,21 +102,12 @@ class MainWindow(QMainWindow):
 
         self._listening = False
         self._quitting = False
-        self._blocks_dirty = False
         self._tray: QSystemTrayIcon | None = None
         self._tray_start = None
         self._tray_stop = None
 
-        self._resize_edges = Qt.Edge(0)
-        self._resize_origin = QPoint()
-        self._resize_geometry = QRect()
         self._editor_auto_expanded = False
         self._editor_previous_size = QSize(NARROW_WIDTH, WINDOW_HEIGHT)
-
-        self._save_timer = QTimer(self)
-        self._save_timer.setSingleShot(True)
-        self._save_timer.setInterval(400)
-        self._save_timer.timeout.connect(self._save_all_metadata)
 
         self._signals = _Signals(self)
         self._runner = ScriptRunner(
@@ -126,9 +120,7 @@ class MainWindow(QMainWindow):
         )
 
         self._setup_chrome()
-        app = QApplication.instance()
-        if app is not None:
-            app.installEventFilter(self)
+        self.resizer = FramelessResizer(self)
         self._configure_table()
         self._connect_signals()
         self._load_library()
@@ -179,112 +171,6 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------------- 窗口缩放
 
-    def _edges_at(self, pos: QPoint) -> Qt.Edge:
-        if self.isMaximized() or self.isFullScreen():
-            return Qt.Edge(0)
-        border = 6
-        edges = Qt.Edge(0)
-        if pos.x() < border:
-            edges |= Qt.Edge.LeftEdge
-        elif pos.x() >= self.width() - border:
-            edges |= Qt.Edge.RightEdge
-        if pos.y() < border:
-            edges |= Qt.Edge.TopEdge
-        elif pos.y() >= self.height() - border:
-            edges |= Qt.Edge.BottomEdge
-        return edges
-
-    @staticmethod
-    def _cursor_for_edges(edges: Qt.Edge) -> Qt.CursorShape:
-        left = bool(edges & Qt.Edge.LeftEdge)
-        right = bool(edges & Qt.Edge.RightEdge)
-        top = bool(edges & Qt.Edge.TopEdge)
-        bottom = bool(edges & Qt.Edge.BottomEdge)
-        if (left and top) or (right and bottom):
-            return Qt.CursorShape.SizeFDiagCursor
-        if (right and top) or (left and bottom):
-            return Qt.CursorShape.SizeBDiagCursor
-        if left or right:
-            return Qt.CursorShape.SizeHorCursor
-        if top or bottom:
-            return Qt.CursorShape.SizeVerCursor
-        return Qt.CursorShape.ArrowCursor
-
-    def _apply_resize(self, global_pos: QPoint) -> None:
-        if not self._resize_edges:
-            return
-        delta = global_pos - self._resize_origin
-        geometry = QRect(self._resize_geometry)
-        minimum_width = self.minimumWidth()
-        minimum_height = self.minimumHeight()
-
-        if self._resize_edges & Qt.Edge.LeftEdge:
-            geometry.setLeft(
-                min(
-                    geometry.right() - minimum_width + 1,
-                    geometry.left() + delta.x(),
-                )
-            )
-        elif self._resize_edges & Qt.Edge.RightEdge:
-            geometry.setRight(
-                max(
-                    geometry.left() + minimum_width - 1,
-                    geometry.right() + delta.x(),
-                )
-            )
-        if self._resize_edges & Qt.Edge.TopEdge:
-            geometry.setTop(
-                min(
-                    geometry.bottom() - minimum_height + 1,
-                    geometry.top() + delta.y(),
-                )
-            )
-        elif self._resize_edges & Qt.Edge.BottomEdge:
-            geometry.setBottom(
-                max(
-                    geometry.top() + minimum_height - 1,
-                    geometry.bottom() + delta.y(),
-                )
-            )
-        self.setGeometry(geometry)
-
-    def eventFilter(self, watched, event) -> bool:  # noqa: N802
-        if isinstance(watched, QWidget) and watched.window() is self:
-            event_type = event.type()
-            if (
-                event_type == QEvent.Type.MouseButtonPress
-                and event.button() == Qt.MouseButton.LeftButton
-            ):
-                edges = self._edges_at(
-                    watched.mapTo(self, event.position().toPoint())
-                )
-                if edges:
-                    self._resize_edges = edges
-                    self._resize_origin = event.globalPosition().toPoint()
-                    self._resize_geometry = self.geometry()
-                    self.setCursor(self._cursor_for_edges(edges))
-                    self.grabMouse()
-                    return True
-            elif event_type == QEvent.Type.MouseMove:
-                if self._resize_edges:
-                    self._apply_resize(event.globalPosition().toPoint())
-                    return True
-                edges = self._edges_at(
-                    watched.mapTo(self, event.position().toPoint())
-                )
-                if edges:
-                    self.setCursor(self._cursor_for_edges(edges))
-                else:
-                    self.unsetCursor()
-            elif event_type == QEvent.Type.MouseButtonRelease and self._resize_edges:
-                self._resize_edges = Qt.Edge(0)
-                self.releaseMouse()
-                self.unsetCursor()
-                return True
-            elif event_type == QEvent.Type.UngrabMouse:
-                self._resize_edges = Qt.Edge(0)
-        return super().eventFilter(watched, event)
-
     def _init_theme(self) -> None:
         dark = theme_module.current_theme() == "dark"
         self.ui.actionTheme.setChecked(dark)
@@ -300,7 +186,7 @@ class MainWindow(QMainWindow):
             "已切换到深色主题" if dark else "已切换到浅色主题", 3000
         )
 
-    def changeEvent(self, event) -> None:  # noqa: N802
+    def changeEvent(self, event: QEvent) -> None:  # noqa: N802
         if event.type() == QEvent.Type.WindowStateChange and hasattr(
             self, "title_bar"
         ):
@@ -387,35 +273,10 @@ class MainWindow(QMainWindow):
         return self._model.entry(row) if row is not None else None
 
     def _new_script(self) -> None:
-        default = self._library.directory / "新脚本.hk"
-        path, _ = QFileDialog.getSaveFileName(
-            self,
-            "新建脚本",
-            str(default),
-            "HotKey 脚本 (*.hk);;所有文件 (*)",
-        )
-        if not path:
+        """选择文件名并创建空脚本，然后打开它的编辑标签。"""
+        target = self._choose_new_script_path()
+        if target is None:
             return
-
-        target = Path(path)
-        if self._library.directory.resolve() != target.resolve().parent:
-            QMessageBox.warning(
-                self,
-                "路径不支持",
-                f"脚本必须直接保存在脚本目录里：\n{self._library.directory}",
-            )
-            return
-        if target.suffix.lower() != ".hk":
-            target = target.with_suffix(".hk")
-
-        for entry in self._model.entries():
-            if entry.path is not None and entry.path.resolve() == target.resolve():
-                QMessageBox.warning(
-                    self,
-                    "脚本已存在",
-                    f"「{entry.name}」已经使用了这个文件，请换一个名字。",
-                )
-                return
 
         script = HotKey(
             key="",
@@ -432,6 +293,38 @@ class MainWindow(QMainWindow):
         self._model.add(script)
         self._open_editor_for_id(script.id)
         self.statusBar().showMessage(f"已新建脚本 {target.name}", 5000)
+
+    def _choose_new_script_path(self) -> Path | None:
+        default = self._library.directory / "新脚本.hk"
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "新建脚本",
+            str(default),
+            "HotKey 脚本 (*.hk);;所有文件 (*)",
+        )
+        if not path:
+            return None
+
+        target = Path(path)
+        if self._library.directory.resolve() != target.resolve().parent:
+            QMessageBox.warning(
+                self,
+                "路径不支持",
+                f"脚本必须直接保存在脚本目录里：\n{self._library.directory}",
+            )
+            return None
+        if target.suffix.lower() != ".hk":
+            target = target.with_suffix(".hk")
+
+        for entry in self._model.entries():
+            if entry.path is not None and entry.path.resolve() == target.resolve():
+                QMessageBox.warning(
+                    self,
+                    "脚本已存在",
+                    f"「{entry.name}」已经使用了这个文件，请换一个名字。",
+                )
+                return None
+        return target
 
     def _import_script(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -526,7 +419,7 @@ class MainWindow(QMainWindow):
         self._reload_service()
         self.statusBar().showMessage("已清除热键，脚本仍可手动运行/导出", 5000)
 
-    def _show_context_menu(self, position) -> None:
+    def _show_context_menu(self, position: QPoint) -> None:
         table = self.ui.hotkeyTable
         index = table.indexAt(position)
         menu = QMenu(self)
@@ -558,7 +451,7 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------------- 编辑标签
 
-    def _open_editor_from_index(self, index) -> None:
+    def _open_editor_from_index(self, index: QModelIndex) -> None:
         source = self._proxy.mapToSource(index)
         if not source.isValid():
             return
@@ -621,7 +514,6 @@ class MainWindow(QMainWindow):
 
         self._active_tab = index
         self._current_id = entry.id
-        self._blocks_dirty = tab.dirty
         self.ui.blockEditor.load_blocks(tab.blocks)
         hotkey_text = (
             keymap.keyboard_to_qt(entry.key) if entry.key else "无热键"
@@ -656,7 +548,6 @@ class MainWindow(QMainWindow):
         if tab is None:
             return
         tab.dirty = True
-        self._blocks_dirty = True
         self.ui.editorTabs.setTabText(self._active_tab, self._tab_label(tab))
         self.statusBar().showMessage("积木已修改，点「保存」写入脚本文件", 3000)
 
@@ -674,6 +565,7 @@ class MainWindow(QMainWindow):
         self._save_tab(self._active_tab)
 
     def _save_tab(self, index: int) -> bool:
+        """校验并保存一个标签；返回 False 表示用户取消或校验失败。"""
         if not 0 <= index < len(self._editor_tabs):
             return False
         tab = self._editor_tabs[index]
@@ -707,8 +599,6 @@ class MainWindow(QMainWindow):
 
         self._model.touch(row)
         tab.dirty = False
-        if index == self._active_tab:
-            self._blocks_dirty = False
         self.ui.editorTabs.setTabText(index, self._tab_label(tab))
         self._reload_service()
         self.statusBar().showMessage(f"已保存 {entry.path.name if entry.path else entry.name}", 4000)
@@ -793,34 +683,13 @@ class MainWindow(QMainWindow):
             self._set_editor_visible(False)
 
     def _set_editor_visible(self, visible: bool) -> None:
+        """显示/隐藏右侧编辑区；只在安全条件下自动调整窗口大小。"""
         was_hidden = self.ui.editorPanel.isHidden()
 
         if visible and was_hidden:
-            if self.ui.editorPanel.parent() is not self.ui.centralSplitter:
-                self.ui.centralSplitter.addWidget(self.ui.editorPanel)
-            # 只在窗口仍是默认 400×600、且没有最大化/全屏时自动展开；
-            # 用户手动调过大小、最大化或全屏时只显示面板，不动窗口。
-            self._editor_auto_expanded = (
-                not self.isMaximized()
-                and not self.isFullScreen()
-                and self.width() == NARROW_WIDTH
-                and self.height() == WINDOW_HEIGHT
-            )
-            if self._editor_auto_expanded:
-                self._editor_previous_size = self.size()
-                self.resize(WIDE_WIDTH, WINDOW_HEIGHT)
-                self.ui.centralSplitter.setSizes(
-                    [NARROW_WIDTH, WIDE_WIDTH - NARROW_WIDTH]
-                )
+            self._open_editor_panel()
         elif not visible:
-            if (
-                self._editor_auto_expanded
-                and not self.isMaximized()
-                and not self.isFullScreen()
-                and self.size() == QSize(WIDE_WIDTH, WINDOW_HEIGHT)
-            ):
-                self.resize(self._editor_previous_size)
-            self._editor_auto_expanded = False
+            self._close_editor_panel()
 
         self._commit_tab()
         self.ui.editorPanel.setVisible(visible)
@@ -829,6 +698,37 @@ class MainWindow(QMainWindow):
         self.ui.actionToggleEditor.setChecked(visible)
         if visible and self._editor_tabs:
             self._activate_tab(self._active_tab)
+
+    def _is_default_narrow_window(self) -> bool:
+        return (
+            not self.isMaximized()
+            and not self.isFullScreen()
+            and self.width() == NARROW_WIDTH
+            and self.height() == WINDOW_HEIGHT
+        )
+
+    def _open_editor_panel(self) -> None:
+        if self.ui.editorPanel.parent() is not self.ui.centralSplitter:
+            self.ui.centralSplitter.addWidget(self.ui.editorPanel)
+
+        # 用户手动调过大小、最大化或全屏时，只显示面板，不动窗口。
+        self._editor_auto_expanded = self._is_default_narrow_window()
+        if self._editor_auto_expanded:
+            self._editor_previous_size = self.size()
+            self.resize(WIDE_WIDTH, WINDOW_HEIGHT)
+            self.ui.centralSplitter.setSizes(
+                [NARROW_WIDTH, WIDE_WIDTH - NARROW_WIDTH]
+            )
+
+    def _close_editor_panel(self) -> None:
+        if (
+            self._editor_auto_expanded
+            and not self.isMaximized()
+            and not self.isFullScreen()
+            and self.size() == QSize(WIDE_WIDTH, WINDOW_HEIGHT)
+        ):
+            self.resize(self._editor_previous_size)
+        self._editor_auto_expanded = False
 
     # ---------------------------------------------------------------- 运行/导出
 
@@ -860,6 +760,21 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("运行中…", 3000)
 
     def _export_python(self) -> None:
+        """把当前标签（或选中脚本）导出为独立可运行的 .py。"""
+        selection = self._export_selection()
+        if selection is None:
+            return
+        blocks, name = selection
+
+        source = self._build_export_source(blocks)
+        if source is None:
+            return
+        target = self._ask_export_path(name)
+        if target is None:
+            return
+        self._write_export(target, source)
+
+    def _export_selection(self) -> tuple[list[Block], str] | None:
         tab = self._active_tab_object()
         if tab is not None:
             blocks = self.ui.blockEditor.blocks()
@@ -867,16 +782,20 @@ class MainWindow(QMainWindow):
         else:
             row = self._selected_source_row()
             if row is None:
-                QMessageBox.information(self, "导出 Python", "请先选中或打开一个脚本。")
-                return
+                QMessageBox.information(
+                    self, "导出 Python", "请先选中或打开一个脚本。"
+                )
+                return None
             entry = self._model.entry(row)
             blocks = entry.blocks
             name = entry.name or entry.key or "脚本"
 
         if not blocks:
             QMessageBox.information(self, "导出 Python", "这个脚本还没有积木。")
-            return
+            return None
+        return blocks, name
 
+    def _build_export_source(self, blocks: list[Block]) -> str | None:
         source = render_program(blocks)
         try:
             compile(source, "<export>", "exec")
@@ -887,8 +806,10 @@ class MainWindow(QMainWindow):
                 "生成的脚本有语法错误（通常是变量名或参数没填完整）：\n"
                 f"第 {exc.lineno} 行：{exc.msg}",
             )
-            return
+            return None
+        return source
 
+    def _ask_export_path(self, name: str) -> Path | None:
         default = self._library.directory / f"{safe_stem(name)}.py"
         path, _ = QFileDialog.getSaveFileName(
             self,
@@ -896,10 +817,9 @@ class MainWindow(QMainWindow):
             str(default),
             "Python 文件 (*.py);;所有文件 (*)",
         )
-        if not path:
-            return
+        return Path(path) if path else None
 
-        target = Path(path)
+    def _write_export(self, target: Path, source: str) -> None:
         try:
             target.write_text(source, encoding="utf-8", newline="\n")
         except OSError as exc:
@@ -914,7 +834,7 @@ class MainWindow(QMainWindow):
         )
 
     def _save_all_metadata(self) -> None:
-        self._save_timer.stop()
+        """退出/关闭前把所有脚本的元数据和已保存脚本写回磁盘。"""
         for entry in self._model.entries():
             try:
                 self._library.save(entry)
@@ -927,9 +847,6 @@ class MainWindow(QMainWindow):
         except storage.StorageError as exc:
             logger.error("保存脚本失败 %s: %s", entry.name, exc)
             self.statusBar().showMessage(f"保存失败：{exc}", 6000)
-
-    def _schedule_save(self) -> None:
-        self._save_timer.start()
 
     # ---------------------------------------------------------------- 监听
 
@@ -1002,9 +919,8 @@ class MainWindow(QMainWindow):
         if entry.script.strip():
             self._runner.submit(entry.id, entry.script)
 
-    def _on_script_started(self, hotkey_id: str) -> None:
-        if hotkey_id != PREVIEW_ID:
-            self.statusBar().showMessage("正在执行脚本…")
+    def _on_script_started(self, _hotkey_id: str) -> None:
+        self.statusBar().showMessage("正在执行脚本…")
 
     def _on_script_finished(self, hotkey_id: str, ok: bool, message: str) -> None:
         row = self._model.row_of(hotkey_id)
@@ -1096,6 +1012,7 @@ class MainWindow(QMainWindow):
             self.ui.editorTabs.setTabText(index, self._tab_label(tab))
 
     def _persist_tabs(self) -> None:
+        """把打开的标签路径写入 settings.ini，供下次启动恢复。"""
         settings = theme_module.settings()
         paths = []
         active_path = ""
@@ -1113,6 +1030,7 @@ class MainWindow(QMainWindow):
         settings.setValue(SETTINGS_ACTIVE_TAB, active_path)
 
     def _restore_tabs(self) -> None:
+        """恢复上次打开的标签；路径已不存在的静默跳过。"""
         settings = theme_module.settings()
         raw = settings.value(SETTINGS_OPEN_TABS, [])
         if isinstance(raw, str):
@@ -1196,7 +1114,9 @@ class MainWindow(QMainWindow):
         painter.end()
         return QIcon(pixmap)
 
-    def _on_tray_activated(self, reason) -> None:
+    def _on_tray_activated(
+        self, reason: QSystemTrayIcon.ActivationReason
+    ) -> None:
         if reason in (
             QSystemTrayIcon.ActivationReason.Trigger,
             QSystemTrayIcon.ActivationReason.DoubleClick,
@@ -1208,7 +1128,7 @@ class MainWindow(QMainWindow):
         self.raise_()
         self.activateWindow()
 
-    def closeEvent(self, event) -> None:  # noqa: N802
+    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
         if self._quitting:
             super().closeEvent(event)
             return

@@ -301,11 +301,14 @@ HotKey/
 │       ├── theme.py         # 深/浅色调色板与 QSS 渲染
 │       └── theme.qss        # 使用 $变量 的 QSS 模板
 ├── tests/                   # pytest + pytest-qt（163 项）
+├── docs/ARCHITECTURE.md     # 代码结构说明（读代码先看这个）
 ├── tools/build_ui.ps1       # .ui -> generated/ui_*.py
 └── legacy/                  # 旧 Tk 实现（仅参考）
 ```
 
 ## 开发
+
+第一次读代码先看 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)：里面按模块说明主窗口分区、数据流和"改哪里"。
 
 修改界面：用 Qt Designer 打开 `hotkey/ui/forms/*.ui`，保存后重新生成：
 

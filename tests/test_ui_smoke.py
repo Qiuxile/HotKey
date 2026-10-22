@@ -113,18 +113,21 @@ def test_resize_edges(qtbot, tmp_path):
     qtbot.wait(50)
     window.resize(800, 600)
 
-    top_left = window._edges_at(QPoint(1, 1))
+    top_left = window.resizer.edges_at(QPoint(1, 1))
     assert top_left & Qt.Edge.LeftEdge
     assert top_left & Qt.Edge.TopEdge
-    assert window._cursor_for_edges(top_left) == Qt.CursorShape.SizeFDiagCursor
+    assert (
+        window.resizer.cursor_for_edges(top_left)
+        == Qt.CursorShape.SizeFDiagCursor
+    )
 
-    bottom_right = window._edges_at(QPoint(799, 599))
+    bottom_right = window.resizer.edges_at(QPoint(799, 599))
     assert bottom_right & Qt.Edge.RightEdge
     assert bottom_right & Qt.Edge.BottomEdge
 
-    assert not window._edges_at(QPoint(400, 300))
+    assert not window.resizer.edges_at(QPoint(400, 300))
     assert (
-        window._cursor_for_edges(Qt.Edge.LeftEdge)
+        window.resizer.cursor_for_edges(Qt.Edge.LeftEdge)
         == Qt.CursorShape.SizeHorCursor
     )
 
@@ -132,11 +135,11 @@ def test_resize_edges(qtbot, tmp_path):
 def test_manual_resize_geometry(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
     window.setGeometry(100, 100, 800, 600)
-    window._resize_geometry = window.geometry()
-    window._resize_origin = QPoint(900, 700)
-    window._resize_edges = Qt.Edge.RightEdge | Qt.Edge.BottomEdge
+    window.resizer._start_geometry = window.geometry()
+    window.resizer._origin = QPoint(900, 700)
+    window.resizer._edges = Qt.Edge.RightEdge | Qt.Edge.BottomEdge
 
-    window._apply_resize(QPoint(950, 760))
+    window.resizer.apply_resize(QPoint(950, 760))
 
     assert window.geometry().width() == 850
     assert window.geometry().height() == 660

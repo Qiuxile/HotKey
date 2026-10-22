@@ -31,7 +31,6 @@ class TitleBar(QFrame):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(8, 0, 4, 0)
         layout.setSpacing(4)
-        self._layout = layout
 
         self.title_label = QLabel("HotKey", self)
         self.title_label.setObjectName("titleText")
