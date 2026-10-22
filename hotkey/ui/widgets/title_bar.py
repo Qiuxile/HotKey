@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QPoint, QSize, Qt, Signal
-from PySide6.QtGui import QFontMetrics
+from PySide6.QtGui import QAction, QFontMetrics
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -48,6 +48,7 @@ class TitleBar(QFrame):
         layout.addStretch(1)
 
         self.menu_buttons: list[QToolButton] = []
+        self.menus: list[QMenu] = []
 
         self.theme_button = QToolButton(self)
         self.theme_button.setObjectName("titleTheme")
@@ -96,26 +97,34 @@ class TitleBar(QFrame):
 
     # ---------------------------------------------------------------- 菜单
 
-    def attach_menus(self, menus: list[QMenu]) -> None:
-        for menu in menus:
-            # 先脱离旧 QMenuBar，避免它被销毁时把菜单一起带走
-            menu.setParent(self)
+    def attach_menus(
+        self, menus: list[tuple[str, list[QAction]]]
+    ) -> None:
+        for title, actions in menus:
             button = QToolButton(self)
             button.setObjectName("titleMenuButton")
-            button.setText(menu.title())
-            button.setMenu(menu)
-            button.setPopupMode(
-                QToolButton.ToolButtonPopupMode.InstantPopup
-            )
+            button.setText(title)
             button.setToolButtonStyle(
                 Qt.ToolButtonStyle.ToolButtonTextOnly
             )
             button.setFixedHeight(28)
             button.setAutoRaise(True)
             self._menu_row.addWidget(button)
-            self.menu_buttons.append(button)
-            # QMenu 作为子控件时可能被自动显示，压住标题栏；保持弹出式隐藏
+
+            menu = QMenu(button)
+            menu.addActions(actions)
             menu.hide()
+            button.clicked.connect(
+                lambda _checked=False, m=menu, b=button: self._popup(m, b)
+            )
+            self.menu_buttons.append(button)
+            self.menus.append(menu)
+
+    def _popup(self, menu: QMenu, button: QToolButton) -> None:
+        if menu.isVisible():
+            menu.hide()
+            return
+        menu.popup(button.mapToGlobal(QPoint(0, button.height())))
 
     # ---------------------------------------------------------------- 状态
 

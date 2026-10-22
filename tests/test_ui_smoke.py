@@ -1,6 +1,7 @@
 """主窗口冒烟测试。"""
 
 from PySide6.QtCore import QPoint, Qt
+from PySide6.QtTest import QTest
 
 from hotkey.ui.main_window import MainWindow
 from hotkey.ui.widgets.block_editor import BlockListEditor
@@ -53,10 +54,13 @@ def test_titlebar_has_menu_and_toolbar_is_above_blocks(qtbot, tmp_path):
 
     assert len(window.title_bar.menu_buttons) == 3
     assert all(button.isVisible() for button in window.title_bar.menu_buttons)
-    window.title_bar.menu_buttons[0].click()
+    assert len(window.title_bar.menus[0].actions()) >= 4
+    QTest.mouseClick(
+        window.title_bar.menu_buttons[0], Qt.MouseButton.LeftButton
+    )
     qtbot.wait(10)
-    assert window.ui.menuFile.isVisible()
-    window.ui.menuFile.hide()
+    assert window.title_bar.menus[0].isVisible()
+    window.title_bar.menus[0].hide()
     window._set_editor_visible(True)
     qtbot.wait(10)
     toolbar_y = window.ui.btnCapturePos.mapTo(window, QPoint(0, 0)).y()

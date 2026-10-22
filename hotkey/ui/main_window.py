@@ -155,9 +155,13 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.title_bar)
         self.setMenuWidget(chrome)
 
-        # 不用 QMainWindow 自带的菜单栏：每个菜单放进标题栏的按钮
+        # 不用 QMainWindow 自带的菜单栏：用标题栏按钮承载同样的 QAction
         self.title_bar.attach_menus(
-            [self.ui.menuFile, self.ui.menuEdit, self.ui.menuAction]
+            [
+                (self.ui.menuFile.title(), self.ui.menuFile.actions()),
+                (self.ui.menuEdit.title(), self.ui.menuEdit.actions()),
+                (self.ui.menuAction.title(), self.ui.menuAction.actions()),
+            ]
         )
         self.ui.menubar.hide()
         self.ui.menubar.setParent(None)
