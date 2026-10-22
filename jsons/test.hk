@@ -1,0 +1,25 @@
+{
+  "version": 5,
+  "hotkeys": [
+    {
+      "id": "4e490e6691194ac1980e527603bb2bef",
+      "key": "",
+      "description": "",
+      "script": "pyautogui.alert('test')",
+      "enabled": true,
+      "blocks": [
+        {
+          "kind": "dialog_alert",
+          "text": "弹出提示：test",
+          "params": {
+            "text": "test"
+          },
+          "children": [],
+          "else_children": [],
+          "x": 0.0,
+          "y": 0.0
+        }
+      ]
+    }
+  ]
+}

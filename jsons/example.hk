@@ -1,9 +1,25 @@
-﻿[
+{
+  "version": 5,
+  "hotkeys": [
     {
-        "key": "F1",
-        "description": "Hello, World!",
-        "code": [
-            "pyautogui.confirm('Hello, World!')"
-        ]
+      "id": "dda8d65fa4bf484284267deb8fd51b7a",
+      "key": "",
+      "description": "",
+      "script": "pyautogui.alert('Hello, World')",
+      "enabled": true,
+      "blocks": [
+        {
+          "kind": "dialog_alert",
+          "text": "弹出提示：Hello, World",
+          "params": {
+            "text": "Hello, World"
+          },
+          "children": [],
+          "else_children": [],
+          "x": 0.0,
+          "y": 0.0
+        }
+      ]
     }
-]
+  ]
+}
