@@ -1,3 +1,27 @@
-dist
-HotKey.spec
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+
+# 虚拟环境
+.venv/
+.venv-*/
+
+# IDE
+.idea/
+.vscode/
+
+# 打包产物与本地下载的 wheel
+dist/
+wheels/
+
+# 本地日志与临时文件
+*.log
+debug.log
+.pytest_tmp/
+.uic-check-*.py
+
+# 本地 agent 说明（不随仓库分发）
 CLAUDE.md
