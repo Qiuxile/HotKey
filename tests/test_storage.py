@@ -115,3 +115,74 @@ def test_save_keeps_backup_and_removes_tmp(tmp_path):
     assert path.exists()
     assert path.with_name(path.name + ".bak").exists()
     assert not path.with_name(path.name + ".tmp").exists()
+
+
+def test_v3_text_blocks_are_migrated_to_params(tmp_path):
+    path = write_json(
+        tmp_path / "hotkeys.json",
+        {
+            "version": 3,
+            "hotkeys": [
+                {
+                    "id": "old",
+                    "key": "f1",
+                    "description": "旧积木",
+                    "script": "",
+                    "blocks": [
+                        {
+                            "kind": "mouse_move_to",
+                            "text": "移动鼠标到（10, 20）",
+                            "children": [],
+                        }
+                    ],
+                }
+            ],
+        },
+    )
+
+    hotkeys, warnings = storage.load_document(path)
+    block = hotkeys[0].blocks[0]
+
+    assert block.params == {"x": "10", "y": "20"}
+    assert hotkeys[0].script == "pyautogui.moveTo(10, 20)"
+    assert any("迁移" in warning for warning in warnings)
+
+
+def test_v4_params_roundtrip(tmp_path):
+    from hotkey.core.models import Block
+
+    path = tmp_path / "hotkeys.json"
+    hotkey = HotKey(
+        key="f1",
+        id="fixed",
+        blocks=[
+            Block(
+                "dialog_alert",
+                text="弹出提示：你好",
+                params={"text": "你好"},
+            )
+        ],
+    )
+
+    storage.save(path, [hotkey])
+    loaded, _ = storage.load_document(path)
+
+    assert loaded[0].blocks[0].params == {"text": "你好"}
+    assert loaded[0].blocks[0].text == "弹出提示：你好"
+    assert loaded[0].script == "pyautogui.alert('你好')"
+
+
+def test_save_derives_script_from_blocks(tmp_path):
+    from hotkey.core.models import Block
+
+    path = tmp_path / "hotkeys.json"
+    hotkey = HotKey(
+        key="f1",
+        script="stale",
+        blocks=[Block("mouse_click")],
+    )
+
+    storage.save(path, [hotkey])
+    data = json.loads(path.read_text(encoding="utf-8"))
+
+    assert data["hotkeys"][0]["script"] == "pyautogui.click()"

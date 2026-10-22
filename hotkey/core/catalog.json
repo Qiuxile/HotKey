@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "categories": [
+    { "id": "mouse", "label": "🖱️ 鼠标操作", "color": "#dbeafe", "accent": "#3b82f6" },
+    { "id": "keyboard", "label": "⌨️ 键盘操作", "color": "#dcfce7", "accent": "#22c55e" },
+    { "id": "screen", "label": "🖥️ 屏幕操作", "color": "#ede9fe", "accent": "#8b5cf6" },
+    { "id": "dialog", "label": "💬 弹窗交互", "color": "#ffedd5", "accent": "#f97316" },
+    { "id": "flow", "label": "⏱️ 流程控制", "color": "#fee2e2", "accent": "#ef4444" }
+  ],
+  "blocks": [
+    {
+      "id": "mouse_move_to",
+      "category": "mouse",
+      "label": "移动鼠标到（{x}, {y}）",
+      "code": "pyautogui.moveTo({x}, {y})",
+      "params": [
+        { "name": "x", "placeholder": "x", "kind": "number", "width": 60 },
+        { "name": "y", "placeholder": "y", "kind": "number", "width": 60 }
+      ]
+    },
+    {
+      "id": "mouse_move_rel",
+      "category": "mouse",
+      "label": "相对移动鼠标（{dx}, {dy}）",
+      "code": "pyautogui.moveRel({dx}, {dy}, duration=0.3)",
+      "params": [
+        { "name": "dx", "placeholder": "dx", "kind": "number", "width": 60 },
+        { "name": "dy", "placeholder": "dy", "kind": "number", "width": 60 }
+      ]
+    },
+    {
+      "id": "mouse_click",
+      "category": "mouse",
+      "label": "单击鼠标左键",
+      "code": "pyautogui.click()"
+    },
+    {
+      "id": "mouse_double_click",
+      "category": "mouse",
+      "label": "双击鼠标左键",
+      "code": "pyautogui.doubleClick()"
+    },
+    {
+      "id": "mouse_right_click",
+      "category": "mouse",
+      "label": "单击鼠标右键",
+      "code": "pyautogui.click(button='right')"
+    },
+    {
+      "id": "mouse_down",
+      "category": "mouse",
+      "label": "鼠标左键按下",
+      "code": "pyautogui.mouseDown()"
+    },
+    {
+      "id": "mouse_up",
+      "category": "mouse",
+      "label": "鼠标左键释放",
+      "code": "pyautogui.mouseUp()"
+    },
+    {
+      "id": "mouse_scroll_up",
+      "category": "mouse",
+      "label": "鼠标滚轮向上滚",
+      "code": "pyautogui.scroll(10)"
+    },
+    {
+      "id": "mouse_scroll_down",
+      "category": "mouse",
+      "label": "鼠标滚轮向下滚",
+      "code": "pyautogui.scroll(-10)"
+    },
+    {
+      "id": "mouse_drag",
+      "category": "mouse",
+      "label": "拖拽到（{x}, {y}）",
+      "code": "pyautogui.dragTo({x}, {y}, duration=0.5)",
+      "params": [
+        { "name": "x", "placeholder": "x", "kind": "number", "width": 60 },
+        { "name": "y", "placeholder": "y", "kind": "number", "width": 60 }
+      ]
+    },
+    {
+      "id": "mouse_position",
+      "category": "mouse",
+      "label": "读取鼠标坐标到变量 x, y",
+      "code": "x, y = pyautogui.position()"
+    },
+    {
+      "id": "key_press_enter",
+      "category": "keyboard",
+      "label": "按下 Enter",
+      "code": "pyautogui.press('enter')"
+    },
+    {
+      "id": "key_type_text",
+      "category": "keyboard",
+      "label": "输入文本「{text}」",
+      "code": "pyautogui.typewrite({text})",
+      "params": [
+        { "name": "text", "placeholder": "要输入的文本", "kind": "text", "width": 140 }
+      ]
+    },
+    {
+      "id": "key_type_interval",
+      "category": "keyboard",
+      "label": "逐字输入「{text}」（间隔 0.1 秒）",
+      "code": "pyautogui.typewrite({text}, interval=0.1)",
+      "params": [
+        { "name": "text", "placeholder": "要输入的文本", "kind": "text", "width": 140 }
+      ]
+    },
+    {
+      "id": "key_hotkey_copy",
+      "category": "keyboard",
+      "label": "组合键 Ctrl+C",
+      "code": "pyautogui.hotkey('ctrl', 'c')"
+    },
+    {
+      "id": "key_hotkey_paste",
+      "category": "keyboard",
+      "label": "组合键 Ctrl+V",
+      "code": "pyautogui.hotkey('ctrl', 'v')"
+    },
+    {
+      "id": "key_hotkey_alt_tab",
+      "category": "keyboard",
+      "label": "组合键 Alt+Tab",
+      "code": "pyautogui.hotkey('alt', 'tab')"
+    },
+    {
+      "id": "key_hotkey_win_r",
+      "category": "keyboard",
+      "label": "组合键 Win+R",
+      "code": "pyautogui.hotkey('win', 'r')"
+    },
+    {
+      "id": "key_down_shift",
+      "category": "keyboard",
+      "label": "按住 Shift",
+      "code": "pyautogui.keyDown('shift')"
+    },
+    {
+      "id": "key_up_shift",
+      "category": "keyboard",
+      "label": "松开 Shift",
+      "code": "pyautogui.keyUp('shift')"
+    },
+    {
+      "id": "screen_screenshot",
+      "category": "screen",
+      "label": "截取全屏到 screenshot.png",
+      "code": "pyautogui.screenshot('screenshot.png')"
+    },
+    {
+      "id": "screen_screenshot_region",
+      "category": "screen",
+      "label": "截取区域（左 {left}，上 {top}，宽 {width}，高 {height}）",
+      "code": "pyautogui.screenshot('region.png', region=({left}, {top}, {width}, {height}))",
+      "params": [
+        { "name": "left", "placeholder": "左", "kind": "number", "width": 56 },
+        { "name": "top", "placeholder": "上", "kind": "number", "width": 56 },
+        { "name": "width", "placeholder": "宽", "kind": "number", "width": 56 },
+        { "name": "height", "placeholder": "高", "kind": "number", "width": 56 }
+      ]
+    },
+    {
+      "id": "screen_size",
+      "category": "screen",
+      "label": "读取屏幕尺寸到变量 w, h",
+      "code": "w, h = pyautogui.size()"
+    },
+    {
+      "id": "screen_locate",
+      "category": "screen",
+      "label": "在屏幕上查找图片「{image}」",
+      "code": "pyautogui.locateOnScreen({image})",
+      "params": [
+        { "name": "image", "placeholder": "图片路径", "kind": "text", "width": 150 }
+      ]
+    },
+    {
+      "id": "screen_locate_center",
+      "category": "screen",
+      "label": "查找图片并取中心坐标「{image}」",
+      "code": "pyautogui.locateCenterOnScreen({image})",
+      "params": [
+        { "name": "image", "placeholder": "图片路径", "kind": "text", "width": 150 }
+      ]
+    },
+    {
+      "id": "screen_pixel",
+      "category": "screen",
+      "label": "读取坐标（{x}, {y}）的颜色",
+      "code": "pyautogui.pixel({x}, {y})",
+      "params": [
+        { "name": "x", "placeholder": "x", "kind": "number", "width": 60 },
+        { "name": "y", "placeholder": "y", "kind": "number", "width": 60 }
+      ]
+    },
+    {
+      "id": "screen_pixel_matches",
+      "category": "screen",
+      "label": "判断（{x}, {y}）是否为颜色（{r}, {g}, {b}）",
+      "code": "pyautogui.pixelMatchesColor({x}, {y}, ({r}, {g}, {b}))",
+      "params": [
+        { "name": "x", "placeholder": "x", "kind": "number", "width": 56 },
+        { "name": "y", "placeholder": "y", "kind": "number", "width": 56 },
+        { "name": "r", "placeholder": "R", "kind": "number", "width": 52 },
+        { "name": "g", "placeholder": "G", "kind": "number", "width": 52 },
+        { "name": "b", "placeholder": "B", "kind": "number", "width": 52 }
+      ]
+    },
+    {
+      "id": "dialog_alert",
+      "category": "dialog",
+      "label": "弹出提示：{text}",
+      "code": "pyautogui.alert({text})",
+      "params": [
+        { "name": "text", "placeholder": "提示文字", "kind": "text", "width": 180 }
+      ]
+    },
+    {
+      "id": "dialog_confirm",
+      "category": "dialog",
+      "label": "弹出确认框：{text}",
+      "code": "pyautogui.confirm({text})",
+      "params": [
+        { "name": "text", "placeholder": "提示文字", "kind": "text", "width": 180 }
+      ]
+    },
+    {
+      "id": "dialog_prompt",
+      "category": "dialog",
+      "label": "弹出输入框：{text}",
+      "code": "pyautogui.prompt({text})",
+      "params": [
+        { "name": "text", "placeholder": "提示文字", "kind": "text", "width": 180 }
+      ]
+    },
+    {
+      "id": "flow_sleep_05",
+      "category": "flow",
+      "label": "等待 0.5 秒",
+      "code": "time.sleep(0.5)"
+    },
+    {
+      "id": "flow_sleep_1",
+      "category": "flow",
+      "label": "等待 1 秒",
+      "code": "time.sleep(1)"
+    },
+    {
+      "id": "flow_sleep_2",
+      "category": "flow",
+      "label": "等待 2 秒",
+      "code": "time.sleep(2)"
+    },
+    {
+      "id": "flow_sleep_5",
+      "category": "flow",
+      "label": "等待 5 秒",
+      "code": "time.sleep(5)"
+    },
+    {
+      "id": "flow_for_3",
+      "category": "flow",
+      "label": "重复执行 3 次",
+      "code": "for i in range(3):",
+      "block": true
+    },
+    {
+      "id": "flow_if",
+      "category": "flow",
+      "label": "如果条件成立（True）",
+      "code": "if True:",
+      "block": true
+    }
+  ]
+}

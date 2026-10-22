@@ -332,7 +332,7 @@ class MainWindow(QMainWindow):
             blocks = [Block(kind="empty", text=entry.script)]
 
         self.ui.lblEditing.setText(
-            f"操作编辑 · {keymap.keyboard_to_qt(entry.key)} · 空格编辑所选积木"
+            f"操作编辑 · {keymap.keyboard_to_qt(entry.key)}（参数直接填在积木里）"
         )
         self.ui.blockTree.load_blocks(blocks)
         self._set_editor_visible(True)

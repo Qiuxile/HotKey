@@ -84,6 +84,52 @@ QLabel#lblEditing {
     color: #1a2332;
 }
 
+QTreeWidget#blockTree {
+    background-color: #f7f9fc;
+    border: 1px solid #d5dce6;
+    border-radius: 4px;
+    outline: 0;
+}
+
+QTreeWidget#blockTree::item {
+    background: transparent;
+    border: 0;
+    padding: 2px 0;
+}
+
+QTreeWidget#blockTree::item:selected {
+    background: transparent;
+}
+
+QFrame#blockRow QLabel {
+    background: transparent;
+    color: #1f2937;
+    font-size: 10pt;
+}
+
+QFrame#blockRow QLineEdit {
+    background-color: #ffffff;
+    border: 1px solid #c7d2e0;
+    border-radius: 4px;
+    padding: 1px 6px;
+    min-height: 22px;
+    font-size: 10pt;
+    selection-background-color: #4a8fe7;
+}
+
+QFrame#blockRow QToolButton {
+    background: transparent;
+    color: #64748b;
+    border: 0;
+    font-size: 12pt;
+}
+
+QFrame#blockRow QToolButton:hover {
+    background: #ffffff80;
+    color: #dc2626;
+    border-radius: 4px;
+}
+
 QTreeWidget {
     background-color: #e2e6ed;
     border: 0;

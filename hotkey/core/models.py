@@ -39,16 +39,19 @@ class Block:
 
     ``kind`` 是 ``catalog.Snippet.id``；空白积木用 ``"empty"``，
     此时 ``text`` 就是用户自己写的 Python 代码。
+    普通积木的 ``params`` 保存每个常驻输入框里的值。
     """
 
     kind: str
     text: str = ""
+    params: dict[str, str] = field(default_factory=dict)
     children: list["Block"] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "kind": self.kind,
             "text": self.text,
+            "params": dict(self.params),
             "children": [child.to_dict() for child in self.children],
         }
 
@@ -63,11 +66,20 @@ class Block:
         if not isinstance(text, str):
             raise ValueError("block.text 无效")
 
+        params_data = data.get("params", {})
+        if not isinstance(params_data, dict):
+            raise ValueError("block.params 必须是对象")
+        params: dict[str, str] = {}
+        for name, value in params_data.items():
+            if not isinstance(name, str) or not isinstance(value, str):
+                raise ValueError("block.params 的键和值必须是字符串")
+            params[name] = value
+
         children_data = data.get("children", [])
         if not isinstance(children_data, list):
             raise ValueError("block.children 必须是数组")
         children = [cls.from_dict(child) for child in children_data]
-        return cls(kind=kind, text=text, children=children)
+        return cls(kind=kind, text=text, params=params, children=children)
 
 
 @dataclass

@@ -8,11 +8,12 @@ import shutil
 from pathlib import Path
 from typing import Any, Iterable
 
+from hotkey.core import catalog
 from hotkey.core.blocks import blocks_to_code
 from hotkey.core.keymap import normalize_key
 from hotkey.core.models import Block, HotKey, new_id
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 CONFIG_DIR_NAME = "HotKey"
 FILE_NAME = "hotkeys.json"
 
@@ -84,6 +85,30 @@ def _coerce_script(entry: dict[str, Any]) -> tuple[str, bool]:
     return "", False
 
 
+def _hydrate_block(block: Block) -> None:
+    """补齐参数：v3 只有 text，v4 之后用 params。"""
+    for child in block.children:
+        _hydrate_block(child)
+
+    if block.kind == "empty":
+        return
+
+    try:
+        snippet = catalog.snippet(block.kind)
+    except KeyError:
+        return
+
+    if not block.params and block.text:
+        parsed = snippet.parse_text(block.text)
+        if parsed is not None:
+            block.params = parsed
+
+    if not block.params:
+        block.params = snippet.blank_values()
+
+    block.text = snippet.render(block.params)
+
+
 def parse_document(data: Any) -> tuple[list[HotKey], list[str]]:
     """把 JSON 数据解析为热键列表，同时返回给用户看的警告。"""
     warnings: list[str] = []
@@ -147,6 +172,8 @@ def parse_document(data: Any) -> tuple[list[HotKey], list[str]]:
             warnings.append(f"第{index + 1}条的 blocks 不是数组，已忽略")
 
         if blocks:
+            for block in blocks:
+                _hydrate_block(block)
             script = blocks_to_code(blocks)
         elif script and not has_blocks_key:
             # v1/v2 只有脚本文本：放进一个空白积木里，用户仍然可以继续拖拽

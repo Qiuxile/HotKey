@@ -423,35 +423,35 @@ M0 过程中确认的三个环境事实，后续阶段要沿用：
 
 ## 17. 积木式编辑器改版（2026-10-22）
 
-界面从"自由文本编辑器"改成了"中文积木栏"：
+界面从"自由文本编辑器"改为"Scratch 风格积木栏"：
 
-- 右侧 `BlockTree`（QTreeWidget）**不接受自由输入**，只能从左侧拖入积木
-- 拖入后显示该积木的中文，参数留空，例如 `移动鼠标到（, ）`
-- 选中积木按 **空格** 编辑；改坏中文标签会被还原并提示，不会静默生成错误代码
-- 左侧最顶上增加「空」积木，拖入后按空格自行编写一行 Python
+- 右侧 `BlockTree` 不允许自由写脚本，只能从左侧拖入
+- 每块积木是 `BlockRow`：彩色背景 + 中文文字 + **常驻参数输入框** + 删除按钮
+- 参数输入框一直显示，不需要按空格打开；`number` 只接受数字，`text` 自动加引号
+- 左侧最顶上增加「空」积木，拖入后直接在一行代码输入框里写 Python
 - 把积木拖到 `重复执行 3 次` / `条件判断` 的中间，会成为子积木；`blocks.py` 递归生成缩进代码
+- 积木目录、中文标签、参数类型、分类颜色、Python 模板全部放在
+  `hotkey/core/catalog.json`；`catalog.py` 只负责加载、分段渲染和转义
 
-数据模型升级到 v3：
+数据模型升级到 v4：
 
 ```json
-{"kind": "flow_for_3", "text": "重复执行 3 次",
- "children": [{"kind": "mouse_click", "text": "单击鼠标左键", "children": []}]}
+{"kind": "mouse_move_to", "text": "移动鼠标到（800, 600）",
+ "params": {"x": "800", "y": "600"}, "children": []}
 ```
 
-`script` 字段仍然保留，但由积木重新生成；v1/v2 的旧脚本会迁移成一个「空」积木。
-
-实现要点：
+`script` 仍由积木生成后写入；v1~v3 的旧积木会按中文标签反解出参数（`parse_text`），
+v1/v2 的纯脚本会迁移成一个「空」积木。
 
 | 文件 | 作用 |
 |---|---|
-| `core/catalog.py` | 36 条积木的 `label` 中文模板 + `code` 代码模板，`{name}` 参数 |
-| `core/blocks.py` | `Block` -> Python，容器积木递归缩进 |
-| `core/models.py` | 新增 `Block(kind, text, children)`，`HotKey.blocks` |
-| `core/storage.py` | v3 读写，旧格式迁移，保存时由积木回写 `script` |
-| `ui/widgets/block_tree.py` | 拖放、空格编辑、Delete、非法编辑回滚 |
-| `ui/widgets/statement_tree.py` | 顶部「空」积木 + 分类面板 |
+| `core/catalog.json` | 36 条积木的数据表（可编辑，不需改代码） |
+| `core/catalog.py` | 加载 JSON、`segments()`、`render()`、`code_for_values()` |
+| `core/blocks.py` | `Block` 树 -> Python，容器递归缩进 |
+| `core/models.py` | `Block(kind, text, params, children)` |
+| `ui/widgets/block_tree.py` | `BlockRow` 常驻输入框、拖放嵌套、删除 |
 
 删除的旧文件：`ui/widgets/script_editor.py`、`ui/widgets/highlighter.py`。
-坐标/颜色/尺寸按钮改为复制到剪贴板，用户按空格编辑积木后粘贴。
+坐标/颜色/尺寸按钮复制到剪贴板，直接粘到积木输入框里。
 
-`pytest` 123 项通过。
+`pytest` 126 项通过。

@@ -17,8 +17,8 @@ def block_code(block: Block) -> str:
     except KeyError:
         return ""
 
-    code = snippet.code_for_text(block.text)
-    if code is None:
+    code = snippet.code_for_values(block.params)
+    if not code:
         return ""
 
     if not snippet.block:

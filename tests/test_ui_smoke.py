@@ -69,5 +69,8 @@ def test_config_roundtrip_through_window(qtbot, tmp_path):
 
     window._open_editor_for_id("fixed")
     assert window.ui.blockTree.topLevelItemCount() == 1
-    assert window.ui.blockTree.topLevelItem(0).text(0) == "x = 1"
+    row = window.ui.blockTree.itemWidget(
+        window.ui.blockTree.topLevelItem(0), 0
+    )
+    assert row.code_edit().text() == "x = 1"
     assert blocks.blocks_to_code(entry.blocks) == "x = 1"

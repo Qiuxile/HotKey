@@ -29,13 +29,14 @@ class StatementTree(QTreeWidget):
         self.addTopLevelItem(empty_item)
 
         grouped = catalog.snippets_by_category()
-        for category, label in catalog.CATEGORIES:
-            top = QTreeWidgetItem([label])
+        for category in catalog.CATEGORIES:
+            top = QTreeWidgetItem([category.label])
             top.setFlags(Qt.ItemFlag.ItemIsEnabled)
-            for snippet in grouped.get(category, []):
-                child = QTreeWidgetItem([snippet.label])
+            for snippet in grouped.get(category.id, []):
+                display = snippet.render(snippet.blank_values())
+                child = QTreeWidgetItem([display])
                 child.setData(0, Qt.ItemDataRole.UserRole, snippet.id)
-                child.setToolTip(0, snippet.blank_text())
+                child.setToolTip(0, display)
                 top.addChild(child)
             self.addTopLevelItem(top)
             top.setExpanded(True)

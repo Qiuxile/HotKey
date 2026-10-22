@@ -4,12 +4,14 @@
 
 > 旧版 Tkinter 实现保留在 `legacy/`，可执行 `python main_tk.py` 对比；迁移计划见 [docs/PLAN-qt-migration.md](docs/PLAN-qt-migration.md)。
 
+![积木编辑器预览](docs/blocks-preview.png)
+
 ## 功能
 
-- **积木式编辑**：右侧是积木列表，只能从左侧拖入，不能直接打字
-- **中文优先**：拖入后显示这一行的中文，参数留空等用户填写
-- **空格编辑**：点选积木后按空格编辑参数；删改内容不合法会自动还原
-- **空积木**：左侧最顶上的「空」拖进来后可以自己写代码
+- **积木式编辑**：右侧是彩色积木列表，只能从左侧拖入，不能自由写脚本
+- **参数常驻**：数字/文本参数就是积木里的输入框，一直显示，直接填，不需要额外打开编辑框
+- **JSON 驱动**：积木目录、中文模板、Python 转换与转义全部在 `hotkey/core/catalog.json`
+- **空积木**：左侧最顶上的「空」拖进来后可以自己写一行代码
 - **嵌套流程**：把积木拖到「重复执行 / 条件判断」积木的中间，就成为它的子块
 - **热键管理**：新建 / 修改 / 删除 / 启用停用，重复组合键自动拦截
 - **全局监听**：`keyboard` 注册热键，脚本在独立 worker 线程串行执行，不阻塞界面
@@ -48,13 +50,13 @@ pyinstaller --noconfirm HotKey.spec
 1. `Ctrl+N` 打开对话框，在热键框里按下组合键（如 `Ctrl+Shift+A`），填写描述
 2. 双击列表条目打开右侧积木栏
 3. 从左侧「操作面板」把中文积木拖到右侧
-4. 选中积木按 **空格**，把中文里的参数补全（例如 `移动鼠标到（, ）` → `移动鼠标到（800, 600）`）
+4. 直接在积木里的输入框填参数（例如把 `移动鼠标到（, ）` 的 x、y 填成 `800`、`600`）
 5. 需要循环/判断时，先拖入「重复执行 3 次」，再把其他积木拖到它中间
 6. 点「保存」，积木会先被翻译成脚本并做安全校验
 7. `F5` 启动监听；标题栏和托盘提示「监听中」
 8. 关闭窗口会最小化到托盘；托盘右键「退出」才是真正退出
 
-左侧最顶上的「空」是一块空白积木：拖入后按空格，可以写任意一行 Python 代码。
+左侧最顶上的「空」是一块空白积木：拖入后直接在它的输入框里写一行 Python 代码。
 
 ## 配置文件
 
@@ -96,7 +98,6 @@ v3 格式（同时保留 `script` 方便执行与旧版读取）：
 | 主窗口 | `Ctrl+E` | 显示/隐藏操作编辑 |
 | 主窗口 | `F5` / `Shift+F5` | 启动 / 停止监听 |
 | 主窗口 | `Ctrl+Del` | 删除选中热键 |
-| 积木栏 | `空格` | 编辑选中的积木 |
 | 积木栏 | `Delete` | 删除选中的积木 |
 
 ## 脚本安全
@@ -121,8 +122,9 @@ HotKey/
 │   ├── core/                # 不依赖 Qt，可独立测试
 │   │   ├── models.py        # HotKey / Block / Issue
 │   │   ├── blocks.py        # 积木 -> Python 代码
-│   │   ├── catalog.py       # 36 条积木：中文模板 + 代码模板
-│   │   ├── storage.py       # v1/v2/v3 迁移、原子写、目录回退
+│   │   ├── catalog.json     # 积木表：中文模板、参数、Python 模板（可编辑）
+│   │   ├── catalog.py       # 加载 catalog.json 并提供渲染/转换 API
+│   │   ├── storage.py       # v1~v4 迁移、原子写、目录回退
 │   │   ├── validator.py     # 整段 AST 校验 + 执行命名空间
 │   │   ├── keymap.py        # Qt 键名 <-> keyboard 键名
 │   │   ├── hotkey_service.py# 热键注册
@@ -135,7 +137,7 @@ HotKey/
 │       ├── hotkey_model.py
 │       ├── recorder.py
 │       └── theme.qss
-├── tests/                   # pytest + pytest-qt（122 项）
+├── tests/                   # pytest + pytest-qt（126 项）
 ├── tools/build_ui.ps1       # .ui -> generated/ui_*.py
 └── legacy/                  # 旧 Tk 实现（仅参考）
 ```
@@ -151,7 +153,22 @@ powershell -ExecutionPolicy Bypass -File tools\build_ui.ps1
 
 生成物需要提交；`pytest` 里有一项会用 `build_ui.ps1 -Check` 检查 `.ui` 与生成物是否同步。
 
-新增/修改积木：编辑 `hotkey/core/catalog.py`，同时写中文 `label` 和 `code` 模板，参数用 `{name}` 占位；需要引号包裹的文本参数加进 `quoted`。
+新增/修改积木：编辑 `hotkey/core/catalog.json`，每条包含中文 `label`、Python `code` 和参数表：
+
+```json
+{
+  "id": "mouse_move_to",
+  "category": "mouse",
+  "label": "移动鼠标到（{x}, {y}）",
+  "code": "pyautogui.moveTo({x}, {y})",
+  "params": [
+    { "name": "x", "placeholder": "x", "kind": "number", "width": 60 },
+    { "name": "y", "placeholder": "y", "kind": "number", "width": 60 }
+  ]
+}
+```
+
+`label` 里的 `{name}` 会自动变成常驻输入框；`kind` 为 `number` 时只接受数字，`text` 会自动加引号并转义。改完 JSON 不需要改 Python 代码。
 
 测试（无需真实桌面，Qt 使用 offscreen）：
 
@@ -163,6 +180,6 @@ pytest
 
 - `keyboard` 库在部分 Windows 环境下需要以管理员身份运行才能收到全局按键
 - 录制 `Win+X` 组合键时，系统可能同时响应（例如 `Win+R` 会打开「运行」）
-- 积木参数靠中文模板正则解析：如果把中文标签本身改坏，会还原并提示，不会静默生成错代码
+- 数字参数只接受数字和负号；参数没填完整时保存会提示语法错误
 - 脚本串行执行，长脚本会排队；`time.sleep` 不影响界面和热键注册，但会推迟后续脚本
 - 打包产物是 onedir，不是单文件
