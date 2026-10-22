@@ -1,6 +1,1 @@
-"""UI 组件包。"""
-
-from hotkey.ui.tree import HotKeyTree
-from hotkey.ui.menubar import MenuBar
-
-__all__ = ['HotKeyTree', 'MenuBar']
+"""UI 层：窗口、模型、控件与托盘。"""

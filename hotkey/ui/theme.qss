@@ -1,0 +1,85 @@
+* {
+    font-family: "Microsoft YaHei UI", "Segoe UI";
+    font-size: 9pt;
+}
+
+QMainWindow,
+QWidget {
+    background-color: #f0f3f7;
+    color: #1a2332;
+}
+
+QLineEdit {
+    background-color: #ffffff;
+    border: 1px solid #d5dce6;
+    border-radius: 4px;
+    padding: 6px 8px;
+    selection-background-color: #4a8fe7;
+}
+
+QLineEdit:focus {
+    border-color: #4a8fe7;
+}
+
+QTableView {
+    background-color: #ffffff;
+    alternate-background-color: #f7f9fc;
+    border: 1px solid #d5dce6;
+    border-radius: 4px;
+    selection-background-color: #d0dff5;
+    selection-color: #1a2332;
+    gridline-color: #eef1f5;
+}
+
+QHeaderView::section {
+    background-color: #3b4a5e;
+    color: #ffffff;
+    border: 0;
+    padding: 6px 8px;
+    font-weight: bold;
+}
+
+QPlainTextEdit {
+    background-color: #1e2733;
+    color: #c8d6e5;
+    border: 0;
+    border-radius: 4px;
+    padding: 8px;
+    selection-background-color: #264f78;
+    selection-color: #ffffff;
+}
+
+QPushButton {
+    background-color: #4a8fe7;
+    color: #ffffff;
+    border: 0;
+    border-radius: 4px;
+    padding: 6px 14px;
+}
+
+QPushButton:hover {
+    background-color: #3a7bd5;
+}
+
+QPushButton:pressed {
+    background-color: #3570c0;
+}
+
+QPushButton:disabled {
+    background-color: #b9c4d2;
+}
+
+QSplitter::handle {
+    background-color: #e2e6ed;
+    width: 1px;
+}
+
+QStatusBar {
+    background-color: #e2e6ed;
+    color: #4a5568;
+}
+
+QLabel#lblEditing {
+    font-weight: bold;
+    color: #1a2332;
+}

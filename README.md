@@ -1,5 +1,9 @@
 # HotKey — 热键自动化工具
 
+> **v2 开发中**：正在从 Tkinter 迁移到 PySide6，当前开发分支为 `qt-migration`。
+> 迁移计划见 [docs/PLAN-qt-migration.md](docs/PLAN-qt-migration.md)。
+> 旧版入口仍保留：`python main_tk.py`（代码在 `legacy/`）。
+
 拖拽式零代码热键配置工具，面向非编程用户，通过可视化的操作面板拖拽组合，无需编写代码即可创建复杂的桌面自动化脚本。
 
 ## 功能特点

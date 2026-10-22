@@ -1,0 +1,231 @@
+# -*- coding: utf-8 -*-
+
+################################################################################
+## Form generated from reading UI file 'main_window.ui'
+##
+## Created by: Qt User Interface Compiler version 6.12.0
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
+
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QHBoxLayout, QHeaderView,
+    QLabel, QLineEdit, QMainWindow, QMenu,
+    QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
+    QSplitter, QStatusBar, QTableView, QVBoxLayout,
+    QWidget)
+
+from hotkey.ui.widgets.script_editor import ScriptEditor
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        if not MainWindow.objectName():
+            MainWindow.setObjectName(u"MainWindow")
+        MainWindow.resize(1120, 560)
+        MainWindow.setMinimumSize(QSize(370, 480))
+        self.actionImport = QAction(MainWindow)
+        self.actionImport.setObjectName(u"actionImport")
+        self.actionExport = QAction(MainWindow)
+        self.actionExport.setObjectName(u"actionExport")
+        self.actionQuit = QAction(MainWindow)
+        self.actionQuit.setObjectName(u"actionQuit")
+        self.actionNew = QAction(MainWindow)
+        self.actionNew.setObjectName(u"actionNew")
+        self.actionDelete = QAction(MainWindow)
+        self.actionDelete.setObjectName(u"actionDelete")
+        self.actionSearch = QAction(MainWindow)
+        self.actionSearch.setObjectName(u"actionSearch")
+        self.actionToggleEditor = QAction(MainWindow)
+        self.actionToggleEditor.setObjectName(u"actionToggleEditor")
+        self.actionToggleEditor.setCheckable(True)
+        self.actionStart = QAction(MainWindow)
+        self.actionStart.setObjectName(u"actionStart")
+        self.actionStop = QAction(MainWindow)
+        self.actionStop.setObjectName(u"actionStop")
+        self.centralWidget = QWidget(MainWindow)
+        self.centralWidget.setObjectName(u"centralWidget")
+        self.centralLayout = QHBoxLayout(self.centralWidget)
+        self.centralLayout.setSpacing(0)
+        self.centralLayout.setObjectName(u"centralLayout")
+        self.centralLayout.setContentsMargins(0, 0, 0, 0)
+        self.centralSplitter = QSplitter(self.centralWidget)
+        self.centralSplitter.setObjectName(u"centralSplitter")
+        self.centralSplitter.setOrientation(Qt.Horizontal)
+        self.centralSplitter.setChildrenCollapsible(False)
+        self.listPanel = QWidget(self.centralSplitter)
+        self.listPanel.setObjectName(u"listPanel")
+        self.listPanel.setMinimumSize(QSize(340, 0))
+        self.listLayout = QVBoxLayout(self.listPanel)
+        self.listLayout.setSpacing(8)
+        self.listLayout.setObjectName(u"listLayout")
+        self.listLayout.setContentsMargins(10, 10, 10, 10)
+        self.searchEdit = QLineEdit(self.listPanel)
+        self.searchEdit.setObjectName(u"searchEdit")
+        self.searchEdit.setClearButtonEnabled(True)
+
+        self.listLayout.addWidget(self.searchEdit)
+
+        self.hotkeyTable = QTableView(self.listPanel)
+        self.hotkeyTable.setObjectName(u"hotkeyTable")
+        self.hotkeyTable.setAlternatingRowColors(True)
+        self.hotkeyTable.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.hotkeyTable.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.hotkeyTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.hotkeyTable.setShowGrid(False)
+        self.hotkeyTable.setContextMenuPolicy(Qt.CustomContextMenu)
+
+        self.listLayout.addWidget(self.hotkeyTable)
+
+        self.centralSplitter.addWidget(self.listPanel)
+        self.editorPanel = QWidget(self.centralSplitter)
+        self.editorPanel.setObjectName(u"editorPanel")
+        self.editorLayout = QVBoxLayout(self.editorPanel)
+        self.editorLayout.setSpacing(8)
+        self.editorLayout.setObjectName(u"editorLayout")
+        self.editorLayout.setContentsMargins(10, 10, 10, 10)
+        self.lblEditing = QLabel(self.editorPanel)
+        self.lblEditing.setObjectName(u"lblEditing")
+
+        self.editorLayout.addWidget(self.lblEditing)
+
+        self.scriptEditor = ScriptEditor(self.editorPanel)
+        self.scriptEditor.setObjectName(u"scriptEditor")
+
+        self.editorLayout.addWidget(self.scriptEditor)
+
+        self.editorToolbar = QHBoxLayout()
+        self.editorToolbar.setObjectName(u"editorToolbar")
+        self.btnCapturePos = QPushButton(self.editorPanel)
+        self.btnCapturePos.setObjectName(u"btnCapturePos")
+
+        self.editorToolbar.addWidget(self.btnCapturePos)
+
+        self.btnCaptureColor = QPushButton(self.editorPanel)
+        self.btnCaptureColor.setObjectName(u"btnCaptureColor")
+
+        self.editorToolbar.addWidget(self.btnCaptureColor)
+
+        self.btnScreenSize = QPushButton(self.editorPanel)
+        self.btnScreenSize.setObjectName(u"btnScreenSize")
+
+        self.editorToolbar.addWidget(self.btnScreenSize)
+
+        self.editorSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.editorToolbar.addItem(self.editorSpacer)
+
+        self.btnRunOnce = QPushButton(self.editorPanel)
+        self.btnRunOnce.setObjectName(u"btnRunOnce")
+
+        self.editorToolbar.addWidget(self.btnRunOnce)
+
+        self.btnSaveScript = QPushButton(self.editorPanel)
+        self.btnSaveScript.setObjectName(u"btnSaveScript")
+
+        self.editorToolbar.addWidget(self.btnSaveScript)
+
+        self.btnCloseEditor = QPushButton(self.editorPanel)
+        self.btnCloseEditor.setObjectName(u"btnCloseEditor")
+
+        self.editorToolbar.addWidget(self.btnCloseEditor)
+
+
+        self.editorLayout.addLayout(self.editorToolbar)
+
+        self.centralSplitter.addWidget(self.editorPanel)
+
+        self.centralLayout.addWidget(self.centralSplitter)
+
+        MainWindow.setCentralWidget(self.centralWidget)
+        self.menubar = QMenuBar(MainWindow)
+        self.menubar.setObjectName(u"menubar")
+        self.menubar.setGeometry(QRect(0, 0, 1120, 24))
+        self.menuFile = QMenu(self.menubar)
+        self.menuFile.setObjectName(u"menuFile")
+        self.menuEdit = QMenu(self.menubar)
+        self.menuEdit.setObjectName(u"menuEdit")
+        self.menuAction = QMenu(self.menubar)
+        self.menuAction.setObjectName(u"menuAction")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QStatusBar(MainWindow)
+        self.statusbar.setObjectName(u"statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+
+        self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuEdit.menuAction())
+        self.menubar.addAction(self.menuAction.menuAction())
+        self.menuFile.addAction(self.actionImport)
+        self.menuFile.addAction(self.actionExport)
+        self.menuFile.addSeparator()
+        self.menuFile.addAction(self.actionQuit)
+        self.menuEdit.addAction(self.actionNew)
+        self.menuEdit.addAction(self.actionDelete)
+        self.menuAction.addAction(self.actionSearch)
+        self.menuAction.addAction(self.actionToggleEditor)
+        self.menuAction.addSeparator()
+        self.menuAction.addAction(self.actionStart)
+        self.menuAction.addAction(self.actionStop)
+
+        self.retranslateUi(MainWindow)
+
+        QMetaObject.connectSlotsByName(MainWindow)
+    # setupUi
+
+    def retranslateUi(self, MainWindow):
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"HotKey - \u70ed\u952e\u5de5\u5177", None))
+        self.actionImport.setText(QCoreApplication.translate("MainWindow", u"\u5bfc\u5165...", None))
+#if QT_CONFIG(shortcut)
+        self.actionImport.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+O", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionExport.setText(QCoreApplication.translate("MainWindow", u"\u5bfc\u51fa...", None))
+#if QT_CONFIG(shortcut)
+        self.actionExport.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Shift+S", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionQuit.setText(QCoreApplication.translate("MainWindow", u"\u9000\u51fa", None))
+#if QT_CONFIG(shortcut)
+        self.actionQuit.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Q", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionNew.setText(QCoreApplication.translate("MainWindow", u"\u65b0\u5efa\u70ed\u952e", None))
+#if QT_CONFIG(shortcut)
+        self.actionNew.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+N", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionDelete.setText(QCoreApplication.translate("MainWindow", u"\u5220\u9664\u70ed\u952e", None))
+#if QT_CONFIG(shortcut)
+        self.actionDelete.setShortcut(QCoreApplication.translate("MainWindow", u"Del", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionSearch.setText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22", None))
+#if QT_CONFIG(shortcut)
+        self.actionSearch.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+F", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionToggleEditor.setText(QCoreApplication.translate("MainWindow", u"\u663e\u793a\u64cd\u4f5c\u7f16\u8f91", None))
+#if QT_CONFIG(shortcut)
+        self.actionToggleEditor.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+E", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionStart.setText(QCoreApplication.translate("MainWindow", u"\u542f\u52a8\u76d1\u542c", None))
+#if QT_CONFIG(shortcut)
+        self.actionStart.setShortcut(QCoreApplication.translate("MainWindow", u"F5", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionStop.setText(QCoreApplication.translate("MainWindow", u"\u505c\u6b62\u76d1\u542c", None))
+#if QT_CONFIG(shortcut)
+        self.actionStop.setShortcut(QCoreApplication.translate("MainWindow", u"Shift+F5", None))
+#endif // QT_CONFIG(shortcut)
+        self.searchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22\u70ed\u952e...", None))
+        self.lblEditing.setText(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c\u7f16\u8f91", None))
+        self.btnCapturePos.setText(QCoreApplication.translate("MainWindow", u"\U0001f3af \U00006355\U000083b7\U00005750\U00006807", None))
+        self.btnCaptureColor.setText(QCoreApplication.translate("MainWindow", u"\U0001f58d \U00006355\U000083b7\U0000989c\U00008272", None))
+        self.btnScreenSize.setText(QCoreApplication.translate("MainWindow", u"\U0001f4d0 \U00005c4f\U00005e55\U00005c3a\U00005bf8", None))
+        self.btnRunOnce.setText(QCoreApplication.translate("MainWindow", u"\u8bd5\u8fd0\u884c", None))
+        self.btnSaveScript.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))
+        self.btnCloseEditor.setText(QCoreApplication.translate("MainWindow", u"\u5173\u95ed", None))
+        self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"\u6587\u4ef6", None))
+        self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"\u7f16\u8f91", None))
+        self.menuAction.setTitle(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c", None))
+    # retranslateUi
+

@@ -1,0 +1,16 @@
+[project]
+name = "hotkey"
+version = "2.0.0.dev0"
+description = "拖拽式全局热键自动化工具（PySide6）"
+requires-python = ">=3.10"
+dependencies = [
+    "PySide6-Essentials>=6.12,<6.13",
+    "keyboard>=0.13.5",
+    "pyautogui>=0.9.53",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# 部分受限环境里系统临时目录不可写，把 pytest 的临时根放进仓库
+addopts = "-q --basetemp=.pytest_tmp"
+qt_api = "pyside6"

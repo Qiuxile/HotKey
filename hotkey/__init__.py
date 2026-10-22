@@ -1,6 +1,3 @@
-"""HotKey - 热键配置与监听工具包。"""
+﻿"""HotKey v2 —— 基于 PySide6 的拖拽式全局热键自动化工具。"""
 
-from hotkey.models import HotKeyEntry
-from hotkey.config import KEY_NAME_MAP, MODIFIER_MASKS, MODIFIER_KEYSYMS
-
-__all__ = ['HotKeyEntry', 'KEY_NAME_MAP', 'MODIFIER_MASKS', 'MODIFIER_KEYSYMS']
+__version__ = "2.0.0.dev0"
