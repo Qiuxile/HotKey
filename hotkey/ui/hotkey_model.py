@@ -13,7 +13,7 @@ from PySide6.QtGui import QColor
 from hotkey.core import keymap
 from hotkey.core.models import HotKey
 
-HEADERS = ("热键", "描述", "状态")
+HEADERS = ("名称", "热键", "状态")
 
 
 class HotKeyTableModel(QAbstractTableModel):
@@ -37,16 +37,18 @@ class HotKeyTableModel(QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DisplayRole:
             if column == 0:
-                return keymap.keyboard_to_qt(entry.key)
+                return entry.name or entry.description or "未命名"
             if column == 1:
-                return entry.description
+                return keymap.keyboard_to_qt(entry.key) if entry.key else "—"
             if column == 2:
                 return "启用" if entry.enabled else "停用"
         elif role == Qt.ItemDataRole.ToolTipRole:
             if column == 0:
-                return entry.key
+                return entry.description or (str(entry.path) if entry.path else "（无描述）")
             if column == 1:
-                return entry.description or "（无描述）"
+                return entry.key or "未设置热键，可手动运行或导出"
+        elif role == Qt.ItemDataRole.TextAlignmentRole and column == 1:
+            return Qt.AlignmentFlag.AlignCenter
         elif role == Qt.ItemDataRole.TextAlignmentRole and column == 2:
             return Qt.AlignmentFlag.AlignCenter
         elif role == Qt.ItemDataRole.ForegroundRole and column == 2:
@@ -132,5 +134,7 @@ class HotKeyFilterProxy(QSortFilterProxyModel):
         if model is None:
             return True
         entry = model.entry(source_row)
-        haystack = f"{entry.key} {entry.description}".lower()
+        haystack = (
+            f"{entry.name} {entry.key} {entry.description}".lower()
+        )
         return self._needle in haystack

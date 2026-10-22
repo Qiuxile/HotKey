@@ -1,4 +1,4 @@
-"""热键列表模型与搜索代理的单元测试。"""
+"""热键列表模型（脚本库视图）与搜索代理。"""
 
 from PySide6.QtCore import Qt
 
@@ -8,31 +8,32 @@ from hotkey.ui.hotkey_model import HotKeyFilterProxy, HotKeyTableModel
 
 def make_entries():
     return [
-        HotKey(key="ctrl+a", description="alpha", id="id-a"),
-        HotKey(key="ctrl+b", description="beta", id="id-b"),
-        HotKey(key="f9", description="gamma", id="id-c"),
+        HotKey(key="ctrl+a", name="alpha", description="第一个", id="id-a"),
+        HotKey(key="ctrl+b", name="beta", description="第二个", id="id-b"),
+        HotKey(key="", name="gamma", description="无热键", id="id-c"),
     ]
 
 
-def test_model_displays_and_rows():
+def test_model_displays_name_hotkey_status():
     model = HotKeyTableModel(make_entries())
 
     assert model.rowCount() == 3
     assert model.columnCount() == 3
-    assert model.data(model.index(0, 0)) == "Ctrl+A"
-    assert model.data(model.index(1, 1)) == "beta"
+    assert model.data(model.index(0, 0)) == "alpha"
+    assert model.data(model.index(0, 1)) == "Ctrl+A"
+    assert model.data(model.index(2, 1)) == "—"
     assert model.data(model.index(2, 2)) == "启用"
     assert model.data(model.index(0, 0), Qt.ItemDataRole.UserRole) == "id-a"
 
 
-def test_model_toggle_and_add_remove():
+def test_model_toggle_add_remove():
     model = HotKeyTableModel(make_entries())
 
     model.toggle(0)
     assert model.entry(0).enabled is False
     assert model.data(model.index(0, 2)) == "停用"
 
-    new_entry = HotKey(key="ctrl+9", description="new")
+    new_entry = HotKey(key="ctrl+9", name="new")
     row = model.add(new_entry)
     assert row == 3
     assert model.row_of(new_entry.id) == 3
@@ -58,7 +59,7 @@ def test_proxy_search_maps_to_source_row(qtbot):
     assert proxy.rowCount() == 3
 
 
-def test_proxy_searches_key_and_description(qtbot):
+def test_proxy_searches_name_key_and_description(qtbot):
     model = HotKeyTableModel(make_entries())
     proxy = HotKeyFilterProxy()
     proxy.setSourceModel(model)
@@ -67,4 +68,7 @@ def test_proxy_searches_key_and_description(qtbot):
     assert proxy.rowCount() == 2
 
     proxy.set_search_text("GAMMA")
+    assert proxy.rowCount() == 1
+
+    proxy.set_search_text("第二个")
     assert proxy.rowCount() == 1

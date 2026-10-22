@@ -468,6 +468,9 @@ class BlockListEditor(QScrollArea):
 
     def load_blocks(self, blocks: list[Block]) -> None:
         for widget in self._blocks:
+            self._layout.removeWidget(widget)
+            widget.hide()
+            widget.setParent(None)
             widget.deleteLater()
         self._blocks.clear()
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import Any
 
 
@@ -118,6 +119,8 @@ class HotKey:
     enabled: bool = True
     id: str = field(default_factory=new_id)
     blocks: list[Block] = field(default_factory=list)
+    name: str = ""
+    path: Path | None = field(default=None, compare=False, repr=False)
 
     def to_dict(self) -> dict[str, Any]:
         return {

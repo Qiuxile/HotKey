@@ -111,7 +111,9 @@ def _hydrate_block(block: Block) -> None:
     block.text = snippet.render(block.params)
 
 
-def parse_document(data: Any) -> tuple[list[HotKey], list[str]]:
+def parse_document(
+    data: Any, allow_empty_key: bool = False
+) -> tuple[list[HotKey], list[str]]:
     """把 JSON 数据解析为热键列表，同时返回给用户看的警告。"""
     warnings: list[str] = []
 
@@ -147,8 +149,8 @@ def parse_document(data: Any) -> tuple[list[HotKey], list[str]]:
         if not isinstance(raw_key, str):
             warnings.append(f"第{index + 1}条缺少有效的 key，已跳过")
             continue
-        key = normalize_key(raw_key)
-        if not key:
+        key = normalize_key(raw_key) if raw_key.strip() else ""
+        if not key and not allow_empty_key:
             warnings.append(f"第{index + 1}条 key 为空，已跳过")
             continue
 
@@ -197,12 +199,12 @@ def parse_document(data: Any) -> tuple[list[HotKey], list[str]]:
             blocks=blocks,
         )
 
-        if key in seen:
+        if key and key in seen:
             hotkey.enabled = False
             warnings.append(
                 f"热键 {key} 重复，已保留第一条并把第{index + 1}条设为停用"
             )
-        else:
+        elif key:
             seen[key] = hotkey
 
         hotkeys.append(hotkey)
@@ -213,7 +215,9 @@ def parse_document(data: Any) -> tuple[list[HotKey], list[str]]:
     return hotkeys, warnings
 
 
-def load_document(path: Path | None = None) -> tuple[list[HotKey], list[str]]:
+def load_document(
+    path: Path | None = None, allow_empty_key: bool = False
+) -> tuple[list[HotKey], list[str]]:
     """读取配置文件；文件不存在时返回空列表（首次启动）。"""
     target = Path(path) if path is not None else default_config_path()
     if not target.exists():
@@ -229,7 +233,7 @@ def load_document(path: Path | None = None) -> tuple[list[HotKey], list[str]]:
     except json.JSONDecodeError as exc:
         raise StorageError(f"配置文件不是合法 JSON: {target}（第{exc.lineno}行）") from exc
 
-    return parse_document(data)
+    return parse_document(data, allow_empty_key=allow_empty_key)
 
 
 def load(path: Path | None = None) -> list[HotKey]:

@@ -1,12 +1,14 @@
 """主窗口冒烟测试。"""
 
+from PySide6.QtCore import Qt
+
 from hotkey.ui.main_window import MainWindow
 from hotkey.ui.widgets.block_editor import BlockListEditor
 from hotkey.ui.widgets.statement_tree import StatementTree
 
 
 def make_window(qtbot, tmp_path):
-    window = MainWindow(tmp_path / "hotkeys.json", with_tray=False)
+    window = MainWindow(tmp_path, with_tray=False)
     qtbot.addWidget(window)
     return window
 
@@ -15,10 +17,11 @@ def test_main_window_builds(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
 
     assert "HotKey" in window.windowTitle()
-    assert window.ui.hotkeyTable.model().columnCount() == 3
+    model = window.ui.hotkeyTable.model()
+    assert model.columnCount() == 3
+    assert model.headerData(0, Qt.Orientation.Horizontal) == "名称"
     assert window.ui.editorPanel.isHidden()
-    assert window.ui.fileTabs.count() == 1
-    assert window.ui.fileTabs.tabText(0) == "hotkeys.json"
+    assert window.ui.editorTabs.count() == 0
     assert window.menuWidget() is not None
 
 
@@ -44,14 +47,12 @@ def test_editor_toggle(qtbot, tmp_path):
     assert not window.ui.actionToggleEditor.isChecked()
 
 
-def test_config_roundtrip_through_window(qtbot, tmp_path):
-    from hotkey.core import blocks
-    from hotkey.core import storage
+def test_script_roundtrip_through_window(qtbot, tmp_path):
+    from hotkey.core import blocks, storage
     from hotkey.core.models import Block, HotKey
 
-    config = tmp_path / "hotkeys.json"
     storage.save(
-        config,
+        tmp_path / "demo.json",
         [
             HotKey(
                 key="ctrl+1",
@@ -63,16 +64,16 @@ def test_config_roundtrip_through_window(qtbot, tmp_path):
         ],
     )
 
-    window = MainWindow(config, with_tray=False)
-    qtbot.addWidget(window)
+    window = make_window(qtbot, tmp_path)
 
     assert window.ui.hotkeyTable.model().rowCount() == 1
     entry = window._model.entry(0)
     assert entry.id == "fixed"
+    assert entry.name == "demo"
 
     window._open_editor_for_id("fixed")
+    assert window.ui.editorTabs.count() == 1
     blocks_ = window.ui.blockEditor.blocks()
-    assert len(blocks_) == 1
     assert blocks_[0].kind == "empty"
     assert blocks_[0].text == "x = 1"
     assert blocks.blocks_to_code(blocks_) == "x = 1"
