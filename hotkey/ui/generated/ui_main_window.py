@@ -19,8 +19,8 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QMainWindow, QMenu,
     QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
-    QSplitter, QStatusBar, QTableView, QTreeWidgetItem,
-    QVBoxLayout, QWidget)
+    QSplitter, QStatusBar, QTabBar, QTableView,
+    QToolButton, QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from hotkey.ui.widgets.block_editor import BlockListEditor
 from hotkey.ui.widgets.statement_tree import StatementTree
@@ -29,8 +29,15 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1120, 560)
-        MainWindow.setMinimumSize(QSize(370, 480))
+        MainWindow.resize(1120, 640)
+        MainWindow.setMinimumSize(QSize(760, 520))
+        self.actionNewFile = QAction(MainWindow)
+        self.actionNewFile.setObjectName(u"actionNewFile")
+        self.actionSave = QAction(MainWindow)
+        self.actionSave.setObjectName(u"actionSave")
+        self.actionTheme = QAction(MainWindow)
+        self.actionTheme.setObjectName(u"actionTheme")
+        self.actionTheme.setCheckable(True)
         self.actionImport = QAction(MainWindow)
         self.actionImport.setObjectName(u"actionImport")
         self.actionExport = QAction(MainWindow)
@@ -54,10 +61,34 @@ class Ui_MainWindow(object):
         self.actionStop.setObjectName(u"actionStop")
         self.centralWidget = QWidget(MainWindow)
         self.centralWidget.setObjectName(u"centralWidget")
-        self.centralLayout = QHBoxLayout(self.centralWidget)
+        self.centralLayout = QVBoxLayout(self.centralWidget)
         self.centralLayout.setSpacing(0)
         self.centralLayout.setObjectName(u"centralLayout")
         self.centralLayout.setContentsMargins(0, 0, 0, 0)
+        self.tabRow = QHBoxLayout()
+        self.tabRow.setSpacing(4)
+        self.tabRow.setObjectName(u"tabRow")
+        self.tabRow.setContentsMargins(8, 4, 8, 0)
+        self.fileTabs = QTabBar(self.centralWidget)
+        self.fileTabs.setObjectName(u"fileTabs")
+        self.fileTabs.setTabsClosable(True)
+        self.fileTabs.setMovable(True)
+        self.fileTabs.setDocumentMode(True)
+
+        self.tabRow.addWidget(self.fileTabs)
+
+        self.btnNewFile = QToolButton(self.centralWidget)
+        self.btnNewFile.setObjectName(u"btnNewFile")
+
+        self.tabRow.addWidget(self.btnNewFile)
+
+        self.tabSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.tabRow.addItem(self.tabSpacer)
+
+
+        self.centralLayout.addLayout(self.tabRow)
+
         self.centralSplitter = QSplitter(self.centralWidget)
         self.centralSplitter.setObjectName(u"centralSplitter")
         self.centralSplitter.setOrientation(Qt.Horizontal)
@@ -188,8 +219,12 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
         self.menubar.addAction(self.menuAction.menuAction())
+        self.menuFile.addAction(self.actionNewFile)
         self.menuFile.addAction(self.actionImport)
+        self.menuFile.addSeparator()
+        self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionExport)
+        self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionExportPython)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionQuit)
@@ -197,6 +232,7 @@ class Ui_MainWindow(object):
         self.menuEdit.addAction(self.actionDelete)
         self.menuAction.addAction(self.actionSearch)
         self.menuAction.addAction(self.actionToggleEditor)
+        self.menuAction.addAction(self.actionTheme)
         self.menuAction.addSeparator()
         self.menuAction.addAction(self.actionStart)
         self.menuAction.addAction(self.actionStop)
@@ -208,11 +244,20 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"HotKey - \u70ed\u952e\u5de5\u5177", None))
-        self.actionImport.setText(QCoreApplication.translate("MainWindow", u"\u5bfc\u5165...", None))
+        self.actionNewFile.setText(QCoreApplication.translate("MainWindow", u"\u65b0\u5efa\u6587\u4ef6", None))
+#if QT_CONFIG(shortcut)
+        self.actionNewFile.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Shift+N", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionSave.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))
+#if QT_CONFIG(shortcut)
+        self.actionSave.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+S", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionTheme.setText(QCoreApplication.translate("MainWindow", u"\u6df1\u8272\u6a21\u5f0f", None))
+        self.actionImport.setText(QCoreApplication.translate("MainWindow", u"\u6253\u5f00\u6587\u4ef6...", None))
 #if QT_CONFIG(shortcut)
         self.actionImport.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+O", None))
 #endif // QT_CONFIG(shortcut)
-        self.actionExport.setText(QCoreApplication.translate("MainWindow", u"\u5bfc\u51fa...", None))
+        self.actionExport.setText(QCoreApplication.translate("MainWindow", u"\u53e6\u5b58\u4e3a...", None))
 #if QT_CONFIG(shortcut)
         self.actionExport.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Shift+S", None))
 #endif // QT_CONFIG(shortcut)
@@ -248,6 +293,10 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(shortcut)
         self.actionStop.setShortcut(QCoreApplication.translate("MainWindow", u"Shift+F5", None))
 #endif // QT_CONFIG(shortcut)
+        self.btnNewFile.setText(QCoreApplication.translate("MainWindow", u"+", None))
+#if QT_CONFIG(tooltip)
+        self.btnNewFile.setToolTip(QCoreApplication.translate("MainWindow", u"\u65b0\u5efa\u70ed\u952e\u6587\u4ef6", None))
+#endif // QT_CONFIG(tooltip)
         self.searchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22\u70ed\u952e...", None))
         self.lblEditing.setText(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c\u7f16\u8f91", None))
         self.btnCapturePos.setText(QCoreApplication.translate("MainWindow", u"\U0001f3af \U0000590d\U00005236\U00005750\U00006807", None))

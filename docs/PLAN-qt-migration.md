@@ -500,3 +500,23 @@ v1/v2 的纯脚本会迁移成一个「空」积木。
 - 新增 `core/program.py`，删除 `ui/widgets/block_canvas.py`
 
 `pytest` 147 项通过。
+
+## 20. 自定义标题栏、多文件标签与主题（2026-10-22）
+
+- **无边框窗口**：`setWindowFlag(FramelessWindowHint)`，顶部 `TitleBar` 提供拖动、
+  双击最大化、最小化、最大化/还原、关闭；`QSizeGrip` 负责右下角缩放
+- **菜单栏重组**：`QMainWindow.setMenuWidget()` 把 `TitleBar + QMenuBar` 放进窗口顶部
+- **多文件标签**（`QTabBar#fileTabs`）：
+  - `Document(path, hotkeys, title, dirty)` 列表；切换标签前提交当前模型
+  - 新建/打开/保存/另存为、关闭标签询问、拖动排序
+  - 每个文件独立自动保存，标签用 `*` 表示未保存
+  - 关闭程序时逐个处理未保存文档
+- **主题**：
+  - `theme.py` 定义 `light` / `dark` 调色板，`theme.qss` 改为 `$变量` 模板
+  - 深色 `#0B0C15 / #151628 / #2D2B55 / #7F7FD5 / #E5E5F7`；
+    浅色 `#F9FAFB / #D1D5DB / #4B5563 / #111827`
+  - 标题栏 🌙/☀ 或「操作 → 深色模式」切换，选择写入配置目录 `settings.ini`
+  - 同时设置 `QPalette`，让菜单/对话框跟随主题
+- 测试：多文件打开/切换/自动保存、无边框标志、主题切换与持久化
+
+`pytest` 153 项通过。

@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QApplication
 
 from hotkey.core import storage
 from hotkey.ui.main_window import MainWindow
+from hotkey.ui.theme import apply_theme, current_theme
 
 APP_NAME = "HotKey"
 SERVER_NAME = "HotKey.SingleInstance.v2"
@@ -28,13 +29,6 @@ _QT_LEVELS = {
     QtMsgType.QtCriticalMsg: logging.ERROR,
     QtMsgType.QtFatalMsg: logging.CRITICAL,
 }
-
-
-def _theme_path() -> Path:
-    """源码运行与 PyInstaller 冻结后都能找到 QSS。"""
-    if hasattr(sys, "_MEIPASS"):
-        return Path(sys._MEIPASS) / "hotkey" / "ui" / "theme.qss"
-    return Path(__file__).resolve().parent / "ui" / "theme.qss"
 
 
 def configure_logging() -> Path | None:
@@ -138,14 +132,13 @@ def run(self_test: bool = False) -> int:
     _install_qt_logging()
 
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
     app.setApplicationName(APP_NAME)
     app.setApplicationDisplayName(APP_NAME)
     app.setOrganizationName(APP_NAME)
     app.setQuitOnLastWindowClosed(True)
 
-    theme = _theme_path()
-    if theme.exists():
-        app.setStyleSheet(theme.read_text(encoding="utf-8"))
+    apply_theme(app, current_theme())
 
     if not self_test and _notify_existing_instance():
         logger.info("已有实例在运行，已激活该窗口")

@@ -14,9 +14,12 @@ def make_window(qtbot, tmp_path):
 def test_main_window_builds(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
 
-    assert window.windowTitle().startswith("HotKey")
+    assert "HotKey" in window.windowTitle()
     assert window.ui.hotkeyTable.model().columnCount() == 3
     assert window.ui.editorPanel.isHidden()
+    assert window.ui.fileTabs.count() == 1
+    assert window.ui.fileTabs.tabText(0) == "hotkeys.json"
+    assert window.menuWidget() is not None
 
 
 def test_promoted_widgets_are_used(qtbot, tmp_path):
