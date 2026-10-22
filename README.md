@@ -1,145 +1,153 @@
 # HotKey — 热键自动化工具
 
-> **v2 开发中**：正在从 Tkinter 迁移到 PySide6，当前开发分支为 `qt-migration`。
-> 迁移计划见 [docs/PLAN-qt-migration.md](docs/PLAN-qt-migration.md)。
-> 旧版入口仍保留：`python main_tk.py`（代码在 `legacy/`）。
+拖拽式零代码热键配置工具，面向非编程用户：从左侧操作面板把语句拖进编辑器，绑定一组全局热键，按下就执行。基于 **PySide6**，界面用 **Qt Designer** 的 `.ui` 文件维护。
 
-拖拽式零代码热键配置工具，面向非编程用户，通过可视化的操作面板拖拽组合，无需编写代码即可创建复杂的桌面自动化脚本。
+> 旧版 Tkinter 实现保留在 `legacy/`，可执行 `python main_tk.py` 对比；迁移计划见 [docs/PLAN-qt-migration.md](docs/PLAN-qt-migration.md)。
 
-## 功能特点
+## 功能
 
-### 热键管理
-- 可视化增删改查热键，支持 Ctrl+Shift/Alt/Win 组合键录制
-- JSON 配置导入/导出，方便分享和备份
-- 搜索过滤，快速定位目标热键
+- **热键管理**：新建 / 修改 / 删除 / 启用停用，重复组合键自动拦截
+- **拖拽式编辑器**：36 条预置语句、5 个分类，拖入后自动处理缩进；支持循环与条件块
+- **代码辅助**：Python 语法高亮、Tab / 回车自动缩进、对白名单模块的导入校验
+- **辅助工具**：3 秒倒计时捕获鼠标坐标、像素颜色、屏幕尺寸
+- **全局监听**：`keyboard` 注册全局热键，脚本在工作线程串行执行，不阻塞界面
+- **系统托盘**：关闭窗口最小化到托盘，托盘菜单可启停监听或退出
+- **配置持久化**：启动自动加载，改动 800ms 防抖自动保存，导入/导出 JSON
+- **单实例**：重复启动会激活已有窗口，避免重复注册热键
 
-### 拖拽式操作面板
-- **5 大分类 · 36+ 条操作语句**：鼠标、键盘、屏幕、弹窗、流程控制
-- 从「操作面板」拖拽语句到编辑器即可组合自动化流程
-- 分类树可折叠，非编程用户友好（所有 `import` 由系统自动注入）
+## 环境要求
 
-### 辅助工具
-- 🎯 **捕获坐标** — 倒计时 3 秒后自动捕获鼠标坐标
-- 🖍 **捕获颜色** — 捕获鼠标位置像素 RGB 值
-- 📐 **屏幕尺寸** — 一键插入当前屏幕分辨率
-
-### 代码编辑器
-- 深色主题编辑器，Cascadia Code 等宽字体
-- 保存时自动 AST 安全扫描，检测危险代码
-
-### 全局监听
-- 基于 `keyboard` 库的全局热键捕获
-- 系统托盘后台运行（`pystray`），右键菜单显示/隐藏/退出
-- 线程安全：热键触发与 GUI 操作隔离
-
-### 安全沙箱
-- 热键代码在 AST 白名单沙箱中执行
-- 禁止 `os` / `subprocess` / `open` / `eval` / `exec` 等危险操作
-- 允许 `pyautogui`、`time`、`print` 等安全模块
-
-## 项目结构
-
-```
-HotKey/
-├── main.py                      # 入口文件
-├── requirements.txt             # 依赖声明
-├── README.md
-├── jsons/
-│   ├── hotkeys.json             # 热键配置（JSON 数组）
-│   └── example.json             # 示例配置
-└── hotkey/                      # 核心包
-    ├── __init__.py
-    ├── app.py                   # 应用程序主类（UI 布局 / 主题 / 辅助功能）
-    ├── actuator.py              # 热键执行器（注册 / 注销 / 系统托盘）
-    ├── code_executor.py         # 安全执行器（AST 白名单 + 编译缓存）
-    ├── config.py                # 统一常量（键名映射 / 修饰键掩码 / 主题色）
-    ├── key_recorder.py          # 键盘事件录制器
-    ├── models.py                # 数据模型
-    └── ui/
-        ├── __init__.py
-        ├── tree.py              # 热键列表 TreeView 组件
-        └── menubar.py           # 菜单栏（搜索动画 / 去抖）
-```
-
-## 快速开始
-
-### 环境要求
-
-- Python 3.9+
 - Windows 10 / 11
+- Python 3.10+
+- 运行时依赖见 `requirements.txt`（`PySide6-Essentials`、`keyboard`、`pyautogui`）
 
-### 安装依赖
+## 安装与运行
 
-```bash
-pip install -r requirements.txt
-```
+```powershell
+# 开发环境（含 pytest / pyinstaller）
+pip install -r requirements-dev.txt
 
-### 运行
-
-```bash
+# 运行
 python main.py
+
+# 冒烟测试：启动后自动退出
+python main.py --self-test
 ```
 
-### 使用流程
+打包：
 
-1. **添加热键** — 右键列表空白处 →「添加」，按下组合键并填写描述
-2. **编辑操作** — 右键热键 →「编辑」，从左侧「操作面板」拖拽语句到右侧编辑器
-3. **使用辅助工具** — 点击工具栏「🎯 捕获坐标」等按钮获取精确位置/颜色
-4. **保存并启动** — 保存代码后，右键热键 →「启动」，热键即可全局生效
+```powershell
+pyinstaller --noconfirm HotKey.spec
+# 产物：dist\HotKey\HotKey.exe（onedir）
+```
 
-## JSON 配置格式
+## 使用流程
+
+1. `Ctrl+N` 打开对话框，在热键框里按下组合键（如 `Ctrl+Shift+A`），填写描述
+2. 双击列表条目打开右侧编辑器
+3. 从「操作面板」拖语句到编辑器，按需修改坐标 / 文本
+4. 点「保存」，脚本会先经过安全校验
+5. `F5` 启动监听；标题栏和托盘提示「监听中」
+6. 关闭窗口会最小化到托盘；托盘右键「退出」才是真正退出
+
+## 配置文件
+
+默认位置：`%APPDATA%\HotKey\hotkeys.json`
+
+如果该目录不可写（受限环境、受控文件夹访问等），会依次回退到 `~/.hotkey/hotkeys.json`、`.hotkey/hotkeys.json`，日志在配置目录下的 `logs/hotkey.log`。
+
+v2 格式：
 
 ```json
-[
+{
+  "version": 2,
+  "hotkeys": [
     {
-        "key": "ctrl+shift+a",
-        "description": "弹出提示",
-        "code": [
-            "pyautogui.alert('Hello World')"
-        ]
+      "id": "3f2c9a...",
+      "key": "ctrl+shift+a",
+      "description": "弹出提示",
+      "script": "pyautogui.alert('Hello')",
+      "enabled": true
     }
-]
+  ]
+}
 ```
 
-| 字段 | 说明 |
-|------|------|
-| `key` | 热键组合，如 `ctrl+shift+a`、`F11`、`win+r` |
-| `description` | 热键描述（显示在列表中） |
-| `code` | 按下热键后执行的 Python 代码行列表，沙箱中逐行执行 |
-
-## 操作面板分类
-
-| 分类 | 图标 | 条目数 | 典型操作 |
-|------|------|--------|----------|
-| 鼠标操作 | 🖱️ | 11 | 移动/点击/拖拽/滚轮/获取坐标 |
-| 键盘操作 | ⌨️ | 9 | 按键/输入/组合键(Ctrl+V, Alt+Tab…) |
-| 屏幕操作 | 🖥️ | 7 | 截图/查找图片/像素颜色判断 |
-| 弹窗交互 | 💬 | 3 | 提示框/确认框/输入框 |
-| 流程控制 | ⏱️ | 6 | 等待(0.5~5s)/循环/条件分支 |
-
-## 热键代码安全
-
-代码在受限沙箱中执行：
-
-- ✅ 允许：`pyautogui`、`time`、`print`、基本数据类型和内置函数
-- ❌ 禁止：`__import__`、`eval`、`exec`、`open`、`os.*`、`subprocess.*`
-- 保存代码时自动 AST 扫描，危险模式弹出警告
+也兼容旧版（v1）数组格式，导入时会把 `code` 行列表合并成整段 `script`。
 
 ## 快捷键
 
 | 快捷键 | 功能 |
 |--------|------|
-| `Ctrl+N` | 添加热键 |
-| `Ctrl+O` | 导入 JSON 配置 |
-| `Ctrl+S` | 保存 JSON 配置 |
-| `Ctrl+Shift+S` | 导出 JSON 配置 |
-| `Ctrl+F` | 搜索热键 |
+| `Ctrl+N` | 新建热键 |
+| `Ctrl+O` | 导入配置 |
+| `Ctrl+Shift+S` | 导出配置 |
+| `Ctrl+Q` | 退出程序 |
+| `Ctrl+F` | 搜索 |
+| `Ctrl+E` | 显示/隐藏操作编辑 |
+| `F5` / `Shift+F5` | 启动 / 停止监听 |
+| `Ctrl+Del` | 删除选中热键 |
 
-## 依赖
+## 脚本安全
 
-| 库 | 用途 |
-|----|------|
-| `keyboard` | 全局热键捕获与模拟 |
-| `pystray` | 系统托盘图标 |
-| `Pillow` | 托盘图标渲染 |
-| `pyautogui` | GUI 自动化（鼠标/键盘/屏幕操作） |
+保存前会对整段脚本做 AST 校验，执行前再校验一次：
+
+- 允许：`pyautogui`、`time`、`datetime`、`math`、`random`、`json`、`re` 以及常用内置函数
+- 禁止：`os` / `subprocess` 等模块，`eval` / `exec` / `open` / `__import__` 等调用，`__class__` 等 dunder 属性
+- `import` 语句受白名单限制，执行命名空间只注入白名单模块
+
+这是一道防误用的护栏，不是对抗恶意代码的安全边界——用户本来就能修改脚本。
+
+## 项目结构
+
+```
+HotKey/
+├── main.py                  # 入口（--self-test）
+├── main_tk.py               # 旧版 Tk 入口
+├── HotKey.spec              # PyInstaller onedir 配置
+├── hotkey/
+│   ├── app.py               # 启动、日志、单实例
+│   ├── core/                # 不依赖 Qt，可独立测试
+│   │   ├── models.py        # HotKey / Issue
+│   │   ├── storage.py       # v1/v2 迁移、原子写、目录回退
+│   │   ├── validator.py     # 整段 AST 校验 + 执行命名空间
+│   │   ├── keymap.py        # Qt 键名 <-> keyboard 键名
+│   │   ├── catalog.py       # 36 条语句目录
+│   │   ├── hotkey_service.py# 热键注册
+│   │   └── runner.py        # 单 worker 执行队列
+│   └── ui/
+│       ├── forms/           # Designer 源文件（main_window / hotkey_dialog）
+│       ├── generated/       # pyside6-uic 生成物（提交入库）
+│       ├── widgets/         # ScriptEditor / StatementTree / 高亮
+│       ├── main_window.py
+│       ├── hotkey_model.py
+│       ├── recorder.py
+│       └── theme.qss
+├── tests/                   # pytest + pytest-qt（80 项）
+├── tools/build_ui.ps1       # .ui -> generated/ui_*.py
+└── legacy/                  # 旧 Tk 实现（仅参考）
+```
+
+## 开发
+
+修改界面：用 Qt Designer 打开 `hotkey/ui/forms/*.ui`，保存后重新生成：
+
+```powershell
+.\.venv\Scripts\pyside6-designer.exe hotkey\ui\forms\main_window.ui
+powershell -ExecutionPolicy Bypass -File tools\build_ui.ps1
+```
+
+生成物需要提交；`pytest` 里有一项会用 `build_ui.ps1 -Check` 检查 `.ui` 与生成物是否同步。
+
+测试（无需真实桌面，Qt 使用 offscreen）：
+
+```powershell
+pytest
+```
+
+## 已知限制
+
+- `keyboard` 库在部分 Windows 环境下需要以管理员身份运行才能收到全局按键
+- 录制 `Win+X` 组合键时，系统可能同时响应（例如 `Win+R` 会打开「运行」）
+- 脚本串行执行，长脚本会排队；`time.sleep` 不影响界面和热键注册，但会推迟后续脚本
+- 打包产物是 onedir，不是单文件

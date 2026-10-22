@@ -83,3 +83,61 @@ QLabel#lblEditing {
     font-weight: bold;
     color: #1a2332;
 }
+
+QTreeWidget {
+    background-color: #e2e6ed;
+    border: 0;
+    border-radius: 4px;
+    outline: 0;
+    padding: 4px;
+}
+
+QTreeWidget::item {
+    padding: 4px 2px;
+}
+
+QTreeWidget::item:selected {
+    background-color: #4a8fe7;
+    color: #ffffff;
+    border-radius: 3px;
+}
+
+QMenu {
+    background-color: #ffffff;
+    border: 1px solid #d5dce6;
+    padding: 4px;
+}
+
+QMenu::item {
+    padding: 6px 24px;
+    border-radius: 3px;
+}
+
+QMenu::item:selected {
+    background-color: #d0dff5;
+    color: #1a2332;
+}
+
+QMenu::separator {
+    height: 1px;
+    background-color: #e2e6ed;
+    margin: 4px 8px;
+}
+
+QDialog {
+    background-color: #f0f3f7;
+}
+
+QKeySequenceEdit {
+    background-color: #ffffff;
+    border: 1px solid #d5dce6;
+    border-radius: 4px;
+    padding: 4px 6px;
+}
+
+QToolTip {
+    background-color: #3b4a5e;
+    color: #ffffff;
+    border: 0;
+    padding: 4px 6px;
+}

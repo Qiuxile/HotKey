@@ -19,10 +19,11 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QMainWindow, QMenu,
     QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
-    QSplitter, QStatusBar, QTableView, QVBoxLayout,
-    QWidget)
+    QSplitter, QStatusBar, QTableView, QTreeWidgetItem,
+    QVBoxLayout, QWidget)
 
 from hotkey.ui.widgets.script_editor import ScriptEditor
+from hotkey.ui.widgets.statement_tree import StatementTree
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -95,10 +96,23 @@ class Ui_MainWindow(object):
 
         self.editorLayout.addWidget(self.lblEditing)
 
+        self.editorBody = QHBoxLayout()
+        self.editorBody.setSpacing(8)
+        self.editorBody.setObjectName(u"editorBody")
+        self.statementTree = StatementTree(self.editorPanel)
+        self.statementTree.setObjectName(u"statementTree")
+        self.statementTree.setMinimumSize(QSize(190, 0))
+        self.statementTree.setMaximumSize(QSize(240, 16777215))
+
+        self.editorBody.addWidget(self.statementTree)
+
+        self.editorColumn = QVBoxLayout()
+        self.editorColumn.setSpacing(8)
+        self.editorColumn.setObjectName(u"editorColumn")
         self.scriptEditor = ScriptEditor(self.editorPanel)
         self.scriptEditor.setObjectName(u"scriptEditor")
 
-        self.editorLayout.addWidget(self.scriptEditor)
+        self.editorColumn.addWidget(self.scriptEditor)
 
         self.editorToolbar = QHBoxLayout()
         self.editorToolbar.setObjectName(u"editorToolbar")
@@ -137,7 +151,13 @@ class Ui_MainWindow(object):
         self.editorToolbar.addWidget(self.btnCloseEditor)
 
 
-        self.editorLayout.addLayout(self.editorToolbar)
+        self.editorColumn.addLayout(self.editorToolbar)
+
+
+        self.editorBody.addLayout(self.editorColumn)
+
+
+        self.editorLayout.addLayout(self.editorBody)
 
         self.centralSplitter.addWidget(self.editorPanel)
 
@@ -198,7 +218,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(shortcut)
         self.actionDelete.setText(QCoreApplication.translate("MainWindow", u"\u5220\u9664\u70ed\u952e", None))
 #if QT_CONFIG(shortcut)
-        self.actionDelete.setShortcut(QCoreApplication.translate("MainWindow", u"Del", None))
+        self.actionDelete.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Del", None))
 #endif // QT_CONFIG(shortcut)
         self.actionSearch.setText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22", None))
 #if QT_CONFIG(shortcut)

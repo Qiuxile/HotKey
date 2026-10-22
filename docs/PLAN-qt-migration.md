@@ -1,6 +1,6 @@
 # HotKey v2 迁移与实施计划（Tk → PySide6）
 
-> 状态：实施中 · M0 / M1 已完成（2026-10-22）
+> 状态：可用版本完成 · M0–M5 已交付（2026-10-22）
 > 已定决策：GUI 用 PySide6，界面用 Qt Designer 可编辑的 `.ui` 文件
 
 ## 1. 决策记录
@@ -257,37 +257,40 @@ def keyboard_to_qt(key: str) -> str
 
 - [x] `core/models.py`、`storage.py`、`catalog.py`、`validator.py`、`keymap.py`
 - [x] 测试：v1→v2 迁移、整段编译（`for` 能执行）、keymap 表、重复 key、受限导入
-- **DoD**：`core` 不 import PySide6（已检查）；`pytest` 59 项全部通过
+- **DoD**：`core` 不 import PySide6（已检查）；`pytest` 59 项全部通过（当时）
 
-### M2 主窗（1.5 天）
+### M2 主窗（1.5 天）— ✅ 已完成
 
-- [ ] `main_window.ui` 落地；`HotKeyTableModel` + `QSortFilterProxyModel`
-- [ ] 右键菜单、`QAction` 快捷键、编辑面板显隐（替代窗口尺寸守卫）
-- [ ] 回归测试：搜索过滤后 `mapToSource` 命中正确 UUID
-- **DoD**：增删改查 + 搜索后右键操作对象正确
+- [x] `main_window.ui` 落地；`HotKeyTableModel` + `QSortFilterProxyModel`
+- [x] 右键菜单、`QAction` 快捷键、编辑面板显隐（替代窗口尺寸守卫）
+- [x] 回归测试：搜索过滤后 `mapToSource` 命中正确 UUID
+- **DoD**：增删改查 + 搜索后右键操作对象正确；启动加载、800ms 防抖自动保存
 
-### M3 编辑器（1.5 天）
+### M3 编辑器（1.5 天）— ✅ 已完成
 
-- [ ] `editor_panel.ui` + `ScriptEditor`（Tab、自动缩进、高亮）
-- [ ] `StatementTree` 拖放 → 光标处插入 + 块模板
-- [ ] 整段编译接线，语法错误定位到行
-- **DoD**：拖入 `for` + 循环体，点「试运行」能执行
+- [x] 编辑器内嵌在 `main_window.ui`（`editorPanel`），未单独拆 `editor_panel.ui`
+- [x] `ScriptEditor`（Tab、回车缩进、Backspace 反缩进、语法高亮）
+- [x] `StatementTree` 拖放 → 光标处插入 + 块模板缩进 + `${cursor}` 定位
+- [x] 整段编译接线，语法错误按行提示并阻止保存
+- **DoD**：拖入 `for` + 循环体，点「试运行」能执行（已手工验证）
 
-### M4 热键与托盘（1 天）
+### M4 热键与托盘（1 天）— ✅ 已完成（真机按键待人工确认）
 
-- [ ] `hotkey_dialog.ui` + `QKeySequenceEdit` 录制 + keymap
-- [ ] `HotkeyService` + `ScriptRunner` 接线
-- [ ] 托盘、关窗到托盘、托盘退出
-- [ ] 回归测试：退出后无残留线程/钩子
-- **DoD**：真机热键可执行；托盘退出后任务管理器无进程
+- [x] `hotkey_dialog.ui` + `QKeySequenceEdit` 录制 + keymap
+- [x] `HotkeyService` + `ScriptRunner` 接线
+- [x] 托盘、关窗到托盘、托盘退出
+- [x] 退出路径：保存 → 注销热键 → 关闭 runner → 隐藏托盘 → `QApplication.quit()`
+- **DoD**：注册热键成功、托盘退出路径已用脚本验证；当前会话的键盘钩子收不到
+  合成按键，**真实按键触发需要人工按一次确认**
 
-### M5 收尾（1 天）
+### M5 收尾（1 天）— ✅ 基本完成
 
-- [ ] 自动保存、日志（`RotatingFileHandler` + `qInstallMessageHandler`）、单实例
-- [ ] 坐标捕获与 DPI 一致性（统一走 pyautogui 的物理像素）
-- [ ] `HotKey.spec` 更新、onedir、版本信息、DPI manifest、LGPL 声明
-- [ ] 手工冒烟清单
-- **DoD**：干净环境解压即用
+- [x] 自动保存、日志（`RotatingFileHandler` + `qInstallMessageHandler`）、单实例
+- [x] 坐标捕获与 DPI 一致性（统一走 pyautogui 的物理像素；Qt 侧设置 PassThrough）
+- [x] `HotKey.spec` 更新为 onedir，补 `pyautogui` 等动态导入
+- [ ] 版本信息、显式 DPI manifest、LGPL 声明文件（发布前补）
+- [x] 手工冒烟：启动、关窗到托盘、读配置、保存、试运行、打包 exe 自检
+- **DoD**：解压 onedir 即可运行；配置目录具备多级回退
 
 合计约 **7 人日**，另留 1–2 天缓冲。
 
@@ -390,3 +393,30 @@ M0 过程中确认的三个环境事实，后续阶段要沿用：
 「搜索错位」和「托盘退出」分别在 M2、M4 修复。
 
 测试：`pytest` 59 项通过（core 55 项 + 界面/生成物 4 项），耗时约 3 秒。
+
+## 16. 可用版本完成记录（2026-10-22）
+
+在 M1 基础上补齐了界面与运行时，当前 `pytest` 80 项通过，`dist\HotKey` 可启动。
+
+新增模块：
+
+| 模块 | 作用 |
+|---|---|
+| `core/runner.py` | 单 worker 队列，整段校验 + 编译 + 执行，异常隔离 |
+| `core/hotkey_service.py` | 按 UUID 注册/注销热键，可注入 fake backend 测试 |
+| `ui/hotkey_model.py` | 3 列表格模型 + 搜索代理（选中经 `mapToSource` 回到源行） |
+| `ui/widgets/statement_tree.py` | 分类树 + MIME 拖拽 |
+| `ui/widgets/highlighter.py` | 关键字/字符串/注释/数字高亮 |
+| `ui/widgets/script_editor.py` | 拖放插入、块模板缩进、Tab/回车/反缩进 |
+| `ui/recorder.py` + `hotkey_dialog.ui` | `QKeySequenceEdit` 录制，Win 键走 `Meta` |
+| `ui/main_window.py` | 列表/编辑/搜索/右键菜单/托盘/自动保存/单实例联动 |
+
+端到端验证：
+
+- 新建条目 → 编辑器写入 `for` 循环 → 保存 → 生成的 JSON 为 v2 整段脚本
+- 试运行输出 `3`，证明循环真正执行
+- 关窗后窗口隐藏、托盘图标存在；`_quit()` 顺序为保存 → 注销 → 停 worker → 退出
+- 打包 exe（onedir，124 MB）`--self-test` 退出码 0；`pyautogui` 已进入 Analysis TOC
+
+仍然需要人工确认的一项：当前会话的全局键盘钩子收不到合成按键，
+所以"按下热键触发脚本"只能用真实键盘验证一次。注册本身没有报错。

@@ -126,64 +126,94 @@
          </widget>
         </item>
         <item>
-         <widget class="ScriptEditor" name="scriptEditor"/>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="editorToolbar">
+         <layout class="QHBoxLayout" name="editorBody">
+          <property name="spacing">
+           <number>8</number>
+          </property>
           <item>
-           <widget class="QPushButton" name="btnCapturePos">
-            <property name="text">
-             <string>🎯 捕获坐标</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btnCaptureColor">
-            <property name="text">
-             <string>🖍 捕获颜色</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btnScreenSize">
-            <property name="text">
-             <string>📐 屏幕尺寸</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="editorSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
+           <widget class="StatementTree" name="statementTree">
+            <property name="minimumSize">
              <size>
-              <width>40</width>
-              <height>20</height>
+              <width>190</width>
+              <height>0</height>
              </size>
             </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btnRunOnce">
-            <property name="text">
-             <string>试运行</string>
+            <property name="maximumSize">
+             <size>
+              <width>240</width>
+              <height>16777215</height>
+             </size>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="btnSaveScript">
-            <property name="text">
-             <string>保存</string>
+           <layout class="QVBoxLayout" name="editorColumn">
+            <property name="spacing">
+             <number>8</number>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btnCloseEditor">
-            <property name="text">
-             <string>关闭</string>
-            </property>
-           </widget>
+            <item>
+             <widget class="ScriptEditor" name="scriptEditor"/>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="editorToolbar">
+              <item>
+               <widget class="QPushButton" name="btnCapturePos">
+                <property name="text">
+                 <string>🎯 捕获坐标</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnCaptureColor">
+                <property name="text">
+                 <string>🖍 捕获颜色</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnScreenSize">
+                <property name="text">
+                 <string>📐 屏幕尺寸</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="editorSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnRunOnce">
+                <property name="text">
+                 <string>试运行</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnSaveScript">
+                <property name="text">
+                 <string>保存</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnCloseEditor">
+                <property name="text">
+                 <string>关闭</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
@@ -270,7 +300,7 @@
     <string>删除热键</string>
    </property>
    <property name="shortcut">
-    <string>Del</string>
+    <string>Ctrl+Del</string>
    </property>
   </action>
   <action name="actionSearch">
@@ -314,6 +344,11 @@
    <class>ScriptEditor</class>
    <extends>QPlainTextEdit</extends>
    <header>hotkey.ui.widgets.script_editor</header>
+  </customwidget>
+  <customwidget>
+   <class>StatementTree</class>
+   <extends>QTreeWidget</extends>
+   <header>hotkey.ui.widgets.statement_tree</header>
   </customwidget>
  </customwidgets>
  <resources/>

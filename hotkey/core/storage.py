@@ -26,8 +26,46 @@ def default_config_dir() -> Path:
     return base / CONFIG_DIR_NAME
 
 
+def _candidate_config_dirs() -> list[Path]:
+    candidates: list[Path] = []
+    override = os.environ.get("HOTKEY_HOME")
+    if override:
+        candidates.append(Path(override))
+    candidates.extend(
+        [
+            default_config_dir(),
+            Path.home() / ".hotkey",
+            Path.cwd() / ".hotkey",
+        ]
+    )
+
+    unique: list[Path] = []
+    for candidate in candidates:
+        if candidate not in unique:
+            unique.append(candidate)
+    return unique
+
+
+def config_root() -> Path:
+    """返回第一个真正可写的配置目录。
+
+    某些受限环境（或启用了受控文件夹访问的 Windows）不允许写入
+    ``%APPDATA%``，此时依次回退到用户目录、当前目录，保证程序仍能保存配置。
+    """
+    for candidate in _candidate_config_dirs():
+        try:
+            candidate.mkdir(parents=True, exist_ok=True)
+            probe = candidate / ".write-probe"
+            probe.write_text("", encoding="utf-8")
+            probe.unlink()
+            return candidate
+        except OSError:
+            continue
+    return default_config_dir()
+
+
 def default_config_path() -> Path:
-    return default_config_dir() / FILE_NAME
+    return config_root() / FILE_NAME
 
 
 def _coerce_script(entry: dict[str, Any]) -> tuple[str, bool]:

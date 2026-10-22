@@ -18,7 +18,17 @@ a = Analysis(
         ('hotkey/ui/theme.qss', 'hotkey/ui'),
         ('jsons', 'jsons'),
     ],
-    hiddenimports=[],
+    hiddenimports=[
+        # 脚本通过受限命名空间动态导入这些模块，PyInstaller 静态分析看不到
+        'pyautogui',
+        'pymsgbox',
+        'pytweening',
+        'pyscreeze',
+        'mouseinfo',
+        'keyboard',
+        'PIL',
+        'PIL.Image',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

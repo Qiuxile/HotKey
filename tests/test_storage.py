@@ -13,10 +13,11 @@ def write_json(path, data):
     return path
 
 
-def test_default_path_is_under_appdata():
+def test_default_path_honours_hotkey_home(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOTKEY_HOME", str(tmp_path))
     path = storage.default_config_path()
-    assert path.name == "hotkeys.json"
-    assert "HotKey" in path.parts
+    assert path == tmp_path / "hotkeys.json"
+    assert path.parent.is_dir()
 
 
 def test_load_missing_file_returns_empty(tmp_path):
