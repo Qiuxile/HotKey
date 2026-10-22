@@ -29,8 +29,8 @@ class TitleBar(QFrame):
         self._full_title = "HotKey"
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 0, 8, 0)
-        layout.setSpacing(8)
+        layout.setContentsMargins(8, 0, 4, 0)
+        layout.setSpacing(4)
         self._layout = layout
 
         self.title_label = QLabel("HotKey", self)
@@ -55,7 +55,7 @@ class TitleBar(QFrame):
         self.theme_button.setObjectName("titleTheme")
         self.theme_button.setText("深色")
         self.theme_button.setToolTip("切换到深色主题")
-        self.theme_button.setFixedSize(52, 28)
+        self.theme_button.setFixedSize(44, 28)
         self.theme_button.clicked.connect(self.theme_clicked.emit)
         layout.addWidget(self.theme_button)
 
@@ -91,7 +91,7 @@ class TitleBar(QFrame):
         button.setObjectName("titleClose" if close else "titleButton")
         button.setIcon(self.style().standardIcon(icon))
         button.setIconSize(QSize(14, 14))
-        button.setFixedSize(36, 28)
+        button.setFixedSize(32, 28)
         button.setToolTip(tooltip)
         button.setAutoRaise(True)
         return button
@@ -135,11 +135,11 @@ class TitleBar(QFrame):
         self._apply_title()
 
     def _apply_title(self) -> None:
-        # 右侧固定控件大约占 350px，窄窗口优先保证菜单按钮可见
+        # 右侧固定控件大约占 300px，窄窗口优先保证菜单按钮可见
         bar_width = self.width()
         if bar_width < 200:
             bar_width = self._window.width()
-        available = max(0, min(TITLE_MAX_WIDTH, bar_width - 350))
+        available = max(0, min(TITLE_MAX_WIDTH, bar_width - 300))
         if available < 24:
             self.title_label.setText("")
             return

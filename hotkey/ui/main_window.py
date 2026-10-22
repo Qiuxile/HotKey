@@ -8,7 +8,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QTimer, Qt, Signal
+from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, QTimer, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -77,6 +77,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        # 编辑区先从 splitter 里摘掉，避免隐藏时仍把窗口最小高度撑到 700
+        self.ui.editorPanel.hide()
+        self.ui.editorPanel.setParent(None)
         # QTabBar 在部分布局里会被压成 0 高，强制一个可读高度
         self.ui.editorTabs.setMinimumHeight(28)
         self.ui.editorTabs.setExpanding(False)
@@ -104,6 +107,8 @@ class MainWindow(QMainWindow):
         self._resize_edges = Qt.Edge(0)
         self._resize_origin = QPoint()
         self._resize_geometry = QRect()
+        self._editor_auto_expanded = False
+        self._editor_previous_size = QSize(NARROW_WIDTH, WINDOW_HEIGHT)
 
         self._save_timer = QTimer(self)
         self._save_timer.setSingleShot(True)
@@ -134,6 +139,9 @@ class MainWindow(QMainWindow):
         if with_tray:
             self._setup_tray()
 
+        # 所有布局/隐藏动作完成后再固定窄窗口尺寸
+        self.setMinimumWidth(NARROW_WIDTH)
+        self.resize(NARROW_WIDTH, WINDOW_HEIGHT)
         self._restore_tabs()
 
         if autostart:
@@ -297,6 +305,8 @@ class MainWindow(QMainWindow):
             self, "title_bar"
         ):
             self.title_bar.set_maximized(self.isMaximized())
+            if self.isMaximized() or self.isFullScreen():
+                self._editor_auto_expanded = False
         super().changeEvent(event)
 
     # ---------------------------------------------------------------- 初始化
@@ -783,19 +793,42 @@ class MainWindow(QMainWindow):
             self._set_editor_visible(False)
 
     def _set_editor_visible(self, visible: bool) -> None:
-        if not visible:
-            self._commit_tab()
+        was_hidden = self.ui.editorPanel.isHidden()
+
+        if visible and was_hidden:
+            if self.ui.editorPanel.parent() is not self.ui.centralSplitter:
+                self.ui.centralSplitter.addWidget(self.ui.editorPanel)
+            # 只在窗口仍是默认 400×600、且没有最大化/全屏时自动展开；
+            # 用户手动调过大小、最大化或全屏时只显示面板，不动窗口。
+            self._editor_auto_expanded = (
+                not self.isMaximized()
+                and not self.isFullScreen()
+                and self.width() == NARROW_WIDTH
+                and self.height() == WINDOW_HEIGHT
+            )
+            if self._editor_auto_expanded:
+                self._editor_previous_size = self.size()
+                self.resize(WIDE_WIDTH, WINDOW_HEIGHT)
+                self.ui.centralSplitter.setSizes(
+                    [NARROW_WIDTH, WIDE_WIDTH - NARROW_WIDTH]
+                )
+        elif not visible:
+            if (
+                self._editor_auto_expanded
+                and not self.isMaximized()
+                and not self.isFullScreen()
+                and self.size() == QSize(WIDE_WIDTH, WINDOW_HEIGHT)
+            ):
+                self.resize(self._editor_previous_size)
+            self._editor_auto_expanded = False
+
+        self._commit_tab()
         self.ui.editorPanel.setVisible(visible)
+        if not visible:
+            self.ui.editorPanel.setParent(None)
         self.ui.actionToggleEditor.setChecked(visible)
-        if visible:
-            self.setMinimumSize(760, 520)
-            self.ui.centralSplitter.setSizes([NARROW_WIDTH, 750])
-            self.resize(WIDE_WIDTH, WINDOW_HEIGHT)
-            if self._editor_tabs:
-                self._activate_tab(self._active_tab)
-        else:
-            self.setMinimumSize(NARROW_WIDTH, 520)
-            self.resize(NARROW_WIDTH, WINDOW_HEIGHT)
+        if visible and self._editor_tabs:
+            self._activate_tab(self._active_tab)
 
     # ---------------------------------------------------------------- 运行/导出
 

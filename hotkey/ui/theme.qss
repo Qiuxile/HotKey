@@ -63,7 +63,7 @@ QToolButton#titleMenuButton {
     border: 0;
     border-radius: 4px;
     font-size: 10pt;
-    padding: 0 10px;
+    padding: 0 7px;
 }
 
 QToolButton#titleMenuButton:hover {

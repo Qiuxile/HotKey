@@ -1,6 +1,6 @@
 """主窗口冒烟测试。"""
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint, QSize, Qt
 from PySide6.QtTest import QTest
 
 from hotkey.ui.main_window import MainWindow
@@ -28,10 +28,39 @@ def test_main_window_builds(qtbot, tmp_path):
 
 def test_default_narrow_window_is_400x600(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
+    window.show()
+    qtbot.wait(50)
 
     assert window.width() == 400
     assert window.height() == 600
     assert window.ui.editorPanel.isHidden()
+
+
+def test_editor_expands_only_from_default_size(qtbot, tmp_path):
+    window = make_window(qtbot, tmp_path)
+    window.show()
+    qtbot.wait(50)
+
+    window._set_editor_visible(True)
+    assert not window.ui.editorPanel.isHidden()
+    assert window.size() == QSize(1240, 600)
+
+    window._set_editor_visible(False)
+    assert window.size() == QSize(400, 600)
+
+
+def test_editor_does_not_reset_user_window(qtbot, tmp_path):
+    window = make_window(qtbot, tmp_path)
+    window.show()
+    qtbot.wait(50)
+    window.resize(900, 700)
+
+    window._set_editor_visible(True)
+    assert not window.ui.editorPanel.isHidden()
+    assert window.size() == QSize(900, 700)
+
+    window._set_editor_visible(False)
+    assert window.size() == QSize(900, 700)
 
 
 def test_promoted_widgets_are_used(qtbot, tmp_path):
@@ -59,6 +88,7 @@ def test_editor_toggle(qtbot, tmp_path):
 def test_titlebar_has_menu_and_toolbar_is_above_blocks(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
     window.show()
+    qtbot.wait(50)
 
     assert len(window.title_bar.menu_buttons) == 3
     assert all(button.isVisible() for button in window.title_bar.menu_buttons)
@@ -69,6 +99,7 @@ def test_titlebar_has_menu_and_toolbar_is_above_blocks(qtbot, tmp_path):
     qtbot.wait(10)
     assert window.title_bar.menus[0].isVisible()
     window.title_bar.menus[0].hide()
+
     window._set_editor_visible(True)
     qtbot.wait(10)
     toolbar_y = window.ui.btnCapturePos.mapTo(window, QPoint(0, 0)).y()
@@ -78,8 +109,9 @@ def test_titlebar_has_menu_and_toolbar_is_above_blocks(qtbot, tmp_path):
 
 def test_resize_edges(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
-    window.resize(800, 600)
     window.show()
+    qtbot.wait(50)
+    window.resize(800, 600)
 
     top_left = window._edges_at(QPoint(1, 1))
     assert top_left & Qt.Edge.LeftEdge
