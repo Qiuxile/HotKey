@@ -34,6 +34,7 @@ from hotkey.core.program import render_program
 from hotkey.core.runner import ScriptRunner
 from hotkey.ui import theme as theme_module
 from hotkey.ui.about_dialog import AboutDialog
+from hotkey.ui.icon import app_icon
 from hotkey.ui.icons import themed_icon
 from hotkey.ui.generated.ui_main_window import Ui_MainWindow
 from hotkey.ui.hotkey_model import HotKeyFilterProxy, HotKeyTableModel
@@ -73,6 +74,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.setWindowIcon(app_icon())
         # 编辑区先从 splitter 里摘掉，避免隐藏时仍把窗口最小高度撑到 700
         self.ui.editorPanel.hide()
         self.ui.editorPanel.setParent(None)

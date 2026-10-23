@@ -22,6 +22,7 @@ def test_main_window_builds(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
 
     assert "HotKey" in window.windowTitle()
+    assert not window.windowIcon().isNull()
     model = window.ui.hotkeyTable.model()
     assert model.columnCount() == 3
     assert model.headerData(0, Qt.Orientation.Horizontal) == "名称"
