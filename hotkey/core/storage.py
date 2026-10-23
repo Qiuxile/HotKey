@@ -91,6 +91,8 @@ def _hydrate_block(block: Block) -> None:
         _hydrate_block(child)
     for child in block.else_children:
         _hydrate_block(child)
+    for child in block.expressions.values():
+        _hydrate_block(child)
 
     if block.kind == "empty":
         return
@@ -107,6 +109,23 @@ def _hydrate_block(block: Block) -> None:
 
     if not block.params:
         block.params = snippet.blank_values()
+
+    # 旧配置里的条件/值都是手写 Python；没有 mode 时按代码处理
+    for param in snippet.params:
+        if param.kind == "value":
+            block.value_modes.setdefault(param.name, "code")
+
+    # 旧版函数定义把返回表达式放在 result 参数里，迁移成“返回”积木
+    if block.kind == "logic_func_def":
+        result = block.params.pop("result", "").strip()
+        if result and not any(child.kind == "flow_return" for child in block.children):
+            block.children.append(
+                Block(
+                    kind="flow_return",
+                    params={"value": result},
+                    value_modes={"value": "code"},
+                )
+            )
 
     block.text = snippet.render(block.params)
 

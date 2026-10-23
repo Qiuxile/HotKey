@@ -14,8 +14,8 @@
 ```
 hotkey/
 ├── core/                 # 不依赖 PySide6，可单独 pytest
-│   ├── models.py         # HotKey（脚本）、Block（积木）、Issue
-│   ├── blocks.py         # 积木树 -> Python 代码
+│   ├── models.py         # Block（params/children/expressions/value_modes）、HotKey、Issue
+│   ├── blocks.py         # 积木树 + 值表达式 -> Python 代码
 │   ├── program.py        # 生成可独立运行的 .py
 │   ├── library.py        # 单文件脚本库：加载/保存/删除/迁移
 │   ├── storage.py        # 单文件内 JSON 的解析、v1~v5 迁移、原子写
@@ -37,8 +37,8 @@ hotkey/
 │   ├── theme.py          # 深/浅色调色板、QSS 渲染、QSettings
 │   ├── theme.qss         # 使用 $变量 的 QSS 模板
 │   └── widgets/
-│       ├── block_editor.py     # 单栏积木编辑器（含拖拽排序）
-│       ├── statement_tree.py   # 积木柜：分类 + 搜索 + 拖出积木
+│       ├── block_editor.py     # 单栏积木编辑器（含拖拽排序、值槽）
+│       ├── statement_tree.py   # 积木柜：分类 + 搜索 + 拖出积木/值积木
 │       ├── title_bar.py        # 自定义标题栏 + 菜单按钮
 │       └── frameless_resize.py # 无边框窗口四边/四角缩放
 └── app.py                # 编辑器启动、单实例
@@ -103,14 +103,25 @@ jsons/*.hk ──ScriptLibrary.load()──► 有热键且启用的脚本
 - 标签里的积木修改只在内存，点保存才写文件；`*` 表示有未保存修改。
 - 没有热键（`key == ""`）的脚本不会注册全局热键，但仍可运行/导出。
 - 不同脚本文件不能使用同一个热键；加载时会停用重复项。
+- 值槽存 `Block.expressions[name]`（返回积木）和 `Block.value_modes[name]`（手填类型）；
+  `blocks.expression_code()` 负责把值积木转成表达式。
 
 ## 5. 改哪里
 
 ### 加一个积木
 
 只改 `core/catalog.json`：`id`、`category`、`label`、`code`、`params`、`slots`。
-`label` 里的 `{name}` 会变成常驻输入框；不需要改 UI 代码。
+`label` 里的 `{name}` 会根据参数类型变成常驻输入框或值槽；不需要改 UI 代码。
 加完跑 `pytest tests/test_catalog.py`。全部积木清单见 [BLOCKS.md](BLOCKS.md)。
+
+### 改值槽 / 表达式
+
+- `params[].kind == "value"`：`BlockWidget` 会创建 `ValueSlot`
+- 手填值存在 `Block.params[name]`，类型存在 `Block.value_modes[name]`
+  （`auto` / `text` / `number` / `bool` / `code`）
+- 拖入的返回值积木存在 `Block.expressions[name]`，必须是 `expression: true` 的积木
+- `core.blocks.literal_code()` 处理手填值，`expression_code()` 处理返回积木
+- 表达式积木不能作为普通语句加进积木栏（`BlockListEditor.add_snippet` 会拒绝）
 
 ### 改主窗口布局
 

@@ -5,7 +5,7 @@ import json
 import pytest
 
 from hotkey.core import storage
-from hotkey.core.models import HotKey
+from hotkey.core.models import Block, HotKey
 
 
 def write_json(path, data):
@@ -221,3 +221,29 @@ def test_positions_and_else_branch_roundtrip(tmp_path):
         "else:\n"
         "    pyautogui.doubleClick()"
     )
+
+
+def test_expression_values_roundtrip(tmp_path):
+    path = tmp_path / "hotkeys.json"
+    hotkey = HotKey(
+        key="f1",
+        blocks=[
+            Block(
+                "logic_set",
+                params={"name": "result", "value": ""},
+                expressions={
+                    "value": Block(
+                        "value_func_call",
+                        params={"name": "find", "args": "1"},
+                    )
+                },
+            )
+        ],
+    )
+
+    storage.save(path, [hotkey])
+    loaded, _ = storage.load_document(path)
+    block = loaded[0].blocks[0]
+
+    assert block.expressions["value"].kind == "value_func_call"
+    assert loaded[0].script == "result = find(1)"

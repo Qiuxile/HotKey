@@ -8,10 +8,22 @@ def test_program_has_header_main_and_functions():
     blocks = [
         Block(
             "logic_func_def",
-            params={"name": "double", "params": "x", "result": "x * 2"},
-            children=[Block("logic_set", params={"name": "y", "value": "1"})],
+            params={"name": "double", "params": "x"},
+            children=[
+                Block("logic_set", params={"name": "y", "value": "1"}, value_modes={"value": "number"}),
+                Block("flow_return", params={"value": "x * 2"}, value_modes={"value": "code"}),
+            ],
         ),
-        Block("logic_func_call", params={"name": "double", "args": "3", "variable": "r"}),
+        Block(
+            "logic_set",
+            params={"name": "r", "value": ""},
+            expressions={
+                "value": Block(
+                    "value_func_call",
+                    params={"name": "double", "args": "3"},
+                )
+            },
+        ),
         Block("mouse_click"),
     ]
 
@@ -27,7 +39,7 @@ def test_program_has_header_main_and_functions():
 
 
 def test_program_without_flow_uses_pass():
-    blocks = [Block("logic_func_def", params={"name": "noop", "params": "", "result": ""})]
+    blocks = [Block("logic_func_def", params={"name": "noop", "params": ""})]
 
     program = render_program(blocks)
 

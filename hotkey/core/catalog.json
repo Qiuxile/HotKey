@@ -1,22 +1,541 @@
 {
-  "version": 1,
+  "version": 2,
   "categories": [
-    { "id": "mouse", "label": "鼠标操作", "color": "#dbeafe", "accent": "#3b82f6" },
-    { "id": "keyboard", "label": "键盘操作", "color": "#dcfce7", "accent": "#22c55e" },
-    { "id": "screen", "label": "屏幕操作", "color": "#ede9fe", "accent": "#8b5cf6" },
-    { "id": "logic", "label": "函数与数据", "color": "#fef9c3", "accent": "#ca8a04" },
-    { "id": "dialog", "label": "弹窗交互", "color": "#ffedd5", "accent": "#f97316" },
-    { "id": "flow", "label": "流程控制", "color": "#fee2e2", "accent": "#ef4444" }
+    {
+      "id": "value",
+      "label": "值与条件",
+      "color": "#e0f2fe",
+      "accent": "#0284c7"
+    },
+    {
+      "id": "logic",
+      "label": "函数与数据",
+      "color": "#fef9c3",
+      "accent": "#ca8a04"
+    },
+    {
+      "id": "flow",
+      "label": "流程控制",
+      "color": "#fee2e2",
+      "accent": "#ef4444"
+    },
+    {
+      "id": "mouse",
+      "label": "鼠标操作",
+      "color": "#dbeafe",
+      "accent": "#3b82f6"
+    },
+    {
+      "id": "keyboard",
+      "label": "键盘操作",
+      "color": "#dcfce7",
+      "accent": "#22c55e"
+    },
+    {
+      "id": "screen",
+      "label": "屏幕操作",
+      "color": "#ede9fe",
+      "accent": "#8b5cf6"
+    },
+    {
+      "id": "dialog",
+      "label": "弹窗交互",
+      "color": "#ffedd5",
+      "accent": "#f97316"
+    }
   ],
   "blocks": [
+    {
+      "id": "flow_wait",
+      "category": "flow",
+      "label": "等待 {seconds} 秒",
+      "code": "time.sleep({seconds})",
+      "params": [
+        {
+          "name": "seconds",
+          "placeholder": "秒数，如 0.5",
+          "kind": "number",
+          "width": 80,
+          "default": "1"
+        }
+      ]
+    },
+    {
+      "id": "flow_if_else",
+      "category": "flow",
+      "label": "如果 {condition} 那么",
+      "code": "if {condition}:",
+      "params": [
+        {
+          "name": "condition",
+          "placeholder": "条件",
+          "kind": "value",
+          "width": 180
+        }
+      ],
+      "block": true,
+      "slots": [
+        "那么",
+        "否则"
+      ]
+    },
+    {
+      "id": "flow_elif",
+      "category": "flow",
+      "label": "否则如果 {condition} 那么",
+      "code": "elif {condition}:",
+      "params": [
+        {
+          "name": "condition",
+          "placeholder": "条件",
+          "kind": "value",
+          "width": 180
+        }
+      ],
+      "block": true,
+      "slots": [
+        "那么",
+        "否则"
+      ]
+    },
+    {
+      "id": "flow_while",
+      "category": "flow",
+      "label": "当 {condition} 时重复",
+      "code": "while {condition}:",
+      "params": [
+        {
+          "name": "condition",
+          "placeholder": "条件",
+          "kind": "value",
+          "width": 180
+        }
+      ],
+      "block": true,
+      "slots": [
+        "重复内容"
+      ]
+    },
+    {
+      "id": "flow_for_range",
+      "category": "flow",
+      "label": "对 {name} 从 {start} 到 {end} 步长 {step} 重复",
+      "code": "for {name} in range({start}, {end}, {step}):",
+      "params": [
+        {
+          "name": "name",
+          "placeholder": "i",
+          "kind": "code",
+          "width": 50,
+          "default": "i"
+        },
+        {
+          "name": "start",
+          "placeholder": "0",
+          "kind": "number",
+          "width": 50,
+          "default": "0"
+        },
+        {
+          "name": "end",
+          "placeholder": "10",
+          "kind": "number",
+          "width": 50,
+          "default": "10"
+        },
+        {
+          "name": "step",
+          "placeholder": "1",
+          "kind": "number",
+          "width": 50,
+          "default": "1"
+        }
+      ],
+      "block": true,
+      "slots": [
+        "重复内容"
+      ]
+    },
+    {
+      "id": "flow_break",
+      "category": "flow",
+      "label": "跳出循环",
+      "code": "break"
+    },
+    {
+      "id": "flow_continue",
+      "category": "flow",
+      "label": "继续下一次循环",
+      "code": "continue"
+    },
+    {
+      "id": "flow_return",
+      "category": "flow",
+      "label": "返回 {value}",
+      "code": "return {value}",
+      "params": [
+        {
+          "name": "value",
+          "placeholder": "返回值",
+          "kind": "value",
+          "width": 150
+        }
+      ]
+    },
+    {
+      "id": "flow_if",
+      "category": "flow",
+      "label": "如果条件成立（True）",
+      "code": "if True:",
+      "block": true,
+      "slots": [
+        "内容"
+      ],
+      "hidden": true
+    },
+    {
+      "id": "logic_set",
+      "category": "logic",
+      "label": "设置变量 {name} 为 {value}",
+      "code": "{name} = {value}",
+      "params": [
+        {
+          "name": "name",
+          "placeholder": "变量名",
+          "kind": "code",
+          "width": 80
+        },
+        {
+          "name": "value",
+          "placeholder": "值或返回值",
+          "kind": "value",
+          "width": 170
+        }
+      ]
+    },
+    {
+      "id": "logic_change",
+      "category": "logic",
+      "label": "变量 {name} 增加 {value}",
+      "code": "{name} += {value}",
+      "params": [
+        {
+          "name": "name",
+          "placeholder": "变量名",
+          "kind": "code",
+          "width": 80
+        },
+        {
+          "name": "value",
+          "placeholder": "值",
+          "kind": "value",
+          "width": 150,
+          "default": "1"
+        }
+      ]
+    },
+    {
+      "id": "logic_func_def",
+      "category": "logic",
+      "label": "定义函数 {name}（参数 {params}）",
+      "code": "def {name}({params}):",
+      "params": [
+        {
+          "name": "name",
+          "placeholder": "函数名",
+          "kind": "code",
+          "width": 80
+        },
+        {
+          "name": "params",
+          "placeholder": "a, b",
+          "kind": "code",
+          "width": 120
+        }
+      ],
+      "block": true,
+      "slots": [
+        "函数体"
+      ]
+    },
+    {
+      "id": "logic_func_plain",
+      "category": "logic",
+      "label": "调用 {name}（{args}）",
+      "code": "{name}({args})",
+      "params": [
+        {
+          "name": "name",
+          "placeholder": "函数名",
+          "kind": "code",
+          "width": 80
+        },
+        {
+          "name": "args",
+          "placeholder": "参数",
+          "kind": "code",
+          "width": 150
+        }
+      ]
+    },
+    {
+      "id": "value_variable",
+      "category": "value",
+      "label": "变量 {name}",
+      "code": "{name}",
+      "params": [
+        {
+          "name": "name",
+          "placeholder": "变量名",
+          "kind": "code",
+          "width": 90
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_compare",
+      "category": "value",
+      "label": "({left} {operator} {right})",
+      "code": "({left} {operator} {right})",
+      "params": [
+        {
+          "name": "left",
+          "placeholder": "左值",
+          "kind": "code",
+          "width": 70
+        },
+        {
+          "name": "operator",
+          "placeholder": "==、>、<",
+          "kind": "code",
+          "width": 55,
+          "default": "=="
+        },
+        {
+          "name": "right",
+          "placeholder": "右值",
+          "kind": "code",
+          "width": 70
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_logic",
+      "category": "value",
+      "label": "({left} {operator} {right})",
+      "code": "({left} {operator} {right})",
+      "params": [
+        {
+          "name": "left",
+          "placeholder": "条件",
+          "kind": "code",
+          "width": 70
+        },
+        {
+          "name": "operator",
+          "placeholder": "and / or",
+          "kind": "code",
+          "width": 55,
+          "default": "and"
+        },
+        {
+          "name": "right",
+          "placeholder": "条件",
+          "kind": "code",
+          "width": 70
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_not",
+      "category": "value",
+      "label": "非 {value}",
+      "code": "not ({value})",
+      "params": [
+        {
+          "name": "value",
+          "placeholder": "条件",
+          "kind": "code",
+          "width": 120
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_math",
+      "category": "value",
+      "label": "({left} {operator} {right})",
+      "code": "({left} {operator} {right})",
+      "params": [
+        {
+          "name": "left",
+          "placeholder": "左值",
+          "kind": "code",
+          "width": 70
+        },
+        {
+          "name": "operator",
+          "placeholder": "+ - * /",
+          "kind": "code",
+          "width": 55,
+          "default": "+"
+        },
+        {
+          "name": "right",
+          "placeholder": "右值",
+          "kind": "code",
+          "width": 70
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_random",
+      "category": "value",
+      "label": "随机整数 {low} 到 {high}",
+      "code": "random.randint({low}, {high})",
+      "params": [
+        {
+          "name": "low",
+          "placeholder": "最小值",
+          "kind": "number",
+          "width": 55,
+          "default": "1"
+        },
+        {
+          "name": "high",
+          "placeholder": "最大值",
+          "kind": "number",
+          "width": 55,
+          "default": "10"
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_func_call",
+      "category": "value",
+      "label": "调用 {name}（{args}）",
+      "code": "{name}({args})",
+      "params": [
+        {
+          "name": "name",
+          "placeholder": "函数名",
+          "kind": "code",
+          "width": 80
+        },
+        {
+          "name": "args",
+          "placeholder": "参数",
+          "kind": "code",
+          "width": 130
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_python",
+      "category": "value",
+      "label": "Python 表达式 {code}",
+      "code": "{code}",
+      "params": [
+        {
+          "name": "code",
+          "placeholder": "例如 x > 0",
+          "kind": "code",
+          "width": 150
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_image_exists",
+      "category": "value",
+      "label": "图片 {image} 是否存在",
+      "code": "pyautogui.locateOnScreen({image}) is not None",
+      "params": [
+        {
+          "name": "image",
+          "placeholder": "图片路径",
+          "kind": "text",
+          "width": 140
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_locate",
+      "category": "value",
+      "label": "图片 {image} 的中心坐标",
+      "code": "pyautogui.locateCenterOnScreen({image})",
+      "params": [
+        {
+          "name": "image",
+          "placeholder": "图片路径",
+          "kind": "text",
+          "width": 140
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_pixel",
+      "category": "value",
+      "label": "坐标（{x}, {y}）的颜色",
+      "code": "pyautogui.pixel({x}, {y})",
+      "params": [
+        {
+          "name": "x",
+          "placeholder": "x",
+          "kind": "number",
+          "width": 50,
+          "default": "0"
+        },
+        {
+          "name": "y",
+          "placeholder": "y",
+          "kind": "number",
+          "width": 50,
+          "default": "0"
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_mouse_pos",
+      "category": "value",
+      "label": "鼠标坐标",
+      "code": "pyautogui.position()",
+      "expression": true
+    },
+    {
+      "id": "value_screen_size",
+      "category": "value",
+      "label": "屏幕尺寸",
+      "code": "pyautogui.size()",
+      "expression": true
+    },
     {
       "id": "mouse_move_to",
       "category": "mouse",
       "label": "移动鼠标到（{x}, {y}）",
       "code": "pyautogui.moveTo({x}, {y})",
       "params": [
-        { "name": "x", "placeholder": "x", "kind": "number", "width": 60 },
-        { "name": "y", "placeholder": "y", "kind": "number", "width": 60 }
+        {
+          "name": "x",
+          "placeholder": "x",
+          "kind": "number",
+          "width": 60
+        },
+        {
+          "name": "y",
+          "placeholder": "y",
+          "kind": "number",
+          "width": 60
+        }
       ]
     },
     {
@@ -25,8 +544,18 @@
       "label": "相对移动鼠标（{dx}, {dy}）",
       "code": "pyautogui.moveRel({dx}, {dy}, duration=0.3)",
       "params": [
-        { "name": "dx", "placeholder": "dx", "kind": "number", "width": 60 },
-        { "name": "dy", "placeholder": "dy", "kind": "number", "width": 60 }
+        {
+          "name": "dx",
+          "placeholder": "dx",
+          "kind": "number",
+          "width": 60
+        },
+        {
+          "name": "dy",
+          "placeholder": "dy",
+          "kind": "number",
+          "width": 60
+        }
       ]
     },
     {
@@ -77,8 +606,18 @@
       "label": "拖拽到（{x}, {y}）",
       "code": "pyautogui.dragTo({x}, {y}, duration=0.5)",
       "params": [
-        { "name": "x", "placeholder": "x", "kind": "number", "width": 60 },
-        { "name": "y", "placeholder": "y", "kind": "number", "width": 60 }
+        {
+          "name": "x",
+          "placeholder": "x",
+          "kind": "number",
+          "width": 60
+        },
+        {
+          "name": "y",
+          "placeholder": "y",
+          "kind": "number",
+          "width": 60
+        }
       ]
     },
     {
@@ -99,7 +638,12 @@
       "label": "输入文本「{text}」",
       "code": "pyautogui.typewrite({text})",
       "params": [
-        { "name": "text", "placeholder": "要输入的文本", "kind": "text", "width": 140 }
+        {
+          "name": "text",
+          "placeholder": "要输入的文本",
+          "kind": "text",
+          "width": 140
+        }
       ]
     },
     {
@@ -108,7 +652,12 @@
       "label": "逐字输入「{text}」（间隔 0.1 秒）",
       "code": "pyautogui.typewrite({text}, interval=0.1)",
       "params": [
-        { "name": "text", "placeholder": "要输入的文本", "kind": "text", "width": 140 }
+        {
+          "name": "text",
+          "placeholder": "要输入的文本",
+          "kind": "text",
+          "width": 140
+        }
       ]
     },
     {
@@ -156,13 +705,33 @@
     {
       "id": "screen_screenshot_region",
       "category": "screen",
-      "label": "截取区域（左 {left}，上 {top}，宽 {width}，高 {height}）",
+      "label": "截取区域（{left}, {top}, {width}, {height}）",
       "code": "pyautogui.screenshot('region.png', region=({left}, {top}, {width}, {height}))",
       "params": [
-        { "name": "left", "placeholder": "左", "kind": "number", "width": 56 },
-        { "name": "top", "placeholder": "上", "kind": "number", "width": 56 },
-        { "name": "width", "placeholder": "宽", "kind": "number", "width": 56 },
-        { "name": "height", "placeholder": "高", "kind": "number", "width": 56 }
+        {
+          "name": "left",
+          "placeholder": "x",
+          "kind": "number",
+          "width": 56
+        },
+        {
+          "name": "top",
+          "placeholder": "y",
+          "kind": "number",
+          "width": 56
+        },
+        {
+          "name": "width",
+          "placeholder": "w",
+          "kind": "number",
+          "width": 56
+        },
+        {
+          "name": "height",
+          "placeholder": "h",
+          "kind": "number",
+          "width": 56
+        }
       ]
     },
     {
@@ -177,7 +746,12 @@
       "label": "在屏幕上查找图片「{image}」",
       "code": "pyautogui.locateOnScreen({image})",
       "params": [
-        { "name": "image", "placeholder": "图片路径", "kind": "text", "width": 150 }
+        {
+          "name": "image",
+          "placeholder": "图片路径",
+          "kind": "text",
+          "width": 150
+        }
       ]
     },
     {
@@ -186,7 +760,12 @@
       "label": "查找图片并取中心坐标「{image}」",
       "code": "pyautogui.locateCenterOnScreen({image})",
       "params": [
-        { "name": "image", "placeholder": "图片路径", "kind": "text", "width": 150 }
+        {
+          "name": "image",
+          "placeholder": "图片路径",
+          "kind": "text",
+          "width": 150
+        }
       ]
     },
     {
@@ -195,8 +774,18 @@
       "label": "读取坐标（{x}, {y}）的颜色",
       "code": "pyautogui.pixel({x}, {y})",
       "params": [
-        { "name": "x", "placeholder": "x", "kind": "number", "width": 60 },
-        { "name": "y", "placeholder": "y", "kind": "number", "width": 60 }
+        {
+          "name": "x",
+          "placeholder": "x",
+          "kind": "number",
+          "width": 60
+        },
+        {
+          "name": "y",
+          "placeholder": "y",
+          "kind": "number",
+          "width": 60
+        }
       ]
     },
     {
@@ -205,11 +794,36 @@
       "label": "判断（{x}, {y}）是否为颜色（{r}, {g}, {b}）",
       "code": "pyautogui.pixelMatchesColor({x}, {y}, ({r}, {g}, {b}))",
       "params": [
-        { "name": "x", "placeholder": "x", "kind": "number", "width": 56 },
-        { "name": "y", "placeholder": "y", "kind": "number", "width": 56 },
-        { "name": "r", "placeholder": "R", "kind": "number", "width": 52 },
-        { "name": "g", "placeholder": "G", "kind": "number", "width": 52 },
-        { "name": "b", "placeholder": "B", "kind": "number", "width": 52 }
+        {
+          "name": "x",
+          "placeholder": "x",
+          "kind": "number",
+          "width": 56
+        },
+        {
+          "name": "y",
+          "placeholder": "y",
+          "kind": "number",
+          "width": 56
+        },
+        {
+          "name": "r",
+          "placeholder": "R",
+          "kind": "number",
+          "width": 52
+        },
+        {
+          "name": "g",
+          "placeholder": "G",
+          "kind": "number",
+          "width": 52
+        },
+        {
+          "name": "b",
+          "placeholder": "B",
+          "kind": "number",
+          "width": 52
+        }
       ]
     },
     {
@@ -218,7 +832,12 @@
       "label": "弹出提示：{text}",
       "code": "pyautogui.alert({text})",
       "params": [
-        { "name": "text", "placeholder": "提示文字", "kind": "text", "width": 180 }
+        {
+          "name": "text",
+          "placeholder": "提示文字",
+          "kind": "text",
+          "width": 180
+        }
       ]
     },
     {
@@ -227,7 +846,12 @@
       "label": "弹出确认框：{text}",
       "code": "pyautogui.confirm({text})",
       "params": [
-        { "name": "text", "placeholder": "提示文字", "kind": "text", "width": 180 }
+        {
+          "name": "text",
+          "placeholder": "提示文字",
+          "kind": "text",
+          "width": 180
+        }
       ]
     },
     {
@@ -236,32 +860,41 @@
       "label": "弹出输入框：{text}",
       "code": "pyautogui.prompt({text})",
       "params": [
-        { "name": "text", "placeholder": "提示文字", "kind": "text", "width": 180 }
+        {
+          "name": "text",
+          "placeholder": "提示文字",
+          "kind": "text",
+          "width": 180
+        }
       ]
     },
     {
       "id": "flow_sleep_05",
       "category": "flow",
       "label": "等待 0.5 秒",
-      "code": "time.sleep(0.5)"
+      "code": "time.sleep(0.5)",
+      "hidden": true
     },
     {
       "id": "flow_sleep_1",
       "category": "flow",
       "label": "等待 1 秒",
-      "code": "time.sleep(1)"
+      "code": "time.sleep(1)",
+      "hidden": true
     },
     {
       "id": "flow_sleep_2",
       "category": "flow",
       "label": "等待 2 秒",
-      "code": "time.sleep(2)"
+      "code": "time.sleep(2)",
+      "hidden": true
     },
     {
       "id": "flow_sleep_5",
       "category": "flow",
       "label": "等待 5 秒",
-      "code": "time.sleep(5)"
+      "code": "time.sleep(5)",
+      "hidden": true
     },
     {
       "id": "flow_for_3",
@@ -269,42 +902,10 @@
       "label": "重复执行 3 次",
       "code": "for i in range(3):",
       "block": true,
-      "slots": ["重复内容"]
-    },
-    {
-      "id": "flow_if_else",
-      "category": "flow",
-      "label": "如果 {condition} 那么",
-      "code": "if {condition}:",
-      "block": true,
-      "params": [
-        {
-          "name": "condition",
-          "placeholder": "条件，例如 x > 0",
-          "kind": "code",
-          "width": 180
-        }
+      "slots": [
+        "重复内容"
       ],
-      "slots": ["那么", "否则"]
-    },
-    {
-      "id": "flow_if",
-      "category": "flow",
-      "label": "如果条件成立（True）",
-      "code": "if True:",
-      "block": true,
-      "slots": ["内容"],
       "hidden": true
-    },
-    {
-      "id": "logic_set",
-      "category": "logic",
-      "label": "设置变量 {name} 为 {value}",
-      "code": "{name} = {value}",
-      "params": [
-        { "name": "name", "placeholder": "变量名", "kind": "code", "width": 100 },
-        { "name": "value", "placeholder": "值或表达式", "kind": "code", "width": 170 }
-      ]
     },
     {
       "id": "logic_compare",
@@ -312,11 +913,32 @@
       "label": "比较 {left} {operator} {right} 存入 {variable}",
       "code": "{variable} = ({left} {operator} {right})",
       "params": [
-        { "name": "left", "placeholder": "左值", "kind": "code", "width": 90 },
-        { "name": "operator", "placeholder": "==、>、<", "kind": "code", "width": 60 },
-        { "name": "right", "placeholder": "右值", "kind": "code", "width": 90 },
-        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
-      ]
+        {
+          "name": "left",
+          "placeholder": "左值",
+          "kind": "code",
+          "width": 90
+        },
+        {
+          "name": "operator",
+          "placeholder": "==、>、<",
+          "kind": "code",
+          "width": 60
+        },
+        {
+          "name": "right",
+          "placeholder": "右值",
+          "kind": "code",
+          "width": 90
+        },
+        {
+          "name": "variable",
+          "placeholder": "结果变量",
+          "kind": "code",
+          "width": 90
+        }
+      ],
+      "hidden": true
     },
     {
       "id": "logic_math",
@@ -324,9 +946,20 @@
       "label": "计算 {expression} 存入 {variable}",
       "code": "{variable} = {expression}",
       "params": [
-        { "name": "expression", "placeholder": "表达式，如 x + 1", "kind": "code", "width": 170 },
-        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
-      ]
+        {
+          "name": "expression",
+          "placeholder": "表达式，如 x + 1",
+          "kind": "code",
+          "width": 170
+        },
+        {
+          "name": "variable",
+          "placeholder": "结果变量",
+          "kind": "code",
+          "width": 90
+        }
+      ],
+      "hidden": true
     },
     {
       "id": "logic_random",
@@ -334,23 +967,26 @@
       "label": "随机整数 {low} 到 {high} 存入 {variable}",
       "code": "{variable} = random.randint({low}, {high})",
       "params": [
-        { "name": "low", "placeholder": "最小值", "kind": "number", "width": 60 },
-        { "name": "high", "placeholder": "最大值", "kind": "number", "width": 60 },
-        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
-      ]
-    },
-    {
-      "id": "logic_func_def",
-      "category": "logic",
-      "label": "定义函数 {name}（参数 {params}）返回 {result}",
-      "code": "def {name}({params}):",
-      "block": true,
-      "slots": ["函数体"],
-      "params": [
-        { "name": "name", "placeholder": "函数名", "kind": "code", "width": 90 },
-        { "name": "params", "placeholder": "参数，如 a, b", "kind": "code", "width": 120 },
-        { "name": "result", "placeholder": "返回表达式，可留空", "kind": "code", "width": 150 }
-      ]
+        {
+          "name": "low",
+          "placeholder": "最小值",
+          "kind": "number",
+          "width": 60
+        },
+        {
+          "name": "high",
+          "placeholder": "最大值",
+          "kind": "number",
+          "width": 60
+        },
+        {
+          "name": "variable",
+          "placeholder": "结果变量",
+          "kind": "code",
+          "width": 90
+        }
+      ],
+      "hidden": true
     },
     {
       "id": "logic_func_call",
@@ -358,29 +994,26 @@
       "label": "调用 {name}（{args}）存入 {variable}",
       "code": "{variable} = {name}({args})",
       "params": [
-        { "name": "name", "placeholder": "函数名", "kind": "code", "width": 90 },
-        { "name": "args", "placeholder": "实参", "kind": "code", "width": 130 },
-        { "name": "variable", "placeholder": "返回值变量", "kind": "code", "width": 100 }
-      ]
-    },
-    {
-      "id": "logic_func_plain",
-      "category": "logic",
-      "label": "调用 {name}（{args}）",
-      "code": "{name}({args})",
-      "params": [
-        { "name": "name", "placeholder": "函数名", "kind": "code", "width": 90 },
-        { "name": "args", "placeholder": "实参", "kind": "code", "width": 170 }
-      ]
-    },
-    {
-      "id": "logic_return",
-      "category": "logic",
-      "label": "返回 {value}",
-      "code": "return {value}",
-      "params": [
-        { "name": "value", "placeholder": "返回值", "kind": "code", "width": 170 }
-      ]
+        {
+          "name": "name",
+          "placeholder": "函数名",
+          "kind": "code",
+          "width": 90
+        },
+        {
+          "name": "args",
+          "placeholder": "实参",
+          "kind": "code",
+          "width": 130
+        },
+        {
+          "name": "variable",
+          "placeholder": "返回值变量",
+          "kind": "code",
+          "width": 100
+        }
+      ],
+      "hidden": true
     },
     {
       "id": "logic_exists",
@@ -388,9 +1021,20 @@
       "label": "图片 {image} 是否存在存入 {variable}",
       "code": "{variable} = pyautogui.locateOnScreen({image}) is not None",
       "params": [
-        { "name": "image", "placeholder": "图片路径", "kind": "text", "width": 140 },
-        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
-      ]
+        {
+          "name": "image",
+          "placeholder": "图片路径",
+          "kind": "text",
+          "width": 140
+        },
+        {
+          "name": "variable",
+          "placeholder": "结果变量",
+          "kind": "code",
+          "width": 90
+        }
+      ],
+      "hidden": true
     },
     {
       "id": "logic_locate",
@@ -398,9 +1042,20 @@
       "label": "查找图片 {image} 位置存入 {variable}",
       "code": "{variable} = pyautogui.locateCenterOnScreen({image})",
       "params": [
-        { "name": "image", "placeholder": "图片路径", "kind": "text", "width": 140 },
-        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
-      ]
+        {
+          "name": "image",
+          "placeholder": "图片路径",
+          "kind": "text",
+          "width": 140
+        },
+        {
+          "name": "variable",
+          "placeholder": "结果变量",
+          "kind": "code",
+          "width": 90
+        }
+      ],
+      "hidden": true
     },
     {
       "id": "logic_pixel",
@@ -408,10 +1063,26 @@
       "label": "坐标（{x}, {y}）颜色存入 {variable}",
       "code": "{variable} = pyautogui.pixel({x}, {y})",
       "params": [
-        { "name": "x", "placeholder": "x", "kind": "number", "width": 56 },
-        { "name": "y", "placeholder": "y", "kind": "number", "width": 56 },
-        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 90 }
-      ]
+        {
+          "name": "x",
+          "placeholder": "x",
+          "kind": "number",
+          "width": 56
+        },
+        {
+          "name": "y",
+          "placeholder": "y",
+          "kind": "number",
+          "width": 56
+        },
+        {
+          "name": "variable",
+          "placeholder": "结果变量",
+          "kind": "code",
+          "width": 90
+        }
+      ],
+      "hidden": true
     },
     {
       "id": "logic_mouse_pos",
@@ -419,8 +1090,14 @@
       "label": "读取鼠标坐标存入 {variable}",
       "code": "{variable} = pyautogui.position()",
       "params": [
-        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 100 }
-      ]
+        {
+          "name": "variable",
+          "placeholder": "结果变量",
+          "kind": "code",
+          "width": 100
+        }
+      ],
+      "hidden": true
     },
     {
       "id": "logic_screen_size",
@@ -428,8 +1105,29 @@
       "label": "读取屏幕尺寸存入 {variable}",
       "code": "{variable} = pyautogui.size()",
       "params": [
-        { "name": "variable", "placeholder": "结果变量", "kind": "code", "width": 100 }
-      ]
+        {
+          "name": "variable",
+          "placeholder": "结果变量",
+          "kind": "code",
+          "width": 100
+        }
+      ],
+      "hidden": true
+    },
+    {
+      "id": "logic_return",
+      "category": "logic",
+      "label": "返回 {value}",
+      "code": "return {value}",
+      "params": [
+        {
+          "name": "value",
+          "placeholder": "返回值",
+          "kind": "code",
+          "width": 170
+        }
+      ],
+      "hidden": true
     }
   ]
 }

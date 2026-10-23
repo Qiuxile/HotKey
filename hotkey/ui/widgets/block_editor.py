@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from PySide6.QtCore import QMimeData, QRegularExpression, Qt, Signal
+from PySide6.QtCore import QEvent, QMimeData, QRegularExpression, Qt, Signal
 from PySide6.QtGui import QDrag, QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QApplication,
+    QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -20,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from hotkey.core import catalog
+from hotkey.core.blocks import expression_code, literal_code
 from hotkey.core.models import Block
 from hotkey.ui.widgets.statement_tree import SNIPPET_MIME
 
@@ -200,12 +202,19 @@ class _DragHandle(QLabel):
 
 
 class BlockWidget(QFrame):
-    """单栏里的一个积木。"""
+    """单栏里的一个积木；``compact`` 时作为值槽里的表达式片段。"""
 
-    def __init__(self, block: Block, editor: "BlockListEditor") -> None:
+    def __init__(
+        self,
+        block: Block,
+        editor: "BlockListEditor",
+        *,
+        compact: bool = False,
+    ) -> None:
         super().__init__()
         self.block = block
         self.editor = editor
+        self.compact = compact
         self.snippet = (
             None if block.kind == EMPTY_KIND else catalog.snippet(block.kind)
         )
@@ -215,14 +224,16 @@ class BlockWidget(QFrame):
         self.accent = self.category.accent if self.category else "#94a3b8"
 
         self._fields: dict[str, QLineEdit] = {}
+        self._value_slots: dict[str, ValueSlot] = {}
         self.bodies: list[BodyArea] = []
 
         self.setObjectName("blockWidget")
-        self.setMinimumWidth(320)
+        self.setProperty("compact", compact)
+        self.setMinimumWidth(0 if compact else 320)
         self.setAcceptDrops(True)
         self.setStyleSheet(
             "QFrame#blockWidget {"
-            f" border-left: 4px solid {self.accent};"
+            f" border-left: {3 if compact else 4}px solid {self.accent};"
             "}"
         )
 
@@ -233,27 +244,29 @@ class BlockWidget(QFrame):
         self.header = QFrame(self)
         self.header.setObjectName("blockHeader")
         header_layout = QHBoxLayout(self.header)
-        header_layout.setContentsMargins(6, 5, 8, 5)
-        header_layout.setSpacing(5)
+        header_layout.setContentsMargins(4 if compact else 6, 3 if compact else 5, 4 if compact else 8, 3 if compact else 5)
+        header_layout.setSpacing(4 if compact else 5)
 
-        self.drag_handle = _DragHandle(self)
-        header_layout.addWidget(self.drag_handle)
+        self.drag_handle = None if compact else _DragHandle(self)
+        if self.drag_handle is not None:
+            header_layout.addWidget(self.drag_handle)
 
         if self.snippet is None:
             self._build_empty(header_layout)
         else:
             self._build_snippet(header_layout, self.snippet)
 
-        delete_button = QToolButton(self.header)
-        delete_button.setText("✕")
-        delete_button.setToolTip("删除这块积木")
-        delete_button.setAutoRaise(True)
-        delete_button.setFixedSize(22, 22)
-        delete_button.clicked.connect(lambda: self.editor.delete_block(self))
-        header_layout.addWidget(delete_button)
+        if not compact:
+            delete_button = QToolButton(self.header)
+            delete_button.setText("✕")
+            delete_button.setToolTip("删除这块积木")
+            delete_button.setAutoRaise(True)
+            delete_button.setFixedSize(22, 22)
+            delete_button.clicked.connect(lambda: self.editor.delete_block(self))
+            header_layout.addWidget(delete_button)
         root.addWidget(self.header)
 
-        if self.snippet is not None and self.snippet.block:
+        if not compact and self.snippet is not None and self.snippet.block:
             slots = self.snippet.slots or ("内容",)
             for index, label in enumerate(slots):
                 body = BodyArea(self, index, label)
@@ -281,6 +294,14 @@ class BlockWidget(QFrame):
 
         for segment in snippet.segments():
             if isinstance(segment, catalog.Param):
+                if segment.kind == "value":
+                    slot = ValueSlot(self, segment)
+                    layout.addWidget(slot, 1)
+                    slot.changed.connect(self.editor.changed.emit)
+                    self._value_slots[segment.name] = slot
+                    has_growing_field = True
+                    continue
+
                 edit = QLineEdit(self.block.params.get(segment.name, ""), self.header)
                 edit.setPlaceholderText(segment.placeholder)
                 edit.setFixedHeight(26)
@@ -332,18 +353,32 @@ class BlockWidget(QFrame):
     def field(self, name: str) -> QLineEdit | None:
         return self._fields.get(name)
 
+    def value_slot(self, name: str) -> "ValueSlot | None":
+        return self._value_slots.get(name)
+
     def code_edit(self) -> QLineEdit | None:
         return self._fields.get("")
 
     def to_block(self) -> Block:
         children = self.bodies[0].blocks() if self.bodies else []
         else_children = self.bodies[1].blocks() if len(self.bodies) > 1 else []
+        params = dict(self.block.params)
+        expressions: dict[str, Block] = {}
+        value_modes: dict[str, str] = {}
+        for name, slot in self._value_slots.items():
+            params[name] = slot.literal
+            value_modes[name] = slot.mode
+            expression = slot.to_expression()
+            if expression is not None:
+                expressions[name] = expression
         return Block(
             kind=self.block.kind,
             text=self.block.text,
-            params=dict(self.block.params),
+            params=params,
             children=children,
             else_children=else_children,
+            expressions=expressions,
+            value_modes=value_modes,
         )
 
     def refresh_size(self) -> None:
@@ -416,6 +451,173 @@ class BlockWidget(QFrame):
             )
             self.editor.add_snippet(payload, after=self)
             event.acceptProposedAction()
+
+
+class ValueSlot(QFrame):
+    """值槽：可手填字面量，也可拖入一个有返回值的表达式积木。"""
+
+    changed = Signal()
+    MODES = (
+        ("自动", "auto"),
+        ("文本", "text"),
+        ("数字", "number"),
+        ("布尔", "bool"),
+        ("代码", "code"),
+    )
+
+    def __init__(self, owner: "BlockWidget", param: catalog.Param) -> None:
+        super().__init__(owner.header)
+        self.owner = owner
+        self.editor = owner.editor
+        self.param = param
+        self.literal = owner.block.params.get(param.name, "")
+        self.mode = owner.block.value_modes.get(param.name, "auto")
+        self.expression: Block | None = None
+        self._expression_widget: BlockWidget | None = None
+
+        self.setObjectName("valueSlot")
+        self.setAcceptDrops(True)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(2, 1, 2, 1)
+        layout.setSpacing(3)
+        self._layout = layout
+
+        self.mode_combo = QComboBox(self)
+        self.mode_combo.setObjectName("valueMode")
+        self.mode_combo.setFixedWidth(48)
+        for label, value in self.MODES:
+            self.mode_combo.addItem(label, value)
+        index = max(0, self.mode_combo.findData(self.mode))
+        self.mode_combo.setCurrentIndex(index)
+        self.mode_combo.setToolTip("手填值的类型；拖入表达式积木后自动忽略")
+        self.mode_combo.currentIndexChanged.connect(self._on_mode_changed)
+        layout.addWidget(self.mode_combo)
+
+        self.edit = QLineEdit(self.literal, self)
+        self.edit.setPlaceholderText(param.placeholder or "值")
+        self.edit.setFixedHeight(22)
+        self.edit.setAcceptDrops(False)
+        self.edit.textChanged.connect(self._on_literal_changed)
+        self.edit.installEventFilter(self)
+        layout.addWidget(self.edit, 1)
+
+        self.clear_button = QToolButton(self)
+        self.clear_button.setText("✕")
+        self.clear_button.setAutoRaise(True)
+        self.clear_button.setFixedSize(18, 18)
+        self.clear_button.setToolTip("清除表达式，改回手填")
+        self.clear_button.hide()
+        self.clear_button.clicked.connect(self.clear_expression)
+        layout.addWidget(self.clear_button)
+
+        expression = owner.block.expressions.get(param.name)
+        if expression is not None:
+            self.set_expression(expression)
+
+    # ---------------------------------------------------------------- 手填
+
+    def _on_literal_changed(self, text: str) -> None:
+        self.literal = text
+        self.changed.emit()
+
+    def _on_mode_changed(self, _index: int) -> None:
+        self.mode = self.mode_combo.currentData() or "auto"
+        self.changed.emit()
+
+    def code(self) -> str:
+        if self.expression is not None:
+            expression = self.to_expression()
+            return expression_code(expression)
+        return literal_code(self.literal, self.mode)
+
+    def to_expression(self) -> Block | None:
+        if self._expression_widget is not None:
+            return self._expression_widget.to_block()
+        return self.expression
+
+    # ---------------------------------------------------------------- 表达式
+
+    def set_expression(self, block: Block) -> None:
+        self.expression = block
+        self._remove_expression_widget()
+        widget = BlockWidget(block, self.editor, compact=True)
+        self._expression_widget = widget
+        self._layout.insertWidget(1, widget)
+        widget.show()
+        self.edit.hide()
+        self.mode_combo.hide()
+        self.clear_button.show()
+        self.changed.emit()
+
+    def clear_expression(self, *_args) -> None:
+        if self.expression is None:
+            return
+        self.expression = None
+        self._remove_expression_widget()
+        self.edit.show()
+        self.mode_combo.show()
+        self.clear_button.hide()
+        self.changed.emit()
+
+    def _remove_expression_widget(self) -> None:
+        if self._expression_widget is not None:
+            self._layout.removeWidget(self._expression_widget)
+            self._expression_widget.hide()
+            self._expression_widget.setParent(None)
+            self._expression_widget.deleteLater()
+            self._expression_widget = None
+
+    # ---------------------------------------------------------------- 拖放
+
+    def _accepted_snippet(self, event) -> catalog.Snippet | None:
+        if not event.mimeData().hasFormat(SNIPPET_MIME):
+            return None
+        snippet_id = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
+            "utf-8", errors="replace"
+        )
+        try:
+            snippet = catalog.snippet(snippet_id)
+        except KeyError:
+            return None
+        return snippet if snippet.expression else None
+
+    def eventFilter(self, watched, event) -> bool:  # noqa: N802
+        # QLineEdit 不接受拖放；把落在输入框上的拖放转给值槽
+        if watched is self.edit and event.type() in (
+            QEvent.Type.DragEnter,
+            QEvent.Type.DragMove,
+            QEvent.Type.Drop,
+        ):
+            if event.type() == QEvent.Type.Drop:
+                self.dropEvent(event)
+            elif event.type() == QEvent.Type.DragEnter:
+                self.dragEnterEvent(event)
+            else:
+                self.dragMoveEvent(event)
+            return True
+        return super().eventFilter(watched, event)
+
+    def dragEnterEvent(self, event) -> None:  # noqa: N802
+        if self._accepted_snippet(event) is not None:
+            event.acceptProposedAction()
+
+    def dragMoveEvent(self, event) -> None:  # noqa: N802
+        if self._accepted_snippet(event) is not None:
+            event.acceptProposedAction()
+
+    def dropEvent(self, event) -> None:  # noqa: N802
+        snippet = self._accepted_snippet(event)
+        if snippet is None:
+            return
+        params = snippet.blank_values()
+        block = Block(
+            kind=snippet.id,
+            text=snippet.render(params),
+            params=params,
+        )
+        self.set_expression(block)
+        event.acceptProposedAction()
 
 
 class _DropHost(QWidget):
@@ -564,7 +766,9 @@ class BlockListEditor(QScrollArea):
         snippet_id: str,
         body: BodyArea | None = None,
         after: BlockWidget | None = None,
-    ) -> BlockWidget:
+    ) -> BlockWidget | None:
+        if snippet_id != EMPTY_KIND and catalog.snippet(snippet_id).expression:
+            return None
         block = self._new_block(snippet_id)
         widget = self.add_block(block, body, after)
         self.changed.emit()

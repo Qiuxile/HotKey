@@ -282,6 +282,34 @@ QFrame#blockWidget[dropPosition="after"] {
     border-bottom: 3px solid $accent;
 }
 
+QFrame#blockWidget[compact="true"] {
+    background-color: $surface_high;
+    border: 1px solid $border;
+    border-left: 3px solid $accent;
+    border-radius: 4px;
+}
+
+QFrame#valueSlot {
+    background-color: $input_bg;
+    border: 1px solid $border;
+    border-radius: 4px;
+}
+
+QFrame#valueSlot QLineEdit {
+    background: transparent;
+    border: 0;
+    padding: 1px 3px;
+}
+
+QComboBox#valueMode {
+    background-color: $surface_alt;
+    color: $text;
+    border: 1px solid $border;
+    border-radius: 3px;
+    padding: 1px 2px;
+    font-size: 8pt;
+}
+
 QLabel#blockDragHandle {
     color: $muted;
     font-size: 12pt;

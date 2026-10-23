@@ -24,8 +24,9 @@ class Category:
 class Param:
     name: str
     placeholder: str = ""
-    kind: str = "text"  # text | number
+    kind: str = "text"  # text | number | code | value
     width: int = 72
+    default: str = ""
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,7 @@ class Snippet:
     code: str
     params: tuple[Param, ...] = ()
     block: bool = False
+    expression: bool = False
     slots: tuple[str, ...] = ()
     hidden: bool = False
 
@@ -60,7 +62,7 @@ class Snippet:
         return result
 
     def blank_values(self) -> dict[str, str]:
-        return {param.name: "" for param in self.params}
+        return {param.name: param.default for param in self.params}
 
     def preview_values(self) -> dict[str, str]:
         """给积木柜用的短占位符，例如 x、文本、条件。"""
@@ -87,7 +89,7 @@ class Snippet:
         formatted: dict[str, str] = {}
         for param in self.params:
             raw = values.get(param.name, "")
-            if param.kind in ("number", "code"):
+            if param.kind in ("number", "code", "value"):
                 formatted[param.name] = str(raw).strip()
             else:
                 formatted[param.name] = repr(str(raw))
@@ -136,6 +138,7 @@ def _load_catalog(path: Path = CATALOG_PATH) -> tuple[tuple[Category, ...], tupl
                 placeholder=param.get("placeholder", ""),
                 kind=param.get("kind", "text"),
                 width=int(param.get("width", 72)),
+                default=str(param.get("default", "")),
             )
             for param in item.get("params", [])
         )
@@ -146,6 +149,7 @@ def _load_catalog(path: Path = CATALOG_PATH) -> tuple[tuple[Category, ...], tupl
             code=item["code"],
             params=params,
             block=bool(item.get("block", False)),
+            expression=bool(item.get("expression", False)),
             slots=tuple(item.get("slots", ())),
             hidden=bool(item.get("hidden", False)),
         )

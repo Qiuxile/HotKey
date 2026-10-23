@@ -48,6 +48,8 @@ class Block:
     params: dict[str, str] = field(default_factory=dict)
     children: list["Block"] = field(default_factory=list)
     else_children: list["Block"] = field(default_factory=list)
+    expressions: dict[str, "Block"] = field(default_factory=dict)
+    value_modes: dict[str, str] = field(default_factory=dict)
     x: float = 0.0
     y: float = 0.0
 
@@ -58,6 +60,10 @@ class Block:
             "params": dict(self.params),
             "children": [child.to_dict() for child in self.children],
             "else_children": [child.to_dict() for child in self.else_children],
+            "expressions": {
+                name: child.to_dict() for name, child in self.expressions.items()
+            },
+            "value_modes": dict(self.value_modes),
             "x": self.x,
             "y": self.y,
         }
@@ -92,6 +98,24 @@ class Block:
             raise ValueError("block.else_children 必须是数组")
         else_children = [cls.from_dict(child) for child in else_data]
 
+        expressions_data = data.get("expressions", {})
+        if not isinstance(expressions_data, dict):
+            raise ValueError("block.expressions 必须是对象")
+        expressions = {
+            name: cls.from_dict(child)
+            for name, child in expressions_data.items()
+            if isinstance(name, str)
+        }
+
+        modes_data = data.get("value_modes", {})
+        if not isinstance(modes_data, dict):
+            raise ValueError("block.value_modes 必须是对象")
+        value_modes = {
+            name: str(mode)
+            for name, mode in modes_data.items()
+            if isinstance(name, str)
+        }
+
         x = float(data.get("x", 0.0) or 0.0)
         y = float(data.get("y", 0.0) or 0.0)
         return cls(
@@ -100,6 +124,8 @@ class Block:
             params=params,
             children=children,
             else_children=else_children,
+            expressions=expressions,
+            value_modes=value_modes,
             x=x,
             y=y,
         )

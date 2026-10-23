@@ -68,8 +68,8 @@ def test_promoted_widgets_are_used(qtbot, tmp_path):
 
     assert isinstance(window.ui.blockEditor, BlockListEditor)
     assert isinstance(window.ui.statementTree, StatementTree)
-    # 顶部「空」+ 6 个分类 + 隐藏的“无结果”提示
-    assert window.ui.statementTree.topLevelItemCount() == 8
+    # 顶部「空」+ 7 个分类 + 隐藏的“无结果”提示
+    assert window.ui.statementTree.topLevelItemCount() == 9
 
 
 def test_palette_toggle_button(qtbot, tmp_path):

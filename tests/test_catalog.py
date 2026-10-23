@@ -7,45 +7,53 @@ from hotkey.core.models import Block
 
 
 def test_catalog_shape():
-    assert len(catalog.SNIPPETS) == 50
-    assert len(catalog.CATEGORIES) == 6
+    assert len(catalog.SNIPPETS) == 71
+    assert len(catalog.CATEGORIES) == 7
+    assert sum(snippet.hidden for snippet in catalog.SNIPPETS) == 16
     ids = [snippet.id for snippet in catalog.SNIPPETS]
     assert len(ids) == len(set(ids))
 
 
 def test_logic_category_has_function_and_value_blocks():
-    logic = [snippet for snippet in catalog.SNIPPETS if snippet.category == "logic"]
-    assert len(logic) == 13
+    logic = [
+        snippet
+        for snippet in catalog.SNIPPETS
+        if snippet.category == "logic" and not snippet.hidden
+    ]
+    assert len(logic) == 4
 
     definition = catalog.snippet("logic_func_def")
     assert definition.block is True
     assert definition.slots == ("函数体",)
-    assert [param.name for param in definition.params] == [
-        "name",
-        "params",
-        "result",
+    assert [param.name for param in definition.params] == ["name", "params"]
+
+    values = [
+        snippet for snippet in catalog.SNIPPETS if snippet.category == "value"
     ]
+    assert len(values) == 13
+    assert all(snippet.expression for snippet in values)
 
 
 def test_return_value_blocks_generate_code():
-    exists = catalog.snippet("logic_exists")
-    assert exists.code_for_values({"image": "a.png", "variable": "found"}) == (
-        "found = pyautogui.locateOnScreen('a.png') is not None"
+    exists = catalog.snippet("value_image_exists")
+    assert exists.code_for_values({"image": "a.png"}) == (
+        "pyautogui.locateOnScreen('a.png') is not None"
     )
 
-    compare = catalog.snippet("logic_compare")
+    compare = catalog.snippet("value_compare")
     assert compare.code_for_values(
-        {"left": "x", "operator": ">", "right": "0", "variable": "ok"}
-    ) == "ok = (x > 0)"
+        {"left": "x", "operator": ">", "right": "0"}
+    ) == "(x > 0)"
 
 
 def test_container_slots_and_hidden_blocks():
-    assert catalog.snippet("flow_for_3").slots == ("重复内容",)
+    assert catalog.snippet("flow_for_range").slots == ("重复内容",)
     assert catalog.snippet("flow_if").hidden is True
+    assert catalog.snippet("flow_sleep_1").hidden is True
 
     if_else = catalog.snippet("flow_if_else")
     assert if_else.slots == ("那么", "否则")
-    assert if_else.params[0].kind == "code"
+    assert if_else.params[0].kind == "value"
     assert if_else.code_for_values({"condition": "x > 0"}) == "if x > 0:"
 
 

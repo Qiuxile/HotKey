@@ -2,9 +2,49 @@
 
 由 `hotkey/core/catalog.json` 生成；修改积木后请重新生成本文档。
 
+## 值与条件（13）
+
+| 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
+|---|---|---|---|---|
+| 变量 变量名 | `value_variable` | name:code（变量名） | — | `{name}` |
+| (左值 ==、>、< 右值) | `value_compare` | left:code（左值）, operator:code = ==（==、>、<）, right:code（右值） | — | `({left} {operator} {right})` |
+| (条件 and / or 条件) | `value_logic` | left:code（条件）, operator:code = and（and / or）, right:code（条件） | — | `({left} {operator} {right})` |
+| 非 条件 | `value_not` | value:code（条件） | — | `not ({value})` |
+| (左值 + - * / 右值) | `value_math` | left:code（左值）, operator:code = +（+ - * /）, right:code（右值） | — | `({left} {operator} {right})` |
+| 随机整数 最小值 到 最大值 | `value_random` | low:number = 1（最小值）, high:number = 10（最大值） | — | `random.randint({low}, {high})` |
+| 调用 函数名（参数） | `value_func_call` | name:code（函数名）, args:code（参数） | — | `{name}({args})` |
+| Python 表达式 例如 x > 0 | `value_python` | code:code（例如 x > 0） | — | `{code}` |
+| 图片 图片路径 是否存在 | `value_image_exists` | image:text（图片路径） | — | `pyautogui.locateOnScreen({image}) is not None` |
+| 图片 图片路径 的中心坐标 | `value_locate` | image:text（图片路径） | — | `pyautogui.locateCenterOnScreen({image})` |
+| 坐标（x, y）的颜色 | `value_pixel` | x:number = 0（x）, y:number = 0（y） | — | `pyautogui.pixel({x}, {y})` |
+| 鼠标坐标 | `value_mouse_pos` | — | — | `pyautogui.position()` |
+| 屏幕尺寸 | `value_screen_size` | — | — | `pyautogui.size()` |
+
+## 函数与数据（4）
+
+| 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
+|---|---|---|---|---|
+| 设置变量 变量名 为 值或返回值 | `logic_set` | name:code（变量名）, value:value（值或返回值） | — | `{name} = {value}` |
+| 变量 变量名 增加 值 | `logic_change` | name:code（变量名）, value:value = 1（值） | — | `{name} += {value}` |
+| 定义函数 函数名（参数 a） | `logic_func_def` | name:code（函数名）, params:code（a, b） | 函数体 | `def {name}({params}):` |
+| 调用 函数名（参数） | `logic_func_plain` | name:code（函数名）, args:code（参数） | — | `{name}({args})` |
+
+## 流程控制（8）
+
+| 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
+|---|---|---|---|---|
+| 等待 秒数 秒 | `flow_wait` | seconds:number = 1（秒数，如 0.5） | — | `time.sleep({seconds})` |
+| 如果 条件 那么 | `flow_if_else` | condition:value（条件） | 那么 / 否则 | `if {condition}:` |
+| 否则如果 条件 那么 | `flow_elif` | condition:value（条件） | 那么 / 否则 | `elif {condition}:` |
+| 当 条件 时重复 | `flow_while` | condition:value（条件） | 重复内容 | `while {condition}:` |
+| 对 i 从 0 到 10 步长 1 重复 | `flow_for_range` | name:code = i（i）, start:number = 0（0）, end:number = 10（10）, step:number = 1（1） | 重复内容 | `for {name} in range({start}, {end}, {step}):` |
+| 跳出循环 | `flow_break` | — | — | `break` |
+| 继续下一次循环 | `flow_continue` | — | — | `continue` |
+| 返回 返回值 | `flow_return` | value:value（返回值） | — | `return {value}` |
+
 ## 鼠标操作（11）
 
-| 积木 | id | 参数 | 槽位 | Python |
+| 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
 |---|---|---|---|---|
 | 移动鼠标到（x, y） | `mouse_move_to` | x:number（x）, y:number（y） | — | `pyautogui.moveTo({x}, {y})` |
 | 相对移动鼠标（dx, dy） | `mouse_move_rel` | dx:number（dx）, dy:number（dy） | — | `pyautogui.moveRel({dx}, {dy}, duration=0.3)` |
@@ -20,7 +60,7 @@
 
 ## 键盘操作（9）
 
-| 积木 | id | 参数 | 槽位 | Python |
+| 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
 |---|---|---|---|---|
 | 按下 Enter | `key_press_enter` | — | — | `pyautogui.press('enter')` |
 | 输入文本「要输入的文本」 | `key_type_text` | text:text（要输入的文本） | — | `pyautogui.typewrite({text})` |
@@ -34,55 +74,41 @@
 
 ## 屏幕操作（7）
 
-| 积木 | id | 参数 | 槽位 | Python |
+| 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
 |---|---|---|---|---|
 | 截取全屏到 screenshot.png | `screen_screenshot` | — | — | `pyautogui.screenshot('screenshot.png')` |
-| 截取区域（左 左，上 上，宽 宽，高 高） | `screen_screenshot_region` | left:number（左）, top:number（上）, width:number（宽）, height:number（高） | — | `pyautogui.screenshot('region.png', region=({left}, {top}, {width}, {height}))` |
+| 截取区域（x, y, w, h） | `screen_screenshot_region` | left:number（x）, top:number（y）, width:number（w）, height:number（h） | — | `pyautogui.screenshot('region.png', region=({left}, {top}, {width}, {height}))` |
 | 读取屏幕尺寸到变量 w, h | `screen_size` | — | — | `w, h = pyautogui.size()` |
 | 在屏幕上查找图片「图片路径」 | `screen_locate` | image:text（图片路径） | — | `pyautogui.locateOnScreen({image})` |
 | 查找图片并取中心坐标「图片路径」 | `screen_locate_center` | image:text（图片路径） | — | `pyautogui.locateCenterOnScreen({image})` |
 | 读取坐标（x, y）的颜色 | `screen_pixel` | x:number（x）, y:number（y） | — | `pyautogui.pixel({x}, {y})` |
 | 判断（x, y）是否为颜色（R, G, B） | `screen_pixel_matches` | x:number（x）, y:number（y）, r:number（R）, g:number（G）, b:number（B） | — | `pyautogui.pixelMatchesColor({x}, {y}, ({r}, {g}, {b}))` |
 
-## 函数与数据（13）
-
-| 积木 | id | 参数 | 槽位 | Python |
-|---|---|---|---|---|
-| 设置变量 变量名 为 值或表达式 | `logic_set` | name:code（变量名）, value:code（值或表达式） | — | `{name} = {value}` |
-| 比较 左值 ==、>、< 右值 存入 结果变量 | `logic_compare` | left:code（左值）, operator:code（==、>、<）, right:code（右值）, variable:code（结果变量） | — | `{variable} = ({left} {operator} {right})` |
-| 计算 表达式 存入 结果变量 | `logic_math` | expression:code（表达式，如 x + 1）, variable:code（结果变量） | — | `{variable} = {expression}` |
-| 随机整数 最小值 到 最大值 存入 结果变量 | `logic_random` | low:number（最小值）, high:number（最大值）, variable:code（结果变量） | — | `{variable} = random.randint({low}, {high})` |
-| 定义函数 函数名（参数 参数）返回 返回表达式 | `logic_func_def` | name:code（函数名）, params:code（参数，如 a, b）, result:code（返回表达式，可留空） | 函数体 | `def {name}({params}):` |
-| 调用 函数名（实参）存入 返回值变量 | `logic_func_call` | name:code（函数名）, args:code（实参）, variable:code（返回值变量） | — | `{variable} = {name}({args})` |
-| 调用 函数名（实参） | `logic_func_plain` | name:code（函数名）, args:code（实参） | — | `{name}({args})` |
-| 返回 返回值 | `logic_return` | value:code（返回值） | — | `return {value}` |
-| 图片 图片路径 是否存在存入 结果变量 | `logic_exists` | image:text（图片路径）, variable:code（结果变量） | — | `{variable} = pyautogui.locateOnScreen({image}) is not None` |
-| 查找图片 图片路径 位置存入 结果变量 | `logic_locate` | image:text（图片路径）, variable:code（结果变量） | — | `{variable} = pyautogui.locateCenterOnScreen({image})` |
-| 坐标（x, y）颜色存入 结果变量 | `logic_pixel` | x:number（x）, y:number（y）, variable:code（结果变量） | — | `{variable} = pyautogui.pixel({x}, {y})` |
-| 读取鼠标坐标存入 结果变量 | `logic_mouse_pos` | variable:code（结果变量） | — | `{variable} = pyautogui.position()` |
-| 读取屏幕尺寸存入 结果变量 | `logic_screen_size` | variable:code（结果变量） | — | `{variable} = pyautogui.size()` |
-
 ## 弹窗交互（3）
 
-| 积木 | id | 参数 | 槽位 | Python |
+| 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
 |---|---|---|---|---|
 | 弹出提示：提示文字 | `dialog_alert` | text:text（提示文字） | — | `pyautogui.alert({text})` |
 | 弹出确认框：提示文字 | `dialog_confirm` | text:text（提示文字） | — | `pyautogui.confirm({text})` |
 | 弹出输入框：提示文字 | `dialog_prompt` | text:text（提示文字） | — | `pyautogui.prompt({text})` |
 
-## 流程控制（6）
-
-| 积木 | id | 参数 | 槽位 | Python |
-|---|---|---|---|---|
-| 等待 0.5 秒 | `flow_sleep_05` | — | — | `time.sleep(0.5)` |
-| 等待 1 秒 | `flow_sleep_1` | — | — | `time.sleep(1)` |
-| 等待 2 秒 | `flow_sleep_2` | — | — | `time.sleep(2)` |
-| 等待 5 秒 | `flow_sleep_5` | — | — | `time.sleep(5)` |
-| 重复执行 3 次 | `flow_for_3` | — | 重复内容 | `for i in range(3):` |
-| 如果 条件 那么 | `flow_if_else` | condition:code（条件，例如 x > 0） | 那么 / 否则 | `if {condition}:` |
-
 ## 旧版隐藏积木
 
-- `flow_if`：如果条件成立（True）（不在积木柜显示，旧配置迁移用）
+- `flow_if`：如果条件成立（True）（不在积木柜显示，旧配置兼容用）
+- `flow_sleep_05`：等待 0.5 秒（不在积木柜显示，旧配置兼容用）
+- `flow_sleep_1`：等待 1 秒（不在积木柜显示，旧配置兼容用）
+- `flow_sleep_2`：等待 2 秒（不在积木柜显示，旧配置兼容用）
+- `flow_sleep_5`：等待 5 秒（不在积木柜显示，旧配置兼容用）
+- `flow_for_3`：重复执行 3 次（不在积木柜显示，旧配置兼容用）
+- `logic_compare`：比较 左值 ==、>、< 右值 存入 结果变量（不在积木柜显示，旧配置兼容用）
+- `logic_math`：计算 表达式 存入 结果变量（不在积木柜显示，旧配置兼容用）
+- `logic_random`：随机整数 最小值 到 最大值 存入 结果变量（不在积木柜显示，旧配置兼容用）
+- `logic_func_call`：调用 函数名（实参）存入 返回值变量（不在积木柜显示，旧配置兼容用）
+- `logic_exists`：图片 图片路径 是否存在存入 结果变量（不在积木柜显示，旧配置兼容用）
+- `logic_locate`：查找图片 图片路径 位置存入 结果变量（不在积木柜显示，旧配置兼容用）
+- `logic_pixel`：坐标（x, y）颜色存入 结果变量（不在积木柜显示，旧配置兼容用）
+- `logic_mouse_pos`：读取鼠标坐标存入 结果变量（不在积木柜显示，旧配置兼容用）
+- `logic_screen_size`：读取屏幕尺寸存入 结果变量（不在积木柜显示，旧配置兼容用）
+- `logic_return`：返回 返回值（不在积木柜显示，旧配置兼容用）
 
-共 **49** 个可见积木，另有「空」块和 1 个隐藏旧积木。
+共 **55** 个可见积木，另有「空」块和 16 个隐藏旧积木。
