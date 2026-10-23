@@ -12,6 +12,8 @@ from hotkey.core.models import HotKey
 INVALID_NAME = re.compile(r'[<>:"/\\|?*\x00-\x1f]+')
 SCRIPT_SUFFIX = ".hk"
 LEGACY_SUFFIX = ".json"
+SCRIPT_DIR_NAME = "hks"
+LEGACY_DIR_NAME = "jsons"
 
 
 def app_root() -> Path:
@@ -20,11 +22,34 @@ def app_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _migrate_script_dir(base: Path) -> None:
+    """旧版本用 jsons/；新版本用 hks/，首次启动时整体改名。"""
+    old = base / LEGACY_DIR_NAME
+    new = base / SCRIPT_DIR_NAME
+    if new.exists() or not old.is_dir():
+        return
+    try:
+        old.rename(new)
+        return
+    except OSError:
+        pass
+    try:
+        new.mkdir(parents=True, exist_ok=True)
+        for child in old.iterdir():
+            child.replace(new / child.name)
+    except OSError:
+        pass
+
+
 def default_script_dir() -> Path:
-    """优先程序旁边的 jsons/，不可写时回退到配置目录。"""
+    """优先程序旁边的 hks/，不可写时回退到配置目录。"""
+    root = app_root()
+    _migrate_script_dir(root)
+    config_root = storage.config_root()
+    _migrate_script_dir(config_root)
     candidates = [
-        app_root() / "jsons",
-        storage.config_root() / "jsons",
+        root / SCRIPT_DIR_NAME,
+        config_root / SCRIPT_DIR_NAME,
     ]
     for candidate in candidates:
         try:

@@ -1,7 +1,7 @@
 """单文件脚本库：加载、迁移、保存、删除。"""
 
 from hotkey.core import storage
-from hotkey.core.library import ScriptLibrary
+from hotkey.core.library import ScriptLibrary, _migrate_script_dir
 from hotkey.core.models import Block, HotKey
 
 
@@ -77,3 +77,14 @@ def test_save_and_delete(tmp_path):
 
     library.delete(script)
     assert not path.exists()
+
+
+def test_legacy_jsons_folder_is_renamed_to_hks(tmp_path):
+    old = tmp_path / "jsons"
+    old.mkdir()
+    (old / "demo.hk").write_text("{}", encoding="utf-8")
+
+    _migrate_script_dir(tmp_path)
+
+    assert not old.exists()
+    assert (tmp_path / "hks" / "demo.hk").exists()

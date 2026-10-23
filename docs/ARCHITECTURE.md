@@ -66,7 +66,7 @@ hotkey/
 ## 4. 数据流
 
 ```
-jsons/*.hk
+hks/*.hk
    │ ScriptLibrary.load()
    ▼
 HotKey 列表 ──► HotKeyTableModel ──► 左侧列表（最大 400px）
@@ -85,7 +85,7 @@ blocks_to_code() ──► validator.validate() ──► library.save() 写回 
 监听器进程：
 
 ```
-jsons/*.hk ──ScriptLibrary.load()──► 有热键且启用的脚本
+hks/*.hk ──ScriptLibrary.load()──► 有热键且启用的脚本
    │                                      │
    │ QFileSystemWatcher 监视 .hk           │ HotkeyService 注册
    ▼                                      ▼

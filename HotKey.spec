@@ -17,7 +17,6 @@ a = Analysis(
     datas=[
         ('hotkey/ui/theme.qss', 'hotkey/ui'),
         ('hotkey/core/catalog.json', 'hotkey/core'),
-        ('jsons/example.hk', 'jsons'),
         ('assets', 'assets'),
     ],
     hiddenimports=[

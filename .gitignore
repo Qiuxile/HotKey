@@ -23,10 +23,10 @@ debug.log
 .pytest_tmp/
 .uic-check-*.py
 .hotkey/
-jsons/.hotkey/
+hks/.hotkey/
 
 # 本地 agent 说明（不随仓库分发）
 CLAUDE.md
 
 # 脚本自动备份
-jsons/*.bak
+hks/*.bak
