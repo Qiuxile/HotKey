@@ -770,8 +770,16 @@ class BlockListEditor(QScrollArea):
         body: BodyArea | None = None,
         after: BlockWidget | None = None,
     ) -> BlockWidget | None:
-        if snippet_id != EMPTY_KIND and not catalog.snippet(snippet_id).statement:
-            return None
+        if snippet_id != EMPTY_KIND:
+            snippet = catalog.snippet(snippet_id)
+            if not snippet.statement:
+                return None
+            if snippet_id == "flow_elif":
+                target_body = body
+                if target_body is None and after is not None:
+                    target_body = body_of(after)
+                if target_body is None or target_body.index != 1:
+                    return None
         block = self._new_block(snippet_id)
         widget = self.add_block(block, body, after)
         self.changed.emit()

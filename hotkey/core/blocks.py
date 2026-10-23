@@ -103,14 +103,16 @@ def expression_code(block: Block | None) -> str:
 
 def _conditional_code(block: Block, snippet: catalog.Snippet, keyword: str) -> str:
     code = _format_snippet(block, snippet)
-    then_body = _body_code(block.children)
-    result = f"{code}\n{then_body}"
+    result = f"{code}\n{_body_code(block.children)}"
 
-    if not block.else_children:
-        return result
-    if block.else_children[0].kind == "flow_elif":
-        return result + "\n" + block_code(block.else_children[0])
-    return result + "\nelse:\n" + _body_code(block.else_children)
+    children = list(block.else_children)
+    for child in children:
+        if child.kind == "flow_elif":
+            result += "\n" + block_code(child)
+    others = [child for child in children if child.kind != "flow_elif"]
+    if others:
+        result += "\nelse:\n" + _body_code(others)
+    return result
 
 
 def block_code(block: Block) -> str:

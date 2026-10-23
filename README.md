@@ -115,7 +115,9 @@ pyinstaller --noconfirm HotKey.spec
 
 ### 3. 条件、循环与流程
 
-- `如果 {condition} 那么` + 「否则」槽位；`否则如果 {condition} 那么` 放在否则槽里形成 `if / elif / else`
+- `如果 {condition} 那么` + 「否则」槽位
+- `否则如果 {condition} 那么` 只有「那么」槽位，可以连续放多个在「否则」里；最后剩下的普通积木作为最终 `else`
+- 「否则如果」只能放在「否则」槽里，不能放在顶层或「那么」里，避免出现两个「否则」的冲突
 - `当 {condition} 时重复` → `while`
 - `对 {name} 从 {start} 到 {end} 步长 {step} 重复` → `for ... in range(...)`
 - `等待 {seconds} 秒` 一个积木，秒数自己填，不再有 0.5/1/2/5 四个固定块
@@ -322,7 +324,7 @@ HotKey/
 │       ├── recorder.py
 │       ├── theme.py         # 深色调色板与 QSS 渲染
 │       └── theme.qss        # 使用 $变量 的 QSS 模板
-├── tests/                   # pytest + pytest-qt（200 项）
+├── tests/                   # pytest + pytest-qt（202 项）
 ├── docs/ARCHITECTURE.md     # 代码结构说明（读代码先看这个）
 ├── docs/BLOCKS.md           # 积木柜全部积木清单
 ├── tools/build_ui.ps1       # .ui -> generated/ui_*.py
