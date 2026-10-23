@@ -62,6 +62,19 @@ class Snippet:
     def blank_values(self) -> dict[str, str]:
         return {param.name: "" for param in self.params}
 
+    def preview_values(self) -> dict[str, str]:
+        """给积木柜用的短占位符，例如 x、文本、条件。"""
+        values: dict[str, str] = {}
+        for param in self.params:
+            text = param.placeholder or param.name
+            text = text.split("，")[0].split(",")[0].strip()
+            values[param.name] = text
+        return values
+
+    def preview(self) -> str:
+        """积木柜里显示的中文预览，不再出现空的括号。"""
+        return self.render(self.preview_values())
+
     def render(self, values: dict[str, str]) -> str:
         return self.label.format(
             **{param.name: values.get(param.name, "") for param in self.params}

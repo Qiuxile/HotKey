@@ -119,12 +119,27 @@ class Ui_MainWindow(object):
         self.editorBody = QHBoxLayout()
         self.editorBody.setSpacing(8)
         self.editorBody.setObjectName(u"editorBody")
-        self.statementTree = StatementTree(self.editorPanel)
-        self.statementTree.setObjectName(u"statementTree")
-        self.statementTree.setMinimumSize(QSize(190, 0))
-        self.statementTree.setMaximumSize(QSize(240, 16777215))
+        self.palettePanel = QWidget(self.editorPanel)
+        self.palettePanel.setObjectName(u"palettePanel")
+        self.palettePanel.setMinimumSize(QSize(190, 0))
+        self.palettePanel.setMaximumSize(QSize(240, 16777215))
+        self.paletteLayout = QVBoxLayout(self.palettePanel)
+        self.paletteLayout.setSpacing(6)
+        self.paletteLayout.setObjectName(u"paletteLayout")
+        self.paletteLayout.setContentsMargins(0, 0, 0, 0)
+        self.paletteSearch = QLineEdit(self.palettePanel)
+        self.paletteSearch.setObjectName(u"paletteSearch")
+        self.paletteSearch.setClearButtonEnabled(True)
 
-        self.editorBody.addWidget(self.statementTree)
+        self.paletteLayout.addWidget(self.paletteSearch)
+
+        self.statementTree = StatementTree(self.palettePanel)
+        self.statementTree.setObjectName(u"statementTree")
+
+        self.paletteLayout.addWidget(self.statementTree)
+
+
+        self.editorBody.addWidget(self.palettePanel)
 
         self.editorColumn = QVBoxLayout()
         self.editorColumn.setSpacing(8)
@@ -278,6 +293,7 @@ class Ui_MainWindow(object):
         self.searchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22\u70ed\u952e...", None))
         self.btnNewScript.setText(QCoreApplication.translate("MainWindow", u"\uff0b \u65b0\u5efa\u811a\u672c", None))
         self.lblEditing.setText(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c\u7f16\u8f91", None))
+        self.paletteSearch.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22\u79ef\u6728...", None))
         self.btnCapturePos.setText(QCoreApplication.translate("MainWindow", u"\u590d\u5236\u5750\u6807", None))
         self.btnCaptureColor.setText(QCoreApplication.translate("MainWindow", u"\u590d\u5236\u989c\u8272", None))
         self.btnScreenSize.setText(QCoreApplication.translate("MainWindow", u"\u590d\u5236\u5c3a\u5bf8", None))

@@ -28,17 +28,20 @@ hotkey/
 ├── ui/
 │   ├── forms/*.ui        # Qt Designer 源文件
 │   ├── generated/        # pyside6-uic 生成物（提交入库，勿手改）
-│   ├── main_window.py    # 主窗口：脚本库、编辑标签、监听、托盘
+│   ├── main_window.py    # 编辑器：脚本库、编辑标签、试运行
+│   ├── listener.py       # 独立监听器：托盘 + 热键 + 文件热重载
 │   ├── hotkey_model.py   # 脚本列表的 QAbstractTableModel + 搜索代理
 │   ├── recorder.py       # 热键录入对话框
+│   ├── logging_setup.py  # 编辑器/监听器共用日志
+│   ├── icon.py           # 共用应用图标
 │   ├── theme.py          # 深/浅色调色板、QSS 渲染、QSettings
 │   ├── theme.qss         # 使用 $变量 的 QSS 模板
 │   └── widgets/
-│       ├── block_editor.py     # 单栏积木编辑器
-│       ├── statement_tree.py   # 左侧积木面板
+│       ├── block_editor.py     # 单栏积木编辑器（含拖拽排序）
+│       ├── statement_tree.py   # 积木柜：分类 + 搜索 + 拖出积木
 │       ├── title_bar.py        # 自定义标题栏 + 菜单按钮
 │       └── frameless_resize.py # 无边框窗口四边/四角缩放
-└── app.py                # QApplication、日志、单实例
+└── app.py                # 编辑器启动、单实例
 ```
 
 ## 3. 主窗口的职责分区
@@ -51,13 +54,14 @@ hotkey/
 | 初始化 | `_configure_table`、`_connect_signals`、`_load_library` | 建模型、连信号、加载脚本库 |
 | 脚本库 | `_new_script`、`_import_script`、`_delete_script`、`_edit_hotkey` | 脚本文件与列表操作 |
 | 编辑标签 | `_open_editor_for_id`、`_activate_tab`、`_save_tab`、`_close_tab` | 多标签编辑与保存 |
-| 运行/导出 | `_run_script`、`_export_python` | 执行 / 生成 `.py` |
-| 监听 | `_executable_entries`、`_start_listening`、`_reload_service` | 注册全局热键 |
+| 运行/导出 | `_run_script`、`_export_python` | 试运行 / 生成 `.py` |
+| 监听进程 | `_start_listening`、`_stop_listening`、`_verify_listener_start` | 启动/停止独立监听器进程 |
 | 编辑器工具 | `_capture_coordinate`、`_insert_pixel_color` | 复制坐标/颜色/尺寸 |
-| 窗口/托盘 | `_update_window_title`、`_setup_tray`、`closeEvent`、`_quit` | 标题、托盘、退出 |
+| 窗口/退出 | `_update_window_title`、`closeEvent`、`_quit` | 标题、保存提示、退出 |
 
 `MainWindow` 只做协调；积木代码生成、校验、文件格式、热键注册都在 `core/`。
 窗口边缘缩放已拆到 `widgets/frameless_resize.py`，不要重新塞回主窗口。
+编辑器**没有托盘**；托盘只属于 `hotkey/listener.py` 的监听器进程。
 
 ## 4. 数据流
 
@@ -74,9 +78,24 @@ EditorTab（右侧标签，内存中的 blocks）
    ▼
 blocks_to_code() ──► validator.validate() ──► library.save() 写回 .hk
    │
-   ├── F5：HotkeyService 注册“有热键且启用”的脚本
+   ├── F5：启动独立监听器进程（监听器负责注册热键）
    └── 生成 .py：render_program() 生成独立文件
 ```
+
+监听器进程：
+
+```
+jsons/*.hk ──ScriptLibrary.load()──► 有热键且启用的脚本
+   │                                      │
+   │ QFileSystemWatcher 监视 .hk           │ HotkeyService 注册
+   ▼                                      ▼
+保存后自动 reload ───────────────► 按键触发 ──► ScriptRunner 执行
+   │
+   └── 托盘：打开编辑器 / 暂停 / 退出
+```
+
+编辑器与监听器通过 `QLocalSocket`（`HotKey.Listener.v1`）通信：
+启动、停止、查询状态；脚本内容通过文件同步。
 
 关键不变量：
 
@@ -138,7 +157,7 @@ pytest
 
 - `core` 测试不依赖 Qt。
 - UI 测试用 `pytest-qt` + offscreen。
-- 测试构造 `MainWindow(tmp_path, with_tray=False)`，不会写用户目录/弹托盘。
+- 测试构造 `MainWindow(tmp_path)`，不会写用户目录/弹托盘；监听器进程不在单测里启动。
 
 ## 8. 代码约定
 

@@ -37,7 +37,7 @@ class TitleBar(QFrame):
         self.title_label.setMaximumWidth(TITLE_MAX_WIDTH)
         self.title_label.setMinimumWidth(0)
         self.title_label.setSizePolicy(
-            QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
         )
         layout.addWidget(self.title_label)
 

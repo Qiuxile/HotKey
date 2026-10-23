@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QRegularExpression, Qt, Signal
-from PySide6.QtGui import QRegularExpressionValidator
+from uuid import uuid4
+
+from PySide6.QtCore import QMimeData, QRegularExpression, Qt, Signal
+from PySide6.QtGui import QDrag, QRegularExpressionValidator
 from PySide6.QtWidgets import (
+    QApplication,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -21,6 +24,7 @@ from hotkey.core.models import Block
 from hotkey.ui.widgets.statement_tree import SNIPPET_MIME
 
 EMPTY_KIND = "empty"
+BLOCK_MOVE_MIME = "application/x-hotkey-block-move"
 
 
 def body_of(widget: QWidget) -> "BodyArea | None":
@@ -105,11 +109,22 @@ class BodyArea(QFrame):
             self._widgets[target],
             self._widgets[index],
         )
+        self.arrange()
+
+    def arrange(self) -> None:
         for child in self._widgets:
             self._child_layout.removeWidget(child)
         for position, child in enumerate(self._widgets):
             self._child_layout.insertWidget(position, child)
         self.owner.refresh_size()
+
+    def move_to_end(self, widget: "BlockWidget") -> None:
+        if widget not in self._widgets:
+            return
+        self._widgets.remove(widget)
+        self._widgets.append(widget)
+        self.arrange()
+        self.editor.changed.emit()
 
     def blocks(self) -> list[Block]:
         return [widget.to_block() for widget in self._widgets]
@@ -117,21 +132,71 @@ class BodyArea(QFrame):
     # ---------------------------------------------------------------- 拖放
 
     def dragEnterEvent(self, event) -> None:  # noqa: N802
-        if event.mimeData().hasFormat(SNIPPET_MIME):
+        if event.mimeData().hasFormat(SNIPPET_MIME) or event.mimeData().hasFormat(
+            BLOCK_MOVE_MIME
+        ):
             event.acceptProposedAction()
 
     def dragMoveEvent(self, event) -> None:  # noqa: N802
-        if event.mimeData().hasFormat(SNIPPET_MIME):
+        if event.mimeData().hasFormat(SNIPPET_MIME) or event.mimeData().hasFormat(
+            BLOCK_MOVE_MIME
+        ):
             event.acceptProposedAction()
 
     def dropEvent(self, event) -> None:  # noqa: N802
-        if not event.mimeData().hasFormat(SNIPPET_MIME):
+        if event.mimeData().hasFormat(BLOCK_MOVE_MIME):
+            token = bytes(event.mimeData().data(BLOCK_MOVE_MIME)).decode(
+                "utf-8", errors="replace"
+            )
+            source = self.editor.source_for(token)
+            if source is not None and body_of(source) is self:
+                self.move_to_end(source)
+            event.acceptProposedAction()
             return
-        payload = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
-            "utf-8", errors="replace"
-        )
-        self.editor.add_snippet(payload, body=self)
-        event.acceptProposedAction()
+        if event.mimeData().hasFormat(SNIPPET_MIME):
+            payload = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
+                "utf-8", errors="replace"
+            )
+            self.editor.add_snippet(payload, body=self)
+            event.acceptProposedAction()
+
+
+class _DragHandle(QLabel):
+    """积木左侧的拖拽手柄，只有按住它才会开始排序拖拽。"""
+
+    def __init__(self, block: "BlockWidget") -> None:
+        super().__init__("≡", block.header)
+        self._block = block
+        self._press_pos = None
+        self.setObjectName("blockDragHandle")
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setFixedWidth(16)
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
+        self.setToolTip("拖动这里调整顺序")
+
+    def mousePressEvent(self, event) -> None:  # noqa: N802
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._press_pos = event.position().toPoint()
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:  # noqa: N802
+        if (
+            self._press_pos is not None
+            and event.buttons() & Qt.MouseButton.LeftButton
+            and (event.position().toPoint() - self._press_pos).manhattanLength()
+            >= QApplication.startDragDistance()
+        ):
+            self._press_pos = None
+            self._block.start_reorder_drag()
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802
+        self._press_pos = None
+        super().mouseReleaseEvent(event)
 
 
 class BlockWidget(QFrame):
@@ -168,24 +233,16 @@ class BlockWidget(QFrame):
         self.header = QFrame(self)
         self.header.setObjectName("blockHeader")
         header_layout = QHBoxLayout(self.header)
-        header_layout.setContentsMargins(10, 5, 8, 5)
+        header_layout.setContentsMargins(6, 5, 8, 5)
         header_layout.setSpacing(5)
+
+        self.drag_handle = _DragHandle(self)
+        header_layout.addWidget(self.drag_handle)
 
         if self.snippet is None:
             self._build_empty(header_layout)
         else:
             self._build_snippet(header_layout, self.snippet)
-
-        for symbol, delta in (("▲", -1), ("▼", 1)):
-            button = QToolButton(self.header)
-            button.setText(symbol)
-            button.setToolTip("上移" if delta < 0 else "下移")
-            button.setAutoRaise(True)
-            button.setFixedSize(22, 22)
-            button.clicked.connect(
-                lambda _checked=False, d=delta: self.editor.move_block(self, d)
-            )
-            header_layout.addWidget(button)
 
         delete_button = QToolButton(self.header)
         delete_button.setText("✕")
@@ -300,22 +357,65 @@ class BlockWidget(QFrame):
 
     # ---------------------------------------------------------------- 拖放
 
+    def start_reorder_drag(self) -> None:
+        token = self.editor.begin_block_drag(self)
+        mime = QMimeData()
+        mime.setData(BLOCK_MOVE_MIME, token.encode("utf-8"))
+        drag = QDrag(self)
+        drag.setMimeData(mime)
+        pixmap = self.grab()
+        if not pixmap.isNull():
+            drag.setPixmap(
+                pixmap.scaledToWidth(
+                    min(520, pixmap.width()),
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+        drag.exec(Qt.DropAction.MoveAction)
+        self.editor.end_block_drag(token)
+
+    def _set_drop_hint(self, after: bool | None) -> None:
+        value = "" if after is None else ("after" if after else "before")
+        self.setProperty("dropPosition", value)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
     def dragEnterEvent(self, event) -> None:  # noqa: N802
-        if event.mimeData().hasFormat(SNIPPET_MIME):
+        if event.mimeData().hasFormat(SNIPPET_MIME) or self._has_move(event):
             event.acceptProposedAction()
 
     def dragMoveEvent(self, event) -> None:  # noqa: N802
-        if event.mimeData().hasFormat(SNIPPET_MIME):
+        if self._has_move(event):
+            self._set_drop_hint(event.position().y() > self.height() / 2)
+            event.acceptProposedAction()
+        elif event.mimeData().hasFormat(SNIPPET_MIME):
             event.acceptProposedAction()
 
+    def dragLeaveEvent(self, event) -> None:  # noqa: N802
+        self._set_drop_hint(None)
+        super().dragLeaveEvent(event)
+
+    def _has_move(self, event) -> bool:
+        return event.mimeData().hasFormat(BLOCK_MOVE_MIME)
+
     def dropEvent(self, event) -> None:  # noqa: N802
-        if not event.mimeData().hasFormat(SNIPPET_MIME):
+        self._set_drop_hint(None)
+        if self._has_move(event):
+            token = bytes(event.mimeData().data(BLOCK_MOVE_MIME)).decode(
+                "utf-8", errors="replace"
+            )
+            source = self.editor.source_for(token)
+            if source is not None:
+                after = event.position().y() > self.height() / 2
+                self.editor.reorder_block(source, self, after)
+            event.acceptProposedAction()
             return
-        payload = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
-            "utf-8", errors="replace"
-        )
-        self.editor.add_snippet(payload, after=self)
-        event.acceptProposedAction()
+        if event.mimeData().hasFormat(SNIPPET_MIME):
+            payload = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
+                "utf-8", errors="replace"
+            )
+            self.editor.add_snippet(payload, after=self)
+            event.acceptProposedAction()
 
 
 class _DropHost(QWidget):
@@ -325,21 +425,33 @@ class _DropHost(QWidget):
         self.setAcceptDrops(True)
 
     def dragEnterEvent(self, event) -> None:  # noqa: N802
-        if event.mimeData().hasFormat(SNIPPET_MIME):
+        if event.mimeData().hasFormat(SNIPPET_MIME) or event.mimeData().hasFormat(
+            BLOCK_MOVE_MIME
+        ):
             event.acceptProposedAction()
 
     def dragMoveEvent(self, event) -> None:  # noqa: N802
-        if event.mimeData().hasFormat(SNIPPET_MIME):
+        if event.mimeData().hasFormat(SNIPPET_MIME) or event.mimeData().hasFormat(
+            BLOCK_MOVE_MIME
+        ):
             event.acceptProposedAction()
 
     def dropEvent(self, event) -> None:  # noqa: N802
-        if not event.mimeData().hasFormat(SNIPPET_MIME):
+        if event.mimeData().hasFormat(BLOCK_MOVE_MIME):
+            token = bytes(event.mimeData().data(BLOCK_MOVE_MIME)).decode(
+                "utf-8", errors="replace"
+            )
+            source = self.editor.source_for(token)
+            if source is not None:
+                self.editor.move_to_end(source)
+            event.acceptProposedAction()
             return
-        payload = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
-            "utf-8", errors="replace"
-        )
-        self.editor.add_snippet(payload)
-        event.acceptProposedAction()
+        if event.mimeData().hasFormat(SNIPPET_MIME):
+            payload = bytes(event.mimeData().data(SNIPPET_MIME)).decode(
+                "utf-8", errors="replace"
+            )
+            self.editor.add_snippet(payload)
+            event.acceptProposedAction()
 
 
 class BlockListEditor(QScrollArea):
@@ -355,6 +467,7 @@ class BlockListEditor(QScrollArea):
         self._layout.setSpacing(8)
         self._layout.addStretch(1)
         self._blocks: list[BlockWidget] = []
+        self._drag_sources: dict[str, BlockWidget] = {}
 
         self.setWidget(self._host)
         self.setWidgetResizable(True)
@@ -400,6 +513,51 @@ class BlockListEditor(QScrollArea):
             self._layout.removeWidget(widget)
         for index, widget in enumerate(self._blocks):
             self._layout.insertWidget(index, widget)
+
+    # ---------------------------------------------------------------- 拖拽排序
+
+    def begin_block_drag(self, widget: BlockWidget) -> str:
+        token = uuid4().hex
+        self._drag_sources[token] = widget
+        return token
+
+    def end_block_drag(self, token: str) -> None:
+        self._drag_sources.pop(token, None)
+
+    def source_for(self, token: str) -> BlockWidget | None:
+        return self._drag_sources.get(token)
+
+    def reorder_block(
+        self, source: BlockWidget, target: BlockWidget, after: bool
+    ) -> None:
+        """在同一层（顶层或同一个槽位）内把 source 移到 target 前/后。"""
+        source_body = body_of(source)
+        target_body = body_of(target)
+        if source_body is not target_body or source is target:
+            return
+
+        widgets = source_body._widgets if source_body else self._blocks
+        if source not in widgets or target not in widgets:
+            return
+
+        widgets.remove(source)
+        index = widgets.index(target) + (1 if after else 0)
+        widgets.insert(index, source)
+        if source_body is not None:
+            source_body.arrange()
+        else:
+            self._relayout()
+        self.changed.emit()
+
+    def move_to_end(self, widget: BlockWidget) -> None:
+        if body_of(widget) is not None or widget not in self._blocks:
+            return
+        if self._blocks and self._blocks[-1] is widget:
+            return
+        self._blocks.remove(widget)
+        self._blocks.append(widget)
+        self._relayout()
+        self.changed.emit()
 
     def add_snippet(
         self,

@@ -25,7 +25,7 @@ def make_script(tmp_path, name, key="", blocks=None):
 
 
 def make_window(qtbot, path):
-    window = MainWindow(path, with_tray=False)
+    window = MainWindow(path)
     qtbot.addWidget(window)
     return window
 
@@ -73,7 +73,6 @@ def test_script_without_hotkey(qtbot, tmp_path):
     entry = window._model.entry(0)
     assert entry.key == ""
     assert window._model.data(window._model.index(0, 1)) == "—"
-    assert window._executable_entries() == []
 
 
 def test_frameless_window_and_title_bar(qtbot, tmp_path):

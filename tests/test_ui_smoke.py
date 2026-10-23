@@ -9,7 +9,7 @@ from hotkey.ui.widgets.statement_tree import StatementTree
 
 
 def make_window(qtbot, tmp_path):
-    window = MainWindow(tmp_path, with_tray=False)
+    window = MainWindow(tmp_path)
     qtbot.addWidget(window)
     return window
 
@@ -68,8 +68,8 @@ def test_promoted_widgets_are_used(qtbot, tmp_path):
 
     assert isinstance(window.ui.blockEditor, BlockListEditor)
     assert isinstance(window.ui.statementTree, StatementTree)
-    # 顶部「空」+ 6 个分类
-    assert window.ui.statementTree.topLevelItemCount() == 7
+    # 顶部「空」+ 6 个分类 + 隐藏的“无结果”提示
+    assert window.ui.statementTree.topLevelItemCount() == 8
 
 
 def test_editor_toggle(qtbot, tmp_path):

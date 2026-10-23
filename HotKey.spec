@@ -17,9 +17,11 @@ a = Analysis(
     datas=[
         ('hotkey/ui/theme.qss', 'hotkey/ui'),
         ('hotkey/core/catalog.json', 'hotkey/core'),
-        ('jsons', 'jsons'),
+        ('jsons/example.hk', 'jsons'),
     ],
     hiddenimports=[
+        # 编辑器运行时才 import 监听器，静态分析看不到
+        'hotkey.listener',
         # 脚本通过受限命名空间动态导入这些模块，PyInstaller 静态分析看不到
         'pyautogui',
         'pymsgbox',

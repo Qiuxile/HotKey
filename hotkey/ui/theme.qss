@@ -262,6 +262,24 @@ QFrame#blockWidget {
     border-radius: 8px;
 }
 
+QFrame#blockWidget[dropPosition="before"] {
+    border-top: 3px solid $accent;
+}
+
+QFrame#blockWidget[dropPosition="after"] {
+    border-bottom: 3px solid $accent;
+}
+
+QLabel#blockDragHandle {
+    color: $muted;
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+QLabel#blockDragHandle:hover {
+    color: $accent;
+}
+
 QFrame#blockBody {
     background-color: $surface_high;
     border-radius: 4px;

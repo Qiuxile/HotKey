@@ -1,4 +1,4 @@
-"""主窗口：脚本库、编辑标签、热键监听与托盘。"""
+"""主窗口：脚本库、编辑标签与试运行；热键监听在独立进程。"""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QModelIndex, QObject, QPoint, QSize, QTimer, Qt, Signal
-from PySide6.QtGui import QCloseEvent, QColor, QIcon, QPainter, QPen, QPixmap
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -18,14 +18,12 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QSizeGrip,
-    QSystemTrayIcon,
     QVBoxLayout,
     QWidget,
 )
 
 from hotkey.core import keymap, storage, validator
 from hotkey.core.blocks import blocks_to_code
-from hotkey.core.hotkey_service import HotkeyService
 from hotkey.core.library import (
     ScriptLibrary,
     default_script_dir,
@@ -60,23 +58,16 @@ class EditorTab:
 
 
 class _Signals(QObject):
-    """把 keyboard / runner 线程的回调安全地转发到主线程。"""
+    """把 runner 线程的回调安全地转发到主线程。"""
 
-    triggered = Signal(str)
     started = Signal(str)
     finished = Signal(str, bool, str)
 
 
 class MainWindow(QMainWindow):
-    """脚本库 + 编辑标签 + 全局热键 + 托盘。"""
+    """编辑器窗口：脚本库 + 编辑标签 + 试运行；监听器在独立进程。"""
 
-    def __init__(
-        self,
-        library_dir: Path | None = None,
-        *,
-        with_tray: bool = True,
-        autostart: bool = False,
-    ) -> None:
+    def __init__(self, library_dir: Path | None = None) -> None:
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -102,9 +93,6 @@ class MainWindow(QMainWindow):
 
         self._listening = False
         self._quitting = False
-        self._tray: QSystemTrayIcon | None = None
-        self._tray_start = None
-        self._tray_stop = None
 
         self._editor_auto_expanded = False
         self._editor_previous_size = QSize(NARROW_WIDTH, WINDOW_HEIGHT)
@@ -113,10 +101,6 @@ class MainWindow(QMainWindow):
         self._runner = ScriptRunner(
             on_started=self._signals.started.emit,
             on_finished=self._signals.finished.emit,
-        )
-        self._hotkey_service = HotkeyService(
-            on_trigger=self._signals.triggered.emit,
-            on_error=self._on_hotkey_error,
         )
 
         self._setup_chrome()
@@ -128,16 +112,10 @@ class MainWindow(QMainWindow):
         self._set_editor_visible(False)
         self._update_actions()
 
-        if with_tray:
-            self._setup_tray()
-
         # 所有布局/隐藏动作完成后再固定窄窗口尺寸
         self.setMinimumWidth(NARROW_WIDTH)
         self.resize(NARROW_WIDTH, WINDOW_HEIGHT)
         self._restore_tabs()
-
-        if autostart:
-            self._start_listening()
 
     # ---------------------------------------------------------------- 外观
 
@@ -221,6 +199,9 @@ class MainWindow(QMainWindow):
         self.ui.actionStop.triggered.connect(self._stop_listening)
 
         self.ui.searchEdit.textChanged.connect(self._proxy.set_search_text)
+        self.ui.paletteSearch.textChanged.connect(
+            self.ui.statementTree.set_filter
+        )
         table = self.ui.hotkeyTable
         table.doubleClicked.connect(self._open_editor_from_index)
         table.customContextMenuRequested.connect(self._show_context_menu)
@@ -239,7 +220,6 @@ class MainWindow(QMainWindow):
         self.ui.btnScreenSize.clicked.connect(self._insert_screen_size)
         self.ui.blockEditor.changed.connect(self._on_blocks_changed)
 
-        self._signals.triggered.connect(self._execute_hotkey)
         self._signals.started.connect(self._on_script_started)
         self._signals.finished.connect(self._on_script_finished)
 
@@ -376,7 +356,6 @@ class MainWindow(QMainWindow):
         self._model.toggle(row)
         entry = self._model.entry(row)
         self._save_metadata(entry)
-        self._reload_service()
 
     def _set_hotkey(self) -> None:
         row = self._selected_source_row()
@@ -408,7 +387,6 @@ class MainWindow(QMainWindow):
         self._model.touch(row)
         self._save_metadata(entry)
         self._refresh_tab_labels()
-        self._reload_service()
 
     def _clear_hotkey(self, row: int) -> None:
         entry = self._model.entry(row)
@@ -416,7 +394,6 @@ class MainWindow(QMainWindow):
         self._model.touch(row)
         self._save_metadata(entry)
         self._refresh_tab_labels()
-        self._reload_service()
         self.statusBar().showMessage("已清除热键，脚本仍可手动运行/导出", 5000)
 
     def _show_context_menu(self, position: QPoint) -> None:
@@ -600,7 +577,6 @@ class MainWindow(QMainWindow):
         self._model.touch(row)
         tab.dirty = False
         self.ui.editorTabs.setTabText(index, self._tab_label(tab))
-        self._reload_service()
         self.statusBar().showMessage(f"已保存 {entry.path.name if entry.path else entry.name}", 4000)
         return True
 
@@ -850,74 +826,50 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------------- 监听
 
-    def _executable_entries(self) -> list[HotKey]:
-        return [
-            entry
-            for entry in self._model.entries()
-            if entry.enabled and entry.key and entry.script.strip()
-        ]
-
     def _start_listening(self) -> None:
-        entries = self._executable_entries()
-        if not entries:
-            QMessageBox.information(
-                self,
-                "没有可运行的热键",
-                "请给脚本设置热键，并在编辑器里保存脚本。",
+        from hotkey.listener import is_listener_running, launch_listener
+
+        if is_listener_running():
+            self._set_listening(True)
+            self.statusBar().showMessage("监听器已经在运行", 4000)
+            return
+        if not launch_listener():
+            QMessageBox.critical(
+                self, "启动失败", "无法启动监听器进程，请检查程序路径。"
             )
             return
-
-        try:
-            self._hotkey_service.start(entries)
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("启动监听失败")
-            QMessageBox.critical(self, "启动失败", str(exc))
-            return
-
         self._set_listening(True)
-        self.statusBar().showMessage(f"监听已启动，共 {len(entries)} 个热键", 5000)
+        self.statusBar().showMessage("监听器已启动，窗口关闭后仍会继续", 5000)
+        QTimer.singleShot(700, self._verify_listener_start)
 
-    def _stop_listening(self) -> None:
-        self._hotkey_service.stop()
-        self._set_listening(False)
-        self.statusBar().showMessage("监听已停止", 4000)
+    def _verify_listener_start(self) -> None:
+        from hotkey.listener import is_listener_running
 
-    def _reload_service(self) -> None:
-        if not self._listening:
-            return
-        try:
-            self._hotkey_service.reload(self._executable_entries())
-        except Exception:  # noqa: BLE001
-            logger.exception("重新注册热键失败")
+        if not is_listener_running():
             self._set_listening(False)
             QMessageBox.warning(
-                self, "监听已停止", "热键重新注册失败，请检查组合键是否有效。"
+                self,
+                "监听器未启动",
+                "监听器进程没有响应，请查看配置目录下的 listener.log。",
             )
+
+    def _stop_listening(self) -> None:
+        from hotkey.listener import stop_listener
+
+        if stop_listener():
+            self.statusBar().showMessage("监听器已退出", 4000)
+        else:
+            self.statusBar().showMessage("监听器没有在运行", 4000)
+        self._set_listening(False)
 
     def _set_listening(self, listening: bool) -> None:
         self._listening = listening
         self._update_actions()
         self._update_window_title()
-        if self._tray is not None:
-            self._tray.setToolTip(
-                "HotKey · " + ("监听中" if listening else "已停止")
-            )
 
     def _update_actions(self) -> None:
         self.ui.actionStart.setEnabled(not self._listening)
         self.ui.actionStop.setEnabled(self._listening)
-        if self._tray_start is not None:
-            self._tray_start.setEnabled(not self._listening)
-        if self._tray_stop is not None:
-            self._tray_stop.setEnabled(self._listening)
-
-    def _execute_hotkey(self, hotkey_id: str) -> None:
-        row = self._model.row_of(hotkey_id)
-        if row is None:
-            return
-        entry = self._model.entry(row)
-        if entry.script.strip():
-            self._runner.submit(entry.id, entry.script)
 
     def _on_script_started(self, _hotkey_id: str) -> None:
         self.statusBar().showMessage("正在执行脚本…")
@@ -927,20 +879,10 @@ class MainWindow(QMainWindow):
         label = self._model.entry(row).name if row is not None else hotkey_id
         if ok:
             self.statusBar().showMessage(f"{label} 执行完成", 3000)
-        else:
-            logger.error("脚本 %s 执行失败: %s", label, message)
-            self.statusBar().showMessage(f"{label} 执行失败：{message}", 8000)
-            if self._tray is not None:
-                self._tray.showMessage(
-                    "脚本执行失败",
-                    f"{label}\n{message}",
-                    QSystemTrayIcon.MessageIcon.Warning,
-                    4000,
-                )
-
-    def _on_hotkey_error(self, key: str, message: str) -> None:
-        logger.error("热键 %s 注册失败: %s", key, message)
-        self.statusBar().showMessage(f"热键 {key} 注册失败：{message}", 8000)
+            return
+        logger.error("脚本 %s 执行失败: %s", label, message)
+        self.statusBar().showMessage(f"{label} 执行失败：{message}", 8000)
+        QMessageBox.warning(self, "试运行失败", f"{label}\n{message}")
 
     # ---------------------------------------------------------------- 编辑器工具
 
@@ -1068,111 +1010,42 @@ class MainWindow(QMainWindow):
         if not self._editor_tabs:
             self._set_editor_visible(False)
 
-    def _setup_tray(self) -> None:
-        if not QSystemTrayIcon.isSystemTrayAvailable():
-            logger.warning("系统托盘不可用")
-            return
+    def _confirm_save_dirty_tabs(self) -> bool:
+        """关闭编辑器前询问保存；返回 False 表示取消关闭。"""
+        dirty = [tab for tab in self._editor_tabs if tab.dirty]
+        if not dirty:
+            return True
 
-        menu = QMenu(self)
-        show_action = menu.addAction("显示主窗口")
-        show_action.triggered.connect(self._show_window)
-        self._tray_start = menu.addAction("开始监听")
-        self._tray_start.triggered.connect(self._start_listening)
-        self._tray_stop = menu.addAction("停止监听")
-        self._tray_stop.triggered.connect(self._stop_listening)
-        menu.addSeparator()
-        quit_action = menu.addAction("退出")
-        quit_action.triggered.connect(self._quit)
-
-        self._tray = QSystemTrayIcon(self._make_icon(), self)
-        self._tray.setContextMenu(menu)
-        self._tray.setToolTip("HotKey · 未监听")
-        self._tray.activated.connect(self._on_tray_activated)
-        self._tray.show()
-
-    def _make_icon(self) -> QIcon:
-        pixmap = QPixmap(64, 64)
-        pixmap.fill(Qt.GlobalColor.transparent)
-        painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor("#151628"))
-        painter.drawRoundedRect(2, 2, 60, 60, 14, 14)
-
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPen(QPen(QColor("#7F7FD5"), 3))
-        painter.drawRoundedRect(5, 5, 54, 54, 11, 11)
-
-        pen = QPen(QColor("#E5E5F7"), 5)
-        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-        painter.setPen(pen)
-        painter.drawLine(18, 21, 30, 31)
-        painter.drawLine(30, 31, 18, 41)
-        painter.drawLine(35, 43, 47, 43)
-        painter.end()
-        return QIcon(pixmap)
-
-    def _on_tray_activated(
-        self, reason: QSystemTrayIcon.ActivationReason
-    ) -> None:
-        if reason in (
-            QSystemTrayIcon.ActivationReason.Trigger,
-            QSystemTrayIcon.ActivationReason.DoubleClick,
-        ):
-            self._show_window()
-
-    def _show_window(self) -> None:
-        self.showNormal()
-        self.raise_()
-        self.activateWindow()
+        answer = QMessageBox.question(
+            self,
+            "未保存的脚本",
+            f"有 {len(dirty)} 个标签还没保存，要保存吗？",
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel,
+        )
+        if answer == QMessageBox.StandardButton.Cancel:
+            return False
+        if answer == QMessageBox.StandardButton.Save:
+            for index, tab in enumerate(list(self._editor_tabs)):
+                if tab.dirty and not self._save_tab(index):
+                    return False
+        return True
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
-        if self._quitting:
-            super().closeEvent(event)
-            return
-
-        self._commit_tab()
-        if self._tray is not None:
-            event.ignore()
-            self.hide()
-            self._tray.showMessage(
-                "HotKey",
-                "已最小化到托盘，脚本和热键继续运行。右键托盘图标可退出。",
-                QSystemTrayIcon.MessageIcon.Information,
-                2000,
-            )
-            return
-
-        self._hotkey_service.stop()
-        self._runner.shutdown()
+        if not self._quitting:
+            self._commit_tab()
+            if not self._confirm_save_dirty_tabs():
+                event.ignore()
+                return
+            self._runner.shutdown()
         event.accept()
 
     def _quit(self) -> None:
         self._commit_tab()
-
-        dirty = [tab for tab in self._editor_tabs if tab.dirty]
-        if dirty:
-            answer = QMessageBox.question(
-                self,
-                "未保存的脚本",
-                f"有 {len(dirty)} 个标签还没保存，要保存吗？",
-                QMessageBox.StandardButton.Save
-                | QMessageBox.StandardButton.Discard
-                | QMessageBox.StandardButton.Cancel,
-            )
-            if answer == QMessageBox.StandardButton.Cancel:
-                return
-            if answer == QMessageBox.StandardButton.Save:
-                for index, tab in enumerate(list(self._editor_tabs)):
-                    if tab.dirty and not self._save_tab(index):
-                        return
-
+        if not self._confirm_save_dirty_tabs():
+            return
         self._save_all_metadata()
         self._quitting = True
-        self._hotkey_service.stop()
         self._runner.shutdown()
-        if self._tray is not None:
-            self._tray.hide()
         QApplication.quit()

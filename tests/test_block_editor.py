@@ -47,6 +47,28 @@ def test_order_and_move(qtbot):
     ]
 
 
+def test_reorder_by_drag_target(qtbot):
+    editor = make_editor(qtbot)
+    first = editor.add_snippet("mouse_click")
+    second = editor.add_snippet("mouse_double_click")
+    third = editor.add_snippet("mouse_right_click")
+
+    editor.reorder_block(third, first, after=False)
+    assert [block.kind for block in editor.blocks()] == [
+        "mouse_right_click",
+        "mouse_click",
+        "mouse_double_click",
+    ]
+
+    editor.reorder_block(first, third, after=True)
+    assert [block.kind for block in editor.blocks()] == [
+        "mouse_right_click",
+        "mouse_click",
+        "mouse_double_click",
+    ]
+    assert all(widget.drag_handle is not None for widget in editor._blocks)
+
+
 def test_container_holds_children(qtbot):
     editor = make_editor(qtbot)
     loop = editor.add_snippet("flow_for_3")
