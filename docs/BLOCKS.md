@@ -2,10 +2,27 @@
 
 由 `hotkey/core/catalog.json` 生成；修改积木后请重新生成本文档。
 
-## 值与条件（13）
+## 函数与数据（4）
 
 | 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
 |---|---|---|---|---|
+| 设置变量 变量名 为 值或返回值 | `logic_set` | name:code（变量名）, value:value（值或返回值） | — | `{name} = {value}` |
+| 变量 变量名 增加 值 | `logic_change` | name:code（变量名）, value:value = 1（值） | — | `{name} += {value}` |
+| 定义函数 函数名（参数 a） | `logic_func_def` | name:code（函数名）, params:code（a, b） | 函数体 | `def {name}({params}):` |
+| 调用 函数名（参数） | `logic_func_plain` | name:code（函数名）, args:code（参数） | — | `{name}({args})` |
+
+## 流程控制（21）
+
+| 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
+|---|---|---|---|---|
+| 等待 秒数 秒 | `flow_wait` | seconds:number = 1（秒数，如 0.5） | — | `time.sleep({seconds})` |
+| 如果 条件 那么 | `flow_if_else` | condition:value（条件） | 那么 / 否则 | `if {condition}:` |
+| 否则如果 条件 那么 | `flow_elif` | condition:value（条件） | 那么 / 否则 | `elif {condition}:` |
+| 当 条件 时重复 | `flow_while` | condition:value（条件） | 重复内容 | `while {condition}:` |
+| 对 i 从 0 到 10 步长 1 重复 | `flow_for_range` | name:code = i（i）, start:number = 0（0）, end:number = 10（10）, step:number = 1（1） | 重复内容 | `for {name} in range({start}, {end}, {step}):` |
+| 跳出循环 | `flow_break` | — | — | `break` |
+| 继续下一次循环 | `flow_continue` | — | — | `continue` |
+| 返回 返回值 | `flow_return` | value:value（返回值） | — | `return {value}` |
 | 变量 变量名 | `value_variable` | name:code（变量名） | — | `{name}` |
 | (左值 ==、>、< 右值) | `value_compare` | left:code（左值）, operator:code = ==（==、>、<）, right:code（右值） | — | `({left} {operator} {right})` |
 | (条件 and / or 条件) | `value_logic` | left:code（条件）, operator:code = and（and / or）, right:code（条件） | — | `({left} {operator} {right})` |
@@ -19,28 +36,6 @@
 | 坐标（x, y）的颜色 | `value_pixel` | x:number = 0（x）, y:number = 0（y） | — | `pyautogui.pixel({x}, {y})` |
 | 鼠标坐标 | `value_mouse_pos` | — | — | `pyautogui.position()` |
 | 屏幕尺寸 | `value_screen_size` | — | — | `pyautogui.size()` |
-
-## 函数与数据（4）
-
-| 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
-|---|---|---|---|---|
-| 设置变量 变量名 为 值或返回值 | `logic_set` | name:code（变量名）, value:value（值或返回值） | — | `{name} = {value}` |
-| 变量 变量名 增加 值 | `logic_change` | name:code（变量名）, value:value = 1（值） | — | `{name} += {value}` |
-| 定义函数 函数名（参数 a） | `logic_func_def` | name:code（函数名）, params:code（a, b） | 函数体 | `def {name}({params}):` |
-| 调用 函数名（参数） | `logic_func_plain` | name:code（函数名）, args:code（参数） | — | `{name}({args})` |
-
-## 流程控制（8）
-
-| 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
-|---|---|---|---|---|
-| 等待 秒数 秒 | `flow_wait` | seconds:number = 1（秒数，如 0.5） | — | `time.sleep({seconds})` |
-| 如果 条件 那么 | `flow_if_else` | condition:value（条件） | 那么 / 否则 | `if {condition}:` |
-| 否则如果 条件 那么 | `flow_elif` | condition:value（条件） | 那么 / 否则 | `elif {condition}:` |
-| 当 条件 时重复 | `flow_while` | condition:value（条件） | 重复内容 | `while {condition}:` |
-| 对 i 从 0 到 10 步长 1 重复 | `flow_for_range` | name:code = i（i）, start:number = 0（0）, end:number = 10（10）, step:number = 1（1） | 重复内容 | `for {name} in range({start}, {end}, {step}):` |
-| 跳出循环 | `flow_break` | — | — | `break` |
-| 继续下一次循环 | `flow_continue` | — | — | `continue` |
-| 返回 返回值 | `flow_return` | value:value（返回值） | — | `return {value}` |
 
 ## 鼠标操作（11）
 

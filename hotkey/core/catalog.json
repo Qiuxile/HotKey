@@ -2,12 +2,6 @@
   "version": 2,
   "categories": [
     {
-      "id": "value",
-      "label": "值与条件",
-      "color": "#e0f2fe",
-      "accent": "#0284c7"
-    },
-    {
       "id": "logic",
       "label": "函数与数据",
       "color": "#fef9c3",
@@ -280,7 +274,7 @@
     },
     {
       "id": "value_variable",
-      "category": "value",
+      "category": "flow",
       "label": "变量 {name}",
       "code": "{name}",
       "params": [
@@ -295,7 +289,7 @@
     },
     {
       "id": "value_compare",
-      "category": "value",
+      "category": "flow",
       "label": "({left} {operator} {right})",
       "code": "({left} {operator} {right})",
       "params": [
@@ -323,7 +317,7 @@
     },
     {
       "id": "value_logic",
-      "category": "value",
+      "category": "flow",
       "label": "({left} {operator} {right})",
       "code": "({left} {operator} {right})",
       "params": [
@@ -351,7 +345,7 @@
     },
     {
       "id": "value_not",
-      "category": "value",
+      "category": "flow",
       "label": "非 {value}",
       "code": "not ({value})",
       "params": [
@@ -366,7 +360,7 @@
     },
     {
       "id": "value_math",
-      "category": "value",
+      "category": "flow",
       "label": "({left} {operator} {right})",
       "code": "({left} {operator} {right})",
       "params": [
@@ -394,7 +388,7 @@
     },
     {
       "id": "value_random",
-      "category": "value",
+      "category": "flow",
       "label": "随机整数 {low} 到 {high}",
       "code": "random.randint({low}, {high})",
       "params": [
@@ -417,7 +411,7 @@
     },
     {
       "id": "value_func_call",
-      "category": "value",
+      "category": "flow",
       "label": "调用 {name}（{args}）",
       "code": "{name}({args})",
       "params": [
@@ -438,7 +432,7 @@
     },
     {
       "id": "value_python",
-      "category": "value",
+      "category": "flow",
       "label": "Python 表达式 {code}",
       "code": "{code}",
       "params": [
@@ -453,7 +447,7 @@
     },
     {
       "id": "value_image_exists",
-      "category": "value",
+      "category": "flow",
       "label": "图片 {image} 是否存在",
       "code": "pyautogui.locateOnScreen({image}) is not None",
       "params": [
@@ -468,7 +462,7 @@
     },
     {
       "id": "value_locate",
-      "category": "value",
+      "category": "flow",
       "label": "图片 {image} 的中心坐标",
       "code": "pyautogui.locateCenterOnScreen({image})",
       "params": [
@@ -483,7 +477,7 @@
     },
     {
       "id": "value_pixel",
-      "category": "value",
+      "category": "flow",
       "label": "坐标（{x}, {y}）的颜色",
       "code": "pyautogui.pixel({x}, {y})",
       "params": [
@@ -506,14 +500,14 @@
     },
     {
       "id": "value_mouse_pos",
-      "category": "value",
+      "category": "flow",
       "label": "鼠标坐标",
       "code": "pyautogui.position()",
       "expression": true
     },
     {
       "id": "value_screen_size",
-      "category": "value",
+      "category": "flow",
       "label": "屏幕尺寸",
       "code": "pyautogui.size()",
       "expression": true

@@ -8,7 +8,7 @@ from hotkey.core.models import Block
 
 def test_catalog_shape():
     assert len(catalog.SNIPPETS) == 71
-    assert len(catalog.CATEGORIES) == 7
+    assert len(catalog.CATEGORIES) == 6
     assert sum(snippet.hidden for snippet in catalog.SNIPPETS) == 16
     ids = [snippet.id for snippet in catalog.SNIPPETS]
     assert len(ids) == len(set(ids))
@@ -28,7 +28,9 @@ def test_logic_category_has_function_and_value_blocks():
     assert [param.name for param in definition.params] == ["name", "params"]
 
     values = [
-        snippet for snippet in catalog.SNIPPETS if snippet.category == "value"
+        snippet
+        for snippet in catalog.SNIPPETS
+        if snippet.category == "flow" and snippet.expression
     ]
     assert len(values) == 13
     assert all(snippet.expression for snippet in values)

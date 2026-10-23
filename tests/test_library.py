@@ -77,3 +77,70 @@ def test_save_and_delete(tmp_path):
 
     library.delete(script)
     assert not path.exists()
+
+
+def test_one_file_can_contain_multiple_hotkeys(tmp_path):
+    storage.save(
+        tmp_path / "group.hk",
+        [
+            HotKey(key="ctrl+1", description="第一个", id="one"),
+            HotKey(key="ctrl+2", description="第二个", id="two"),
+        ],
+    )
+
+    scripts = ScriptLibrary(tmp_path).load()
+
+    assert len(scripts) == 2
+    assert [script.name for script in scripts] == ["第一个", "第二个"]
+    assert scripts[0].path == scripts[1].path == tmp_path / "group.hk"
+
+
+def test_saving_one_hotkey_preserves_siblings(tmp_path):
+    storage.save(
+        tmp_path / "group.hk",
+        [HotKey(key="ctrl+1", id="one"), HotKey(key="ctrl+2", id="two")],
+    )
+    library = ScriptLibrary(tmp_path)
+    scripts = library.load()
+
+    scripts[0].blocks = [Block("mouse_click")]
+    library.save(scripts[0])
+
+    loaded = library.load()
+    assert len(loaded) == 2
+    assert loaded[0].id == "one"
+    assert loaded[0].blocks[0].kind == "mouse_click"
+    assert loaded[1].id == "two"
+
+
+def test_deleting_one_hotkey_keeps_file_until_last(tmp_path):
+    storage.save(
+        tmp_path / "group.hk",
+        [HotKey(key="ctrl+1", id="one"), HotKey(key="ctrl+2", id="two")],
+    )
+    library = ScriptLibrary(tmp_path)
+    scripts = library.load()
+    path = scripts[0].path
+
+    library.delete(scripts[0])
+    assert path.exists()
+    assert [script.id for script in library.load()] == ["two"]
+
+    library.delete(scripts[1])
+    assert not path.exists()
+
+
+def test_import_copy_keeps_all_hotkeys(tmp_path):
+    source = tmp_path / "外部队列.hk"
+    storage.save(
+        source,
+        [HotKey(key="f1", id="one"), HotKey(key="f2", id="two")],
+    )
+    library = ScriptLibrary(tmp_path)
+
+    imported = library.import_copy(source)
+
+    assert len(imported) == 2
+    assert imported[0].path == imported[1].path
+    assert imported[0].path.name.startswith("外部队列")
+    assert len([script for script in library.load() if script.path == imported[0].path]) == 2

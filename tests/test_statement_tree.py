@@ -67,3 +67,12 @@ def test_statement_tree_toggle_all_categories(qtbot):
     assert not tree.all_expanded()
     assert tree.toggle_all_expanded() is True
     assert tree.all_expanded()
+
+
+def test_drag_preview_is_a_small_block(qtbot):
+    tree = StatementTree()
+    qtbot.addWidget(tree)
+    pixmap = tree._drag_pixmap("单击鼠标左键", "#3b82f6")
+    assert not pixmap.isNull()
+    assert pixmap.width() > 40
+    assert pixmap.height() >= 24

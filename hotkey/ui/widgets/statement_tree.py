@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QMimeData, Qt
-from PySide6.QtGui import QDrag
-from PySide6.QtWidgets import QAbstractItemView, QTreeWidget, QTreeWidgetItem
+from PySide6.QtCore import QMimeData, QPoint, Qt
+from PySide6.QtGui import QDrag, QPixmap
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QTreeWidget,
+    QTreeWidgetItem,
+)
 
 from hotkey.core import catalog
 
@@ -132,4 +139,44 @@ class StatementTree(QTreeWidget):
         mime.setData(SNIPPET_MIME, str(snippet_id).encode("utf-8"))
         drag = QDrag(self)
         drag.setMimeData(mime)
+
+        accent = "#7F7FD5"
+        if snippet_id != EMPTY_KIND:
+            try:
+                snippet = catalog.snippet(str(snippet_id))
+                accent = catalog.category(snippet.category).accent
+            except KeyError:
+                pass
+        pixmap = self._drag_pixmap(item.text(0), accent)
+        if not pixmap.isNull():
+            drag.setPixmap(pixmap)
+            drag.setHotSpot(QPoint(12, min(20, pixmap.height() // 2)))
         drag.exec(Qt.DropAction.CopyAction)
+
+    def _drag_pixmap(self, text: str, accent: str) -> QPixmap:
+        """画一个和积木外观一致的小预览，跟随鼠标拖动。"""
+        shown = self.fontMetrics().elidedText(
+            text, Qt.TextElideMode.ElideRight, 240
+        )
+        preview = QFrame(self)
+        preview.setObjectName("dragPreview")
+        preview.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        preview.setStyleSheet(
+            "QFrame#dragPreview {"
+            " background-color: #151628;"
+            " border: 1px solid #2D2B55;"
+            f" border-left: 4px solid {accent};"
+            " border-radius: 4px;"
+            "}"
+            "QLabel { color: #E5E5F7; background: transparent;"
+            " padding: 2px 4px; }"
+        )
+        layout = QHBoxLayout(preview)
+        layout.setContentsMargins(7, 4, 9, 4)
+        label = QLabel(shown, preview)
+        layout.addWidget(label)
+        preview.ensurePolished()
+        preview.adjustSize()
+        pixmap = preview.grab()
+        preview.deleteLater()
+        return pixmap

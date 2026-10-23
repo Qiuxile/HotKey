@@ -51,6 +51,12 @@
          <height>0</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>400</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <layout class="QVBoxLayout" name="listLayout">
         <property name="spacing">
          <number>8</number>
@@ -100,11 +106,28 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="btnNewScript">
-          <property name="text">
-           <string>＋ 新建脚本</string>
+         <layout class="QHBoxLayout" name="newScriptRow">
+          <property name="spacing">
+           <number>6</number>
           </property>
-         </widget>
+          <item>
+           <widget class="QPushButton" name="btnNewScript">
+            <property name="text">
+             <string>＋ 新建脚本</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnNewHotkey">
+            <property name="text">
+             <string>＋ 新建热键</string>
+            </property>
+            <property name="toolTip">
+             <string>在当前 .hk 文件中追加一个热键</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
