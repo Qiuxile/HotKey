@@ -207,6 +207,11 @@ class Ui_MainWindow(object):
 
         self.editorToolbar.addWidget(self.btnSaveScript)
 
+        self.btnSaveAs = QPushButton(self.editorPanel)
+        self.btnSaveAs.setObjectName(u"btnSaveAs")
+
+        self.editorToolbar.addWidget(self.btnSaveAs)
+
         self.btnCloseEditor = QPushButton(self.editorPanel)
         self.btnCloseEditor.setObjectName(u"btnCloseEditor")
 
@@ -337,6 +342,7 @@ class Ui_MainWindow(object):
         self.btnRunOnce.setText(QCoreApplication.translate("MainWindow", u"\u8bd5\u8fd0\u884c", None))
         self.btnExportPython.setText(QCoreApplication.translate("MainWindow", u"\u751f\u6210 .py", None))
         self.btnSaveScript.setText(QCoreApplication.translate("MainWindow", u"\u4fdd\u5b58", None))
+        self.btnSaveAs.setText(QCoreApplication.translate("MainWindow", u"\u53e6\u5b58\u4e3a", None))
         self.btnCloseEditor.setText(QCoreApplication.translate("MainWindow", u"\u5173\u95ed", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"\u6587\u4ef6", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"\u7f16\u8f91", None))

@@ -152,6 +152,7 @@ class MainWindow(QMainWindow):
         for button, name in (
             (self.ui.btnRunOnce, "run.svg"),
             (self.ui.btnSaveScript, "save.svg"),
+            (self.ui.btnSaveAs, "save.svg"),
             (self.ui.btnExportPython, "code.svg"),
         ):
             button.setIcon(themed_icon(name))
@@ -212,6 +213,7 @@ class MainWindow(QMainWindow):
         self.ui.btnNewScript.clicked.connect(self._new_script)
         self.ui.btnImportHotkey.clicked.connect(self._import_script)
         self.ui.btnSaveScript.clicked.connect(self._save_current_tab)
+        self.ui.btnSaveAs.clicked.connect(self._save_as)
         self.ui.btnRunOnce.clicked.connect(self._run_script)
         self.ui.btnExportPython.clicked.connect(self._export_python)
         self.ui.btnCloseEditor.clicked.connect(lambda: self._set_editor_visible(False))

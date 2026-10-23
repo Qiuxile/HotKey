@@ -314,6 +314,13 @@
                </widget>
               </item>
               <item>
+               <widget class="QPushButton" name="btnSaveAs">
+                <property name="text">
+                 <string>另存为</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QPushButton" name="btnCloseEditor">
                 <property name="text">
                  <string>关闭</string>
