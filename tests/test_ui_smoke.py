@@ -203,3 +203,21 @@ def test_new_list_actions_and_keyboard_capture_ui(qtbot, tmp_path):
     assert "导入热键" in window.ui.btnImportHotkey.text()
     assert window.ui.actionSaveAs.text() == "另存为..."
     assert "移除" in window.ui.actionRemove.text()
+    assert "关于" in window.ui.actionAbout.text()
+    assert window.ui.actionAbout.shortcut().toString() == "F1"
+
+
+def test_about_dialog_has_release_information(qtbot):
+    from hotkey import __version__
+    from hotkey.ui.about_dialog import AUTHOR, LICENSE_NAME, REPOSITORY, AboutDialog
+
+    dialog = AboutDialog()
+    qtbot.addWidget(dialog)
+
+    assert __version__ == "1.0.0"
+    assert dialog.version_label.text() == "1.0.0"
+    assert dialog.author_label.text() == AUTHOR == "Surile"
+    assert dialog.license_label.text() == LICENSE_NAME == "MIT"
+    assert REPOSITORY in dialog.repo_label.text()
+    assert dialog.open_repo_button.text() == "打开仓库"
+    assert dialog.copy_button.text() == "复制信息"

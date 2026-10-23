@@ -15,6 +15,7 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
+from hotkey import __version__
 from hotkey.core.hotkey_service import HotkeyService
 from hotkey.core.library import ScriptLibrary, default_script_dir
 from hotkey.core.models import HotKey
@@ -323,6 +324,7 @@ def run_listener(self_test: bool = False) -> int:
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
     app.setApplicationDisplayName("HotKey 监听器")
+    app.setApplicationVersion(__version__)
     app.setOrganizationName(APP_NAME)
     app.setQuitOnLastWindowClosed(False)
     app.setWindowIcon(app_icon())

@@ -237,6 +237,7 @@ python ctrl_alt_f10.py
 | 主窗口 | `Ctrl+F` | 搜索热键 |
 | 主窗口 | `Ctrl+E` | 显示/隐藏积木编辑区 |
 | 主窗口 | `F5` / `Shift+F5` | 启动 / 停止独立监听器 |
+| 主窗口 | `F1` | 打开「关于 HotKey」 |
 | 主窗口 | `Ctrl+Del` | 删除选中热键（会删除文件） |
 | 积木栏 | `Delete` | 删除选中的积木 |
 
@@ -338,7 +339,7 @@ HotKey/
 │       ├── recorder.py
 │       ├── theme.py         # 深色调色板与 QSS 渲染
 │       └── theme.qss        # 使用 $变量 的 QSS 模板
-├── tests/                   # pytest + pytest-qt（207 项）
+├── tests/                   # pytest + pytest-qt（208 项）
 ├── docs/ARCHITECTURE.md     # 代码结构说明（读代码先看这个）
 ├── docs/BLOCKS.md           # 积木柜全部积木清单
 ├── tools/build_ui.ps1       # .ui -> generated/ui_*.py

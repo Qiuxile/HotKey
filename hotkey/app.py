@@ -11,6 +11,7 @@ from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication
 
 from hotkey.core import storage
+from hotkey import __version__
 from hotkey.logging_setup import (
     configure_logging,
     install_exception_logging,
@@ -71,6 +72,7 @@ def run(self_test: bool = False) -> int:
     app.setStyle("Fusion")
     app.setApplicationName(APP_NAME)
     app.setApplicationDisplayName(APP_NAME)
+    app.setApplicationVersion(__version__)
     app.setOrganizationName(APP_NAME)
     app.setQuitOnLastWindowClosed(True)
 

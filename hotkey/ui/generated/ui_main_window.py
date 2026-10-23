@@ -58,6 +58,8 @@ class Ui_MainWindow(object):
         self.actionStart.setObjectName(u"actionStart")
         self.actionStop = QAction(MainWindow)
         self.actionStop.setObjectName(u"actionStop")
+        self.actionAbout = QAction(MainWindow)
+        self.actionAbout.setObjectName(u"actionAbout")
         self.centralWidget = QWidget(MainWindow)
         self.centralWidget.setObjectName(u"centralWidget")
         self.centralLayout = QVBoxLayout(self.centralWidget)
@@ -270,6 +272,8 @@ class Ui_MainWindow(object):
         self.menuAction.addSeparator()
         self.menuAction.addAction(self.actionStart)
         self.menuAction.addAction(self.actionStop)
+        self.menuAction.addSeparator()
+        self.menuAction.addAction(self.actionAbout)
 
         self.retranslateUi(MainWindow)
 
@@ -326,6 +330,10 @@ class Ui_MainWindow(object):
         self.actionStop.setText(QCoreApplication.translate("MainWindow", u"\u505c\u6b62\u76d1\u542c", None))
 #if QT_CONFIG(shortcut)
         self.actionStop.setShortcut(QCoreApplication.translate("MainWindow", u"Shift+F5", None))
+#endif // QT_CONFIG(shortcut)
+        self.actionAbout.setText(QCoreApplication.translate("MainWindow", u"\u5173\u4e8e HotKey", None))
+#if QT_CONFIG(shortcut)
+        self.actionAbout.setShortcut(QCoreApplication.translate("MainWindow", u"F1", None))
 #endif // QT_CONFIG(shortcut)
         self.searchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22\u70ed\u952e...", None))
         self.btnNewScript.setText(QCoreApplication.translate("MainWindow", u"\uff0b \u65b0\u5efa\u70ed\u952e", None))

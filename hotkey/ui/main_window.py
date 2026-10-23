@@ -33,6 +33,7 @@ from hotkey.core.models import Block, HotKey, IssueLevel, new_id
 from hotkey.core.program import render_program
 from hotkey.core.runner import ScriptRunner
 from hotkey.ui import theme as theme_module
+from hotkey.ui.about_dialog import AboutDialog
 from hotkey.ui.icons import themed_icon
 from hotkey.ui.generated.ui_main_window import Ui_MainWindow
 from hotkey.ui.hotkey_model import HotKeyFilterProxy, HotKeyTableModel
@@ -196,6 +197,7 @@ class MainWindow(QMainWindow):
         self.ui.actionToggleEditor.triggered.connect(self._toggle_editor)
         self.ui.actionStart.triggered.connect(self._start_listening)
         self.ui.actionStop.triggered.connect(self._stop_listening)
+        self.ui.actionAbout.triggered.connect(self._show_about)
 
         self.ui.searchEdit.textChanged.connect(self._proxy.set_search_text)
         self.ui.paletteSearch.textChanged.connect(
@@ -384,6 +386,9 @@ class MainWindow(QMainWindow):
         self._model.toggle(row)
         entry = self._model.entry(row)
         self._save_metadata(entry)
+
+    def _show_about(self) -> None:
+        AboutDialog(self).exec()
 
     def _set_hotkey(self) -> None:
         row = self._selected_source_row()

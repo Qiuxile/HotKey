@@ -386,6 +386,49 @@ QDialog {
     background-color: $bg;
 }
 
+QDialog#aboutDialog {
+    background-color: $bg;
+}
+
+QLabel#aboutTitle {
+    color: $text;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+QLabel#aboutSubtitle {
+    color: $muted;
+    font-size: 13px;
+}
+
+QLabel#aboutKey {
+    color: $muted;
+}
+
+QLabel#aboutValue {
+    color: $text;
+}
+
+QLabel#aboutNote {
+    color: $muted;
+    background-color: $surface;
+    border: 1px solid $border;
+    border-radius: 6px;
+    padding: 9px 11px;
+}
+
+QLabel#aboutCopyright {
+    color: $muted;
+    font-size: 11px;
+}
+
+QFrame#aboutSeparator {
+    color: $border;
+    background-color: $border;
+    max-height: 1px;
+    border: none;
+}
+
 QToolTip {
     background-color: $surface;
     color: $text;
