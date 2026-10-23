@@ -754,3 +754,12 @@ v1/v2 的纯脚本会迁移成一个「空」积木。
 - 内容：版本 1.0.0、作者 Surile、仓库链接、MIT 协议、技术栈、本地数据说明
 - 支持打开仓库、复制版本信息；版本号统一到 `hotkey/__init__.py` 和 `pyproject.toml`
 - 测试：版本/作者/协议/链接、菜单动作；`pytest` 208 项通过
+
+
+## 39. 统一品牌图标（2026-10-23）
+
+- 新增 `assets/hotkey.ico`（256px 多尺寸）和 `assets/hotkey.png`（500px）
+- `app_icon()` 优先加载 ICO，缺失时回退 PNG，再回退内置图标
+- 窗口、托盘、关于对话框共用新图标
+- `HotKey.spec` 增加 `icon='assets/hotkey.ico'`，打包后的 exe 也使用新图标
+- 测试：品牌图标可加载；`pytest` 209 项通过

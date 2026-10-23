@@ -31,6 +31,7 @@
 - **Python代码积木**：积木柜「Python代码」分类里有两个——Python代码行（单行）和 Python代码（任意多行）
 - **监听器独立进程**：编辑器只管编辑；`F5` 拉起后台监听器，关掉编辑器热键仍生效
 - **运行/监听**：手动试运行单个脚本，或让独立监听器常驻后台
+- **统一品牌图标**：`assets/hotkey.ico` 用于窗口/托盘/exe，`assets/hotkey.png` 作为备用
 - **自定义标题栏 / 深色主题 / 单实例**：菜单并入标题栏，窗口四边可拖拽缩放；托盘只属于监听器
 
 界面固定使用深色主题，不提供浅色模式切换。
@@ -340,7 +341,7 @@ HotKey/
 │       ├── recorder.py
 │       ├── theme.py         # 深色调色板与 QSS 渲染
 │       └── theme.qss        # 使用 $变量 的 QSS 模板
-├── tests/                   # pytest + pytest-qt（208 项）
+├── tests/                   # pytest + pytest-qt（209 项）
 ├── docs/ARCHITECTURE.md     # 代码结构说明（读代码先看这个）
 ├── docs/BLOCKS.md           # 积木柜全部积木清单
 ├── tools/build_ui.ps1       # .ui -> generated/ui_*.py

@@ -221,3 +221,11 @@ def test_about_dialog_has_release_information(qtbot):
     assert REPOSITORY in dialog.repo_label.text()
     assert dialog.open_repo_button.text() == "打开仓库"
     assert dialog.copy_button.text() == "复制信息"
+
+
+def test_brand_icon_is_loaded(qtbot, tmp_path):
+    from hotkey.ui.icon import app_icon
+
+    icon = app_icon()
+    assert not icon.isNull()
+    assert icon.availableSizes()

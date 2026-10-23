@@ -9,10 +9,14 @@ from hotkey.ui.icons import asset_path
 
 
 def app_icon() -> QIcon:
-    """优先使用 assets/Python.svg，缺失时回退到内置终端图标。"""
-    path = asset_path("Python.svg")
-    if path.exists():
-        return QIcon(str(path))
+    """使用 assets/hotkey.ico（Windows 多尺寸），缺失时回退到 PNG/内置图标。"""
+    icon = QIcon()
+    for name in ("hotkey.ico", "hotkey.png"):
+        path = asset_path(name)
+        if path.exists():
+            icon.addFile(str(path))
+    if not icon.isNull():
+        return icon
 
     pixmap = QPixmap(64, 64)
     pixmap.fill(Qt.GlobalColor.transparent)
