@@ -3,12 +3,16 @@
 from PySide6.QtCore import QPoint, QSize, Qt
 from PySide6.QtTest import QTest
 
+from hotkey.core.library import ScriptLibrary
 from hotkey.ui.main_window import MainWindow
 from hotkey.ui.widgets.block_editor import BlockListEditor
 from hotkey.ui.widgets.statement_tree import StatementTree
 
 
 def make_window(qtbot, tmp_path):
+    library = ScriptLibrary(tmp_path)
+    for item in tmp_path.glob("*.hk"):
+        library.register(item)
     window = MainWindow(tmp_path)
     qtbot.addWidget(window)
     return window

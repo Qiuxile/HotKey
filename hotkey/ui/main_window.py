@@ -84,7 +84,6 @@ class MainWindow(QMainWindow):
             Path(library_dir) if library_dir is not None else default_script_dir()
         )
         self._editor_tabs: list[EditorTab] = []
-        self._include_hidden = False
         self._active_tab = -1
         self._current_id: str | None = None
 
@@ -187,8 +186,7 @@ class MainWindow(QMainWindow):
         self.ui.actionQuit.triggered.connect(self._quit)
         self.ui.actionNew.triggered.connect(self._new_script)
         self.ui.actionDelete.triggered.connect(self._delete_selected)
-        self.ui.actionRemove.triggered.connect(self._hide_selected)
-        self.ui.actionShowHidden.toggled.connect(self._toggle_show_hidden)
+        self.ui.actionRemove.triggered.connect(self._remove_selected)
         self.ui.actionImport.triggered.connect(self._import_script)
         self.ui.actionSave.triggered.connect(self._save_current_tab)
         self.ui.actionSaveAs.triggered.connect(self._save_as)
@@ -228,7 +226,7 @@ class MainWindow(QMainWindow):
         self._signals.finished.connect(self._on_script_finished)
 
     def _load_library(self) -> None:
-        scripts = self._library.load(include_hidden=self._include_hidden)
+        scripts = self._library.load()
         self._model.set_entries(scripts)
         warnings = self._library.warnings
         if warnings:
@@ -339,49 +337,31 @@ class MainWindow(QMainWindow):
             return
         self._delete_script(row)
 
-    def _toggle_show_hidden(self, checked: bool) -> None:
-        self._include_hidden = checked
-        self._load_library()
-        self.statusBar().showMessage(
-            "已显示隐藏的热键" if checked else "已隐藏标记为隐藏的热键",
-            4000,
-        )
-
-    def _hide_selected(self) -> None:
+    def _remove_selected(self) -> None:
         row = self._selected_source_row()
         if row is not None:
-            self._hide_script(row)
+            self._remove_script(row)
 
-    def _hide_script(self, row: int) -> None:
-        """只在列表/热键窗口中隐藏；文件、内容和位置都不变。"""
+    def _remove_script(self, row: int) -> None:
+        """从编辑器和热键窗口移除；文件留在原处，不删除、不移动。"""
         entry = self._model.entry(row)
         answer = QMessageBox.question(
             self,
-            "隐藏热键",
-            f"隐藏「{entry.name or entry.key}」吗？\n"
+            "移除热键",
+            f"从编辑器移除「{entry.name or entry.key}」吗？\n"
             "文件会留在原处，不会删除、不会移动。",
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
 
         self._close_tab_for_id(entry.id, ask=False)
-        try:
-            self._library.hide(entry)
-        except storage.StorageError as exc:
-            QMessageBox.critical(self, "隐藏失败", str(exc))
-            return
+        self._library.remove(entry)
         self._model.remove(row)
         self._persist_tabs()
         self._update_window_title()
         self.statusBar().showMessage(
-            f"已隐藏 {entry.name}，文件仍在 {entry.path}", 5000
+            f"已移除 {entry.name}，文件仍在 {entry.path}", 5000
         )
-
-    def _unhide_script(self, row: int) -> None:
-        entry = self._model.entry(row)
-        self._library.unhide(entry)
-        self._model.touch(row)
-        self.statusBar().showMessage(f"已取消隐藏 {entry.name}", 4000)
 
     def _delete_script(self, row: int) -> None:
         entry = self._model.entry(row)
@@ -470,10 +450,7 @@ class MainWindow(QMainWindow):
             "停用" if entry.enabled else "启用", lambda: self._toggle_script(row)
         )
         menu.addSeparator()
-        if entry.hidden:
-            menu.addAction("取消隐藏", lambda: self._unhide_script(row))
-        else:
-            menu.addAction("隐藏（保留文件）", lambda: self._hide_script(row))
+        menu.addAction("移除（保留文件）", lambda: self._remove_script(row))
         menu.addAction("删除文件", lambda: self._delete_script(row))
         menu.addSeparator()
         menu.addAction("新建热键", self._new_script)

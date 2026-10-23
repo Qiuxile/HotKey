@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from hotkey.core import storage
+from hotkey.core.library import ScriptLibrary
 from hotkey.core.models import Block, HotKey
 from hotkey.ui import theme as theme_module
 from hotkey.ui.main_window import MainWindow
@@ -25,6 +26,9 @@ def make_script(tmp_path, name, key="", blocks=None):
 
 
 def make_window(qtbot, path):
+    library = ScriptLibrary(path)
+    for item in path.glob("*.hk"):
+        library.register(item)
     window = MainWindow(path)
     qtbot.addWidget(window)
     return window

@@ -15,7 +15,7 @@ SCRIPT_SUFFIX = ".hk"
 LEGACY_SUFFIX = ".json"
 SCRIPT_DIR_NAME = "hks"
 LEGACY_DIR_NAME = "jsons"
-HIDDEN_FILE = ".hidden.json"
+MANIFEST_FILE = ".library.json"
 
 
 def app_root() -> Path:
@@ -77,50 +77,47 @@ class ScriptLibrary:
 
     # ---------------------------------------------------------------- 读取
 
-    def load(self, include_hidden: bool = False) -> list[HotKey]:
+    def load(self) -> list[HotKey]:
+        """只加载清单里记录的热键；不扫描目录。"""
         self.warnings = []
         self.directory.mkdir(parents=True, exist_ok=True)
-        self._migrate_extensions()
-        self._migrate_legacy()
 
         scripts: list[HotKey] = []
         seen_keys: dict[str, HotKey] = {}
-        hidden = self._read_hidden()
 
-        for path in self._script_paths():
-            if path.name in hidden and not include_hidden:
+        for name in self._read_manifest():
+            path = self.directory / name
+            if not path.is_file():
                 continue
             try:
                 entries, warnings = storage.load_document(
                     path, allow_empty_key=True
                 )
             except storage.StorageError as exc:
-                self.warnings.append(f"{path.name}: {exc}")
+                self.warnings.append(f"{name}: {exc}")
                 continue
 
-            self.warnings.extend(f"{path.name}: {w}" for w in warnings if w)
+            self.warnings.extend(f"{name}: {w}" for w in warnings if w)
             if not entries:
                 continue
             if len(entries) > 1:
                 self.warnings.append(
-                    f"{path.name}: 一个文件里有 {len(entries)} 个脚本，只载入第一个"
+                    f"{name}: 一个文件里有 {len(entries)} 个热键，只载入第一个"
                 )
 
             script = entries[0]
             script.path = path
             script.name = path.stem
-            script.hidden = path.name in hidden
 
             if script.key:
                 if script.key in seen_keys:
                     script.enabled = False
                     self.warnings.append(
-                        f"{path.name}: 热键 {script.key} 与 "
+                        f"{name}: 热键 {script.key} 与 "
                         f"{seen_keys[script.key].name} 重复，已停用"
                     )
                 else:
                     seen_keys[script.key] = script
-
             scripts.append(script)
 
         scripts.sort(key=lambda script: script.name.lower())
@@ -137,14 +134,14 @@ class ScriptLibrary:
             path
             for path in self.directory.glob(f"*{LEGACY_SUFFIX}")
             if path.is_file()
-            and path.name not in ("hotkeys.json", HIDDEN_FILE)
+            and path.name not in ("hotkeys.json", MANIFEST_FILE)
         )
         return sorted(paths)
 
     def _migrate_extensions(self) -> None:
         renamed = 0
         for path in sorted(self.directory.glob(f"*{LEGACY_SUFFIX}")):
-            if path.name in ("hotkeys.json", HIDDEN_FILE):
+            if path.name in ("hotkeys.json", MANIFEST_FILE):
                 continue
             target = path.with_suffix(SCRIPT_SUFFIX)
             if target.exists():
@@ -237,52 +234,50 @@ class ScriptLibrary:
         else:
             target = script.path
         storage.save(target, [script])
+        self.register(target)
         return target
 
-    def _hidden_path(self) -> Path:
-        return self.directory / HIDDEN_FILE
+    def _manifest_path(self) -> Path:
+        return self.directory / MANIFEST_FILE
 
-    def _read_hidden(self) -> set[str]:
-        path = self._hidden_path()
+    def _read_manifest(self) -> list[str]:
+        path = self._manifest_path()
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
-            return set()
+            return []
         if not isinstance(data, list):
-            return set()
-        return {str(name) for name in data if isinstance(name, str)}
+            return []
+        return [str(name) for name in data if isinstance(name, str)]
 
-    def _write_hidden(self, names: set[str]) -> None:
-        path = self._hidden_path()
+    def _write_manifest(self, names: list[str]) -> None:
+        path = self._manifest_path()
         path.write_text(
-            json.dumps(sorted(names), ensure_ascii=False, indent=2) + "\n",
+            json.dumps(list(dict.fromkeys(names)), ensure_ascii=False, indent=2)
+            + "\n",
             encoding="utf-8",
         )
 
-    def hide(self, script: HotKey) -> None:
-        """只在列表中隐藏；文件、内容和位置都不变。"""
-        if script.path is None:
-            return
-        names = self._read_hidden()
-        names.add(script.path.name)
-        self._write_hidden(names)
-        script.hidden = True
+    def register(self, path: Path) -> None:
+        """把已在 hks/ 里的文件加入可见清单，不复制文件。"""
+        names = self._read_manifest()
+        if path.name not in names:
+            names.append(path.name)
+            self._write_manifest(names)
 
-    def unhide(self, script: HotKey) -> None:
-        if script.path is None:
-            return
-        names = self._read_hidden()
-        names.discard(script.path.name)
-        self._write_hidden(names)
-        script.hidden = False
+    def _unregister(self, name: str) -> None:
+        names = [item for item in self._read_manifest() if item != name]
+        self._write_manifest(names)
 
     def remove(self, script: HotKey) -> None:
-        """旧名称，保留给已有调用；现在等同于隐藏。"""
-        self.hide(script)
+        """从编辑器/热键窗口移除；文件留在原处，不删除、不移动。"""
+        if script.path is not None:
+            self._unregister(script.path.name)
 
     def delete(self, script: HotKey) -> None:
         if script.path is None:
             return
+        self._unregister(script.path.name)
         for path in (
             script.path,
             script.path.with_name(script.path.name + ".bak"),
@@ -302,4 +297,5 @@ class ScriptLibrary:
         script.name = safe_stem(source.stem)
         script.path = self.unique_path(script.name)
         storage.save(script.path, [script])
+        self.register(script.path)
         return script

@@ -41,8 +41,6 @@ class HotKeyTableModel(QAbstractTableModel):
             if column == 1:
                 return keymap.keyboard_to_qt(entry.key) if entry.key else "—"
             if column == 2:
-                if entry.hidden:
-                    return "隐藏"
                 return "启用" if entry.enabled else "停用"
         elif role == Qt.ItemDataRole.ToolTipRole:
             if column == 0:

@@ -24,7 +24,7 @@ debug.log
 .uic-check-*.py
 .hotkey/
 hks/.hotkey/
-hks/.hidden.json
+hks/.library.json
 
 # 本地 agent 说明（不随仓库分发）
 CLAUDE.md

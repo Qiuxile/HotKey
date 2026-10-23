@@ -52,7 +52,7 @@ hotkey/
 |---|---|---|
 | 外观 | `_setup_chrome`、`_apply_button_icons` | 标题栏、菜单、固定深色图标 |
 | 初始化 | `_configure_table`、`_connect_signals`、`_load_library` | 建模型、连信号、加载脚本库 |
-| 脚本库 | `_new_script`、`_import_script`、`_hide_script`、`_delete_script`、`_save_as` | 新建/导入/移除/删除/另存为 |
+| 脚本库 | `_new_script`、`_import_script`、`_remove_script`、`_delete_script`、`_save_as` | 新建/导入/移除/删除/另存为 |
 | 编辑标签 | `_open_editor_for_id`、`_activate_tab`、`_save_tab`、`_close_tab` | 多标签编辑与保存 |
 | 运行/导出 | `_run_script`、`_export_python` | 试运行 / 生成 `.py` |
 | 监听进程 | `_start_listening`、`_stop_listening`、`_verify_listener_start` | 启动/停止独立监听器进程 |
@@ -66,7 +66,7 @@ hotkey/
 ## 4. 数据流
 
 ```
-hks/*.hk
+hks/.library.json 清单
    │ ScriptLibrary.load()
    ▼
 HotKey 列表 ──► HotKeyTableModel ──► 左侧列表（最大 400px）
@@ -85,7 +85,7 @@ blocks_to_code() ──► validator.validate() ──► library.save() 写回 
 监听器进程：
 
 ```
-hks/*.hk ──ScriptLibrary.load()──► 有热键且启用的脚本
+hks/.library.json ──ScriptLibrary.load()──► 有热键且启用的脚本
    │                                      │
    │ QFileSystemWatcher 监视 .hk           │ HotkeyService 注册
    ▼                                      ▼
