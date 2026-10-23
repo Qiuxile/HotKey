@@ -34,7 +34,7 @@ hotkey/
 │   ├── recorder.py       # 热键录入对话框
 │   ├── logging_setup.py  # 编辑器/监听器共用日志
 │   ├── icon.py           # 共用应用图标
-│   ├── theme.py          # 深/浅色调色板、QSS 渲染、QSettings
+│   ├── theme.py          # 深色调色板、QSS 渲染、QSettings
 │   ├── theme.qss         # 使用 $变量 的 QSS 模板
 │   └── widgets/
 │       ├── block_editor.py     # 单栏积木编辑器（含拖拽排序、值槽）

@@ -18,6 +18,7 @@ a = Analysis(
         ('hotkey/ui/theme.qss', 'hotkey/ui'),
         ('hotkey/core/catalog.json', 'hotkey/core'),
         ('jsons/example.hk', 'jsons'),
+        ('assets', 'assets'),
     ],
     hiddenimports=[
         # 编辑器运行时才 import 监听器，静态分析看不到

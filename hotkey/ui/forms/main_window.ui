@@ -350,7 +350,6 @@
     </property>
     <addaction name="actionSearch"/>
     <addaction name="actionToggleEditor"/>
-    <addaction name="actionTheme"/>
     <addaction name="separator"/>
     <addaction name="actionStart"/>
     <addaction name="actionStop"/>
@@ -374,14 +373,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+H</string>
-   </property>
-  </action>
-  <action name="actionTheme">
-   <property name="text">
-    <string>深色模式</string>
-   </property>
-   <property name="checkable">
-    <bool>true</bool>
    </property>
   </action>
   <action name="actionImport">

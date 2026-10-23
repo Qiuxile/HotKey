@@ -1,4 +1,4 @@
-"""深色 / 浅色主题：调色板、QSS 模板与持久化。"""
+"""深色主题：调色板、QSS 模板与配置。"""
 
 from __future__ import annotations
 
@@ -14,24 +14,8 @@ from hotkey.core import storage
 
 SETTINGS_ORG = "HotKey"
 SETTINGS_APP = "HotKey"
-THEME_KEY = "theme"
 
 PALETTES: dict[str, dict[str, str]] = {
-    "light": {
-        "bg": "#F9FAFB",
-        "surface": "#FFFFFF",
-        "surface_alt": "#F3F4F6",
-        "surface_high": "#E5E7EB",
-        "border": "#D1D5DB",
-        "text": "#111827",
-        "muted": "#4B5563",
-        "accent": "#7F7FD5",
-        "accent_hover": "#6A6AC4",
-        "input_bg": "#FFFFFF",
-        "selection": "#EDEBFF",
-        "danger": "#DC2626",
-        "shadow": "#00000018",
-    },
     "dark": {
         "bg": "#0B0C15",
         "surface": "#151628",
@@ -57,7 +41,7 @@ def _qss_path() -> Path:
 
 
 def theme_names() -> tuple[str, ...]:
-    return tuple(PALETTES)
+    return ("dark",)
 
 
 def settings() -> QSettings:
@@ -69,22 +53,16 @@ def settings() -> QSettings:
 
 
 def current_theme() -> str:
-    value = str(settings().value(THEME_KEY, "light"))
-    return value if value in PALETTES else "light"
+    return "dark"
 
 
-def save_theme(name: str) -> None:
-    settings().setValue(THEME_KEY, name)
-
-
-def render_qss(name: str) -> str:
-    palette = PALETTES.get(name, PALETTES["light"])
+def render_qss(name: str = "dark") -> str:
     template = Template(_qss_path().read_text(encoding="utf-8"))
-    return template.safe_substitute(palette)
+    return template.safe_substitute(PALETTES["dark"])
 
 
-def build_palette(name: str) -> QPalette:
-    colors = PALETTES.get(name, PALETTES["light"])
+def build_palette(name: str = "dark") -> QPalette:
+    colors = PALETTES["dark"]
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window, QColor(colors["bg"]))
     palette.setColor(QPalette.ColorRole.WindowText, QColor(colors["text"]))
@@ -112,9 +90,6 @@ def build_palette(name: str) -> QPalette:
     return palette
 
 
-def apply_theme(app: QApplication, name: str) -> None:
-    if name not in PALETTES:
-        name = "light"
-    app.setPalette(build_palette(name))
-    app.setStyleSheet(render_qss(name))
-    save_theme(name)
+def apply_theme(app: QApplication, name: str = "dark") -> None:
+    app.setPalette(build_palette("dark"))
+    app.setStyleSheet(render_qss("dark"))

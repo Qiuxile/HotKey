@@ -5,9 +5,15 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 
+from hotkey.ui.icons import asset_path
+
 
 def app_icon() -> QIcon:
-    """深色圆角 + 终端 >_ 符号。"""
+    """优先使用 assets/Python.svg，缺失时回退到内置终端图标。"""
+    path = asset_path("Python.svg")
+    if path.exists():
+        return QIcon(str(path))
+
     pixmap = QPixmap(64, 64)
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)

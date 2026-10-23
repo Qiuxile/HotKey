@@ -21,20 +21,6 @@ QLabel#titleText {
     padding-left: 2px;
 }
 
-QToolButton#titleTheme {
-    background: transparent;
-    color: $muted;
-    border: 1px solid $border;
-    border-radius: 4px;
-    font-size: 9pt;
-    padding: 0;
-}
-
-QToolButton#titleTheme:hover {
-    background-color: $surface_alt;
-    color: $text;
-}
-
 QToolButton#titleButton {
     background: transparent;
     border: 0;

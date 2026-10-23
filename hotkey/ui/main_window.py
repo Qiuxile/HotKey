@@ -33,6 +33,7 @@ from hotkey.core.models import Block, HotKey, IssueLevel, new_id
 from hotkey.core.program import render_program
 from hotkey.core.runner import ScriptRunner
 from hotkey.ui import theme as theme_module
+from hotkey.ui.icons import themed_icon
 from hotkey.ui.generated.ui_main_window import Ui_MainWindow
 from hotkey.ui.hotkey_model import HotKeyFilterProxy, HotKeyTableModel
 from hotkey.ui.recorder import HotKeyDialog
@@ -41,7 +42,7 @@ from hotkey.ui.widgets.title_bar import TitleBar
 
 logger = logging.getLogger("HotKey.Window")
 
-WINDOW_HEIGHT = 800
+WINDOW_HEIGHT = 700
 NARROW_WIDTH = 400
 WIDE_WIDTH = 1240
 SETTINGS_OPEN_TABS = "open_scripts"
@@ -108,7 +109,6 @@ class MainWindow(QMainWindow):
         self._configure_table()
         self._connect_signals()
         self._load_library()
-        self._init_theme()
         self._set_editor_visible(False)
         self._update_actions()
 
@@ -124,7 +124,6 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(NARROW_WIDTH, 520)
 
         self.title_bar = TitleBar(self)
-        self.title_bar.theme_clicked.connect(self._toggle_theme)
 
         chrome = QWidget(self)
         layout = QVBoxLayout(chrome)
@@ -146,23 +145,21 @@ class MainWindow(QMainWindow):
 
         self.ui.statusbar.addPermanentWidget(QSizeGrip(self), 0)
         self.resize(NARROW_WIDTH, WINDOW_HEIGHT)
+        self._apply_button_icons()
+
+    def _apply_button_icons(self) -> None:
+        icon_size = QSize(16, 16)
+        for button, name in (
+            (self.ui.btnRunOnce, "run.svg"),
+            (self.ui.btnSaveScript, "save.svg"),
+            (self.ui.btnExportPython, "code.svg"),
+        ):
+            button.setIcon(themed_icon(name))
+            button.setIconSize(icon_size)
+        self.ui.actionSave.setIcon(themed_icon("save.svg"))
+        self.ui.actionExportPython.setIcon(themed_icon("code.svg"))
 
     # ---------------------------------------------------------------- 窗口缩放
-
-    def _init_theme(self) -> None:
-        dark = theme_module.current_theme() == "dark"
-        self.ui.actionTheme.setChecked(dark)
-        self.title_bar.set_theme_dark(dark)
-
-    def _toggle_theme(self) -> None:
-        name = "light" if theme_module.current_theme() == "dark" else "dark"
-        theme_module.apply_theme(QApplication.instance(), name)
-        dark = name == "dark"
-        self.ui.actionTheme.setChecked(dark)
-        self.title_bar.set_theme_dark(dark)
-        self.statusBar().showMessage(
-            "已切换到深色主题" if dark else "已切换到浅色主题", 3000
-        )
 
     def changeEvent(self, event: QEvent) -> None:  # noqa: N802
         if event.type() == QEvent.Type.WindowStateChange and hasattr(
@@ -192,7 +189,6 @@ class MainWindow(QMainWindow):
         self.ui.actionSave.triggered.connect(self._save_current_tab)
         self.ui.actionSetHotkey.triggered.connect(self._set_hotkey)
         self.ui.actionExportPython.triggered.connect(self._export_python)
-        self.ui.actionTheme.triggered.connect(self._toggle_theme)
         self.ui.actionSearch.triggered.connect(self._focus_search)
         self.ui.actionToggleEditor.triggered.connect(self._toggle_editor)
         self.ui.actionStart.triggered.connect(self._start_listening)

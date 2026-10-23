@@ -18,7 +18,7 @@ from hotkey.logging_setup import (
 )
 from hotkey.ui.icon import app_icon
 from hotkey.ui.main_window import MainWindow
-from hotkey.ui.theme import apply_theme, current_theme
+from hotkey.ui.theme import apply_theme
 
 APP_NAME = "HotKey"
 SERVER_NAME = "HotKey.SingleInstance.v2"
@@ -74,7 +74,7 @@ def run(self_test: bool = False) -> int:
     app.setOrganizationName(APP_NAME)
     app.setQuitOnLastWindowClosed(True)
 
-    apply_theme(app, current_theme())
+    apply_theme(app)
 
     if not self_test and _notify_existing_instance():
         logger.info("已有实例在运行，已激活该窗口")

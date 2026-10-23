@@ -26,13 +26,13 @@ def test_main_window_builds(qtbot, tmp_path):
     assert window.menuWidget() is not None
 
 
-def test_default_narrow_window_is_400x800(qtbot, tmp_path):
+def test_default_narrow_window_is_400x700(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
     window.show()
     qtbot.wait(50)
 
     assert window.width() == 400
-    assert window.height() == 800
+    assert window.height() == 700
     assert window.ui.editorPanel.isHidden()
 
 
@@ -43,10 +43,10 @@ def test_editor_expands_only_from_default_size(qtbot, tmp_path):
 
     window._set_editor_visible(True)
     assert not window.ui.editorPanel.isHidden()
-    assert window.size() == QSize(1240, 800)
+    assert window.size() == QSize(1240, 700)
 
     window._set_editor_visible(False)
-    assert window.size() == QSize(400, 800)
+    assert window.size() == QSize(400, 700)
 
 
 def test_editor_does_not_reset_user_window(qtbot, tmp_path):

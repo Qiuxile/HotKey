@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QPoint, QSize, Qt, Signal
+from PySide6.QtCore import QPoint, QSize, Qt
 from PySide6.QtGui import QAction, QFontMetrics
 from PySide6.QtWidgets import (
     QFrame,
@@ -15,12 +15,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from hotkey.ui.icons import themed_icon
+
 TITLE_MAX_WIDTH = 300
 
 
 class TitleBar(QFrame):
-    theme_clicked = Signal()
-
     def __init__(self, window: QWidget) -> None:
         super().__init__(window)
         self.setObjectName("titleBar")
@@ -50,14 +50,6 @@ class TitleBar(QFrame):
         self.menu_buttons: list[QToolButton] = []
         self.menus: list[QMenu] = []
 
-        self.theme_button = QToolButton(self)
-        self.theme_button.setObjectName("titleTheme")
-        self.theme_button.setText("深色")
-        self.theme_button.setToolTip("切换到深色主题")
-        self.theme_button.setFixedSize(44, 28)
-        self.theme_button.clicked.connect(self.theme_clicked.emit)
-        layout.addWidget(self.theme_button)
-
         self.min_button = self._make_button(
             QStyle.StandardPixmap.SP_TitleBarMinButton, "最小化"
         )
@@ -70,9 +62,13 @@ class TitleBar(QFrame):
         self.max_button.clicked.connect(self._toggle_maximized)
         layout.addWidget(self.max_button)
 
-        self.close_button = self._make_button(
-            QStyle.StandardPixmap.SP_TitleBarCloseButton, "关闭", close=True
-        )
+        self.close_button = QToolButton(self)
+        self.close_button.setObjectName("titleClose")
+        self.close_button.setIcon(themed_icon("close.svg"))
+        self.close_button.setIconSize(QSize(14, 14))
+        self.close_button.setFixedSize(32, 28)
+        self.close_button.setToolTip("关闭")
+        self.close_button.setAutoRaise(True)
         self.close_button.clicked.connect(self._window.close)
         layout.addWidget(self.close_button)
 
@@ -83,11 +79,9 @@ class TitleBar(QFrame):
         self,
         icon: QStyle.StandardPixmap,
         tooltip: str,
-        *,
-        close: bool = False,
     ) -> QToolButton:
         button = QToolButton(self)
-        button.setObjectName("titleClose" if close else "titleButton")
+        button.setObjectName("titleButton")
         button.setIcon(self.style().standardIcon(icon))
         button.setIconSize(QSize(14, 14))
         button.setFixedSize(32, 28)
@@ -161,12 +155,6 @@ class TitleBar(QFrame):
         )
         self.max_button.setIcon(self.style().standardIcon(icon))
         self.max_button.setToolTip("还原" if maximized else "最大化")
-
-    def set_theme_dark(self, dark: bool) -> None:
-        self.theme_button.setText("浅色" if dark else "深色")
-        self.theme_button.setToolTip(
-            "切换到浅色主题" if dark else "切换到深色主题"
-        )
 
     # ---------------------------------------------------------------- 拖动
 

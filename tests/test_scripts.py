@@ -84,23 +84,12 @@ def test_frameless_window_and_title_bar(qtbot, tmp_path):
     assert window.title_bar.title_label.text()
 
 
-def test_theme_toggle_and_persistence(qtbot, tmp_path):
-    theme_module.save_theme("light")
-    theme_module.apply_theme(QApplication.instance(), "light")
+def test_theme_is_dark_only(qtbot, tmp_path):
+    theme_module.apply_theme(QApplication.instance())
     make_script(tmp_path, "alpha")
     window = make_window(qtbot, tmp_path)
 
-    try:
-        assert window.ui.actionTheme.isChecked() is False
-
-        window._toggle_theme()
-        assert theme_module.current_theme() == "dark"
-        assert "#0B0C15" in QApplication.instance().styleSheet()
-        assert window.ui.actionTheme.isChecked() is True
-
-        window._toggle_theme()
-        assert theme_module.current_theme() == "light"
-        assert "#F9FAFB" in QApplication.instance().styleSheet()
-    finally:
-        theme_module.save_theme("light")
-        theme_module.apply_theme(QApplication.instance(), "light")
+    assert theme_module.theme_names() == ("dark",)
+    assert theme_module.current_theme() == "dark"
+    assert "#0B0C15" in QApplication.instance().styleSheet()
+    assert not hasattr(window.ui, "actionTheme")
