@@ -48,14 +48,19 @@ def test_statement_tree_filters_by_chinese_and_code(qtbot):
     assert tree._no_result_item.isHidden()
 
 
-def test_statement_tree_empty_item_can_be_searched(qtbot):
+def test_python_code_category_has_line_and_multiline_items(qtbot):
     tree = StatementTree()
     qtbot.addWidget(tree)
 
-    tree.set_filter("空")
-    assert tree._empty_item is not None
-    assert not tree._empty_item.isHidden()
-    assert tree._empty_item.data(0, Qt.ItemDataRole.UserRole) == "empty"
+    python_category = next(
+        item
+        for item, _children in tree._category_items
+        if item.text(0) == "Python代码"
+    )
+    labels = [python_category.child(i).text(0) for i in range(python_category.childCount())]
+    assert labels == ["Python代码行", "Python代码"]
+    assert python_category.child(0).data(0, Qt.ItemDataRole.UserRole) == "empty"
+    assert python_category.child(1).data(0, Qt.ItemDataRole.UserRole) == "python"
 
 
 def test_statement_tree_toggle_all_categories(qtbot):

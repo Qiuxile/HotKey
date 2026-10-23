@@ -8,7 +8,7 @@ from hotkey.core.models import Block
 
 def test_catalog_shape():
     assert len(catalog.SNIPPETS) == 71
-    assert len(catalog.CATEGORIES) == 6
+    assert len(catalog.CATEGORIES) == 7
     assert sum(snippet.hidden for snippet in catalog.SNIPPETS) == 24
     ids = [snippet.id for snippet in catalog.SNIPPETS]
     assert len(ids) == len(set(ids))

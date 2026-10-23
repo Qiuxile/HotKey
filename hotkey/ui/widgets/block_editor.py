@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QPlainTextEdit,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -27,6 +28,7 @@ from hotkey.core.models import Block
 from hotkey.ui.widgets.statement_tree import SNIPPET_MIME
 
 EMPTY_KIND = "empty"
+PYTHON_KIND = "python"
 BLOCK_MOVE_MIME = "application/x-hotkey-block-move"
 
 
@@ -300,14 +302,22 @@ class BlockWidget(QFrame):
         self.editor = editor
         self.compact = compact
         self.snippet = (
-            None if block.kind == EMPTY_KIND else catalog.snippet(block.kind)
+            None
+            if block.kind in (EMPTY_KIND, PYTHON_KIND)
+            else catalog.snippet(block.kind)
         )
         self.category = (
-            catalog.category(self.snippet.category) if self.snippet else None
+            catalog.category("python")
+            if block.kind in (EMPTY_KIND, PYTHON_KIND)
+            else (
+                catalog.category(self.snippet.category)
+                if self.snippet
+                else None
+            )
         )
         self.accent = self.category.accent if self.category else "#94a3b8"
 
-        self._fields: dict[str, QLineEdit] = {}
+        self._fields: dict[str, QLineEdit | QPlainTextEdit] = {}
         self._value_slots: dict[str, ValueSlot] = {}
         self._key_fields: dict[str, KeyCapture] = {}
         self.bodies: list[BodyArea] = []
@@ -363,6 +373,20 @@ class BlockWidget(QFrame):
     # ---------------------------------------------------------------- 构建
 
     def _build_empty(self, layout: QHBoxLayout) -> None:
+        if self.block.kind == PYTHON_KIND:
+            edit = QPlainTextEdit(self.block.text, self.header)
+            edit.setObjectName("pythonCode")
+            edit.setPlaceholderText("在这里写任意行 Python 代码")
+            edit.setMinimumWidth(260)
+            edit.setFixedHeight(90)
+            edit.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+            edit.textChanged.connect(
+                lambda: self._on_code_changed(edit.toPlainText())
+            )
+            layout.addWidget(edit, 1)
+            self._fields[""] = edit
+            return
+
         edit = QLineEdit(self.block.text, self.header)
         edit.setPlaceholderText("在这里写一行 Python 代码")
         edit.setMinimumWidth(220)
@@ -460,7 +484,7 @@ class BlockWidget(QFrame):
     def key_field(self, name: str) -> KeyCapture | None:
         return self._key_fields.get(name)
 
-    def code_edit(self) -> QLineEdit | None:
+    def code_edit(self) -> QLineEdit | QPlainTextEdit | None:
         return self._fields.get("")
 
     def to_block(self) -> Block:
@@ -874,7 +898,7 @@ class BlockListEditor(QScrollArea):
         body: BodyArea | None = None,
         after: BlockWidget | None = None,
     ) -> BlockWidget | None:
-        if snippet_id != EMPTY_KIND:
+        if snippet_id not in (EMPTY_KIND, PYTHON_KIND):
             snippet = catalog.snippet(snippet_id)
             if not snippet.statement:
                 return None
@@ -890,8 +914,8 @@ class BlockListEditor(QScrollArea):
         return widget
 
     def _new_block(self, snippet_id: str) -> Block:
-        if snippet_id == EMPTY_KIND:
-            return Block(kind=EMPTY_KIND, text="")
+        if snippet_id in (EMPTY_KIND, PYTHON_KIND):
+            return Block(kind=snippet_id, text="")
         snippet = catalog.snippet(snippet_id)
         params = snippet.blank_values()
         return Block(

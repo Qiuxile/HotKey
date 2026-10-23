@@ -17,6 +17,7 @@ from hotkey.core import catalog
 
 SNIPPET_MIME = "application/x-hotkey-snippet"
 EMPTY_KIND = "empty"
+PYTHON_KIND = "python"
 
 
 class StatementTree(QTreeWidget):
@@ -31,40 +32,53 @@ class StatementTree(QTreeWidget):
         self.setIndentation(14)
         self._leaf_items: list[tuple[QTreeWidgetItem, str]] = []
         self._category_items: list[tuple[QTreeWidgetItem, list[QTreeWidgetItem]]] = []
-        self._empty_item: QTreeWidgetItem | None = None
         self._no_result_item: QTreeWidgetItem | None = None
         self._populate()
 
     def _populate(self) -> None:
-        empty_item = QTreeWidgetItem(["空"])
-        empty_item.setData(0, Qt.ItemDataRole.UserRole, EMPTY_KIND)
-        empty_item.setToolTip(0, "拖入右侧后自己填写代码")
-        self.addTopLevelItem(empty_item)
-        self._empty_item = empty_item
-
         grouped = catalog.snippets_by_category()
         for category in catalog.CATEGORIES:
             top = QTreeWidgetItem([category.label])
             top.setFlags(Qt.ItemFlag.ItemIsEnabled)
             children: list[QTreeWidgetItem] = []
-            for snippet in grouped.get(category.id, []):
-                if snippet.hidden:
-                    continue
-                display = snippet.preview()
-                child = QTreeWidgetItem([display])
-                child.setData(0, Qt.ItemDataRole.UserRole, snippet.id)
-                child.setToolTip(
-                    0, f"{display}\n\n{snippet.code}"
-                )
-                top.addChild(child)
-                children.append(child)
-                self._leaf_items.append(
-                    (
-                        child,
-                        f"{display} {snippet.id} {snippet.code} "
-                        f"{category.label}".lower(),
+
+            if category.id == "python":
+                for label, kind in (
+                    ("Python代码行", EMPTY_KIND),
+                    ("Python代码", PYTHON_KIND),
+                ):
+                    child = QTreeWidgetItem([label])
+                    child.setData(0, Qt.ItemDataRole.UserRole, kind)
+                    tip = (
+                        "只能输入一行 Python 代码"
+                        if kind == EMPTY_KIND
+                        else "可以输入任意行 Python 代码"
                     )
-                )
+                    child.setToolTip(0, tip)
+                    top.addChild(child)
+                    children.append(child)
+                    self._leaf_items.append(
+                        (child, f"{label} {kind} python代码".lower())
+                    )
+            else:
+                for snippet in grouped.get(category.id, []):
+                    if snippet.hidden:
+                        continue
+                    display = snippet.preview()
+                    child = QTreeWidgetItem([display])
+                    child.setData(0, Qt.ItemDataRole.UserRole, snippet.id)
+                    child.setToolTip(
+                        0, f"{display}\n\n{snippet.code}"
+                    )
+                    top.addChild(child)
+                    children.append(child)
+                    self._leaf_items.append(
+                        (
+                            child,
+                            f"{display} {snippet.id} {snippet.code} "
+                            f"{category.label}".lower(),
+                        )
+                    )
             self.addTopLevelItem(top)
             top.setExpanded(True)
             self._category_items.append((top, children))
@@ -88,11 +102,6 @@ class StatementTree(QTreeWidget):
             item.setHidden(not visible)
             any_visible = any_visible or visible
 
-        if self._empty_item is not None:
-            empty_visible = "空" in needle or "empty" in needle
-            self._empty_item.setHidden(not empty_visible)
-            any_visible = any_visible or empty_visible
-
         for category_item, children in self._category_items:
             has_visible = any(not child.isHidden() for child in children)
             category_item.setHidden(not has_visible)
@@ -105,8 +114,6 @@ class StatementTree(QTreeWidget):
     def _show_all(self) -> None:
         for item, _haystack in self._leaf_items:
             item.setHidden(False)
-        if self._empty_item is not None:
-            self._empty_item.setHidden(False)
         for category_item, _children in self._category_items:
             category_item.setHidden(False)
         if self._no_result_item is not None:
@@ -141,7 +148,9 @@ class StatementTree(QTreeWidget):
         drag.setMimeData(mime)
 
         accent = "#7F7FD5"
-        if snippet_id != EMPTY_KIND:
+        if snippet_id in (EMPTY_KIND, PYTHON_KIND):
+            accent = catalog.category("python").accent
+        else:
             try:
                 snippet = catalog.snippet(str(snippet_id))
                 accent = catalog.category(snippet.category).accent

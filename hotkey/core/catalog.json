@@ -2,6 +2,12 @@
   "version": 2,
   "categories": [
     {
+      "id": "python",
+      "label": "Python代码",
+      "color": "#e5e7eb",
+      "accent": "#64748b"
+    },
+    {
       "id": "logic",
       "label": "函数与数据",
       "color": "#fef9c3",

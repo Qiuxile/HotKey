@@ -95,6 +95,8 @@ def _hydrate_block(block: Block) -> None:
         _hydrate_block(child)
 
     if block.kind == "empty":
+        if "\n" in block.text:
+            block.kind = "python"
         return
 
     try:

@@ -200,3 +200,15 @@ def test_key_capture_single_and_combo(qtbot):
     QTest.keyClick(field, Qt.Key.Key_C, Qt.KeyboardModifier.ControlModifier)
     assert field.value() == "ctrl+c"
     assert block_ops.blocks_to_code(editor.blocks()) == "pyautogui.hotkey('ctrl', 'c')"
+
+
+def test_python_code_line_and_multiline(qtbot):
+    editor = make_editor(qtbot)
+    line = editor.add_snippet("empty")
+    line.code_edit().setText("x = 1")
+    assert block_ops.blocks_to_code(editor.blocks()) == "x = 1"
+
+    editor.load_blocks([])
+    block = editor.add_snippet("python")
+    block.code_edit().setPlainText("x = 1\ny = 2\nprint(x + y)")
+    assert block_ops.blocks_to_code(editor.blocks()) == "x = 1\ny = 2\nprint(x + y)"

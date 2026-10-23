@@ -125,7 +125,7 @@ def _conditional_code(block: Block, snippet: catalog.Snippet, keyword: str) -> s
 
 def block_code(block: Block) -> str:
     """把单个积木转成代码；无法识别时返回空串。"""
-    if block.kind == "empty":
+    if block.kind in ("empty", "python"):
         text = block.text.strip()
         return "" if text in ("", "空") else text
 
