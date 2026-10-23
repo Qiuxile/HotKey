@@ -232,6 +232,23 @@ class ScriptLibrary:
         storage.save(target, [script])
         return target
 
+    def remove(self, script: HotKey) -> None:
+        """从列表移除但不删除文件：移动到脚本库的 removed/ 子目录。"""
+        if script.path is None:
+            return
+        target_dir = self.directory / "removed"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target = target_dir / script.path.name
+        index = 2
+        while target.exists():
+            target = target_dir / f"{script.path.stem}-{index}{script.path.suffix}"
+            index += 1
+        try:
+            script.path.replace(target)
+        except OSError as exc:
+            raise storage.StorageError(f"无法移除 {script.path.name}: {exc}") from exc
+        script.path = None
+
     def delete(self, script: HotKey) -> None:
         if script.path is None:
             return

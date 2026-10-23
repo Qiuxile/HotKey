@@ -80,33 +80,6 @@ def test_value_slot_accepts_dropped_value_block(qtbot):
     assert editor.add_snippet("value_compare") is None
 
 
-def test_if_elif_else_codegen():
-    tree = Block(
-        "flow_if_else",
-        params={"condition": "x > 0"},
-        value_modes={"condition": "code"},
-        children=[Block("mouse_click")],
-        else_children=[
-            Block(
-                "flow_elif",
-                params={"condition": "x == 0"},
-                value_modes={"condition": "code"},
-                children=[Block("key_press_enter")],
-                else_children=[Block("key_type_text", params={"text": "no"})],
-            )
-        ],
-    )
-
-    assert codegen.blocks_to_code([tree]) == (
-        "if x > 0:\n"
-        "    pyautogui.click()\n"
-        "elif x == 0:\n"
-        "    pyautogui.press('enter')\n"
-        "else:\n"
-        "    pyautogui.typewrite('no')"
-    )
-
-
 def test_while_and_for_range_codegen():
     while_loop = Block(
         "flow_while",
@@ -186,51 +159,3 @@ def test_value_slots_are_recursive(qtbot):
     right.edit.setText("0")
 
     assert codegen.blocks_to_code(editor.blocks()) == "ok = (count > 0)"
-
-
-def test_multiple_elif_blocks_chain():
-    tree = Block(
-        "flow_if_else",
-        params={"condition": "x > 0"},
-        value_modes={"condition": "code"},
-        children=[Block("mouse_click")],
-        else_children=[
-            Block(
-                "flow_elif",
-                params={"condition": "x == 0"},
-                value_modes={"condition": "code"},
-                children=[Block("key_press_enter")],
-            ),
-            Block(
-                "flow_elif",
-                params={"condition": "x < 0"},
-                value_modes={"condition": "code"},
-                children=[Block("mouse_double_click")],
-            ),
-            Block("key_type_text", params={"text": "none"}, value_modes={"text": "text"}),
-        ],
-    )
-
-    assert codegen.blocks_to_code([tree]) == (
-        "if x > 0:\n"
-        "    pyautogui.click()\n"
-        "elif x == 0:\n"
-        "    pyautogui.press('enter')\n"
-        "elif x < 0:\n"
-        "    pyautogui.doubleClick()\n"
-        "else:\n"
-        "    pyautogui.typewrite('none')"
-    )
-
-
-def test_elif_has_only_then_slot_and_must_stay_in_else(qtbot):
-    editor = make_editor(qtbot)
-    branch = editor.add_snippet("flow_if_else")
-    assert editor.add_snippet("flow_elif") is None
-    assert editor.add_snippet("flow_elif", body=branch.bodies[0]) is None
-
-    first = editor.add_snippet("flow_elif", body=branch.bodies[1])
-    second = editor.add_snippet("flow_elif", body=branch.bodies[1])
-    assert first is not None and second is not None
-    assert len(first.bodies) == 1
-    assert len(second.bodies) == 1

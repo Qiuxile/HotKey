@@ -95,7 +95,8 @@
       "block": true,
       "slots": [
         "那么"
-      ]
+      ],
+      "hidden": true
     },
     {
       "id": "flow_while",
@@ -626,7 +627,8 @@
       "id": "key_press_enter",
       "category": "keyboard",
       "label": "按下 Enter",
-      "code": "pyautogui.press('enter')"
+      "code": "pyautogui.press('enter')",
+      "hidden": true
     },
     {
       "id": "key_type_text",
@@ -664,37 +666,43 @@
       "id": "key_hotkey_copy",
       "category": "keyboard",
       "label": "组合键 Ctrl+C",
-      "code": "pyautogui.hotkey('ctrl', 'c')"
+      "code": "pyautogui.hotkey('ctrl', 'c')",
+      "hidden": true
     },
     {
       "id": "key_hotkey_paste",
       "category": "keyboard",
       "label": "组合键 Ctrl+V",
-      "code": "pyautogui.hotkey('ctrl', 'v')"
+      "code": "pyautogui.hotkey('ctrl', 'v')",
+      "hidden": true
     },
     {
       "id": "key_hotkey_alt_tab",
       "category": "keyboard",
       "label": "组合键 Alt+Tab",
-      "code": "pyautogui.hotkey('alt', 'tab')"
+      "code": "pyautogui.hotkey('alt', 'tab')",
+      "hidden": true
     },
     {
       "id": "key_hotkey_win_r",
       "category": "keyboard",
       "label": "组合键 Win+R",
-      "code": "pyautogui.hotkey('win', 'r')"
+      "code": "pyautogui.hotkey('win', 'r')",
+      "hidden": true
     },
     {
       "id": "key_down_shift",
       "category": "keyboard",
       "label": "按住 Shift",
-      "code": "pyautogui.keyDown('shift')"
+      "code": "pyautogui.keyDown('shift')",
+      "hidden": true
     },
     {
       "id": "key_up_shift",
       "category": "keyboard",
       "label": "松开 Shift",
-      "code": "pyautogui.keyUp('shift')"
+      "code": "pyautogui.keyUp('shift')",
+      "hidden": true
     },
     {
       "id": "screen_screenshot",
@@ -1199,6 +1207,62 @@
         }
       ],
       "hidden": true
+    },
+    {
+      "id": "key_press",
+      "category": "keyboard",
+      "label": "按下按键 {key}",
+      "code": "pyautogui.press({key})",
+      "params": [
+        {
+          "name": "key",
+          "placeholder": "点击后按实体键盘",
+          "kind": "key",
+          "width": 140
+        }
+      ]
+    },
+    {
+      "id": "key_hotkey",
+      "category": "keyboard",
+      "label": "按下组合键 {keys}",
+      "code": "pyautogui.hotkey({keys})",
+      "params": [
+        {
+          "name": "keys",
+          "placeholder": "点击后按组合键",
+          "kind": "hotkey",
+          "width": 170
+        }
+      ]
+    },
+    {
+      "id": "key_down",
+      "category": "keyboard",
+      "label": "按住按键 {key}",
+      "code": "pyautogui.keyDown({key})",
+      "params": [
+        {
+          "name": "key",
+          "placeholder": "点击后按实体键盘",
+          "kind": "key",
+          "width": 140
+        }
+      ]
+    },
+    {
+      "id": "key_up",
+      "category": "keyboard",
+      "label": "松开按键 {key}",
+      "code": "pyautogui.keyUp({key})",
+      "params": [
+        {
+          "name": "key",
+          "placeholder": "点击后按实体键盘",
+          "kind": "key",
+          "width": 140
+        }
+      ]
     }
   ]
 }

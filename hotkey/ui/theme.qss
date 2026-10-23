@@ -281,6 +281,23 @@ QFrame#valueSlot {
     border-radius: 4px;
 }
 
+QPushButton#keyCapture {
+    background-color: $input_bg;
+    color: $text;
+    border: 1px solid $border;
+    border-radius: 4px;
+    padding: 2px 8px;
+    text-align: left;
+}
+
+QPushButton#keyCapture:hover {
+    border-color: $accent;
+}
+
+QPushButton#keyCapture:pressed {
+    background-color: $surface_alt;
+}
+
 QFrame#valueSlot QLineEdit {
     background: transparent;
     border: 0;

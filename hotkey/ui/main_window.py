@@ -185,8 +185,10 @@ class MainWindow(QMainWindow):
         self.ui.actionQuit.triggered.connect(self._quit)
         self.ui.actionNew.triggered.connect(self._new_script)
         self.ui.actionDelete.triggered.connect(self._delete_selected)
+        self.ui.actionRemove.triggered.connect(self._remove_selected)
         self.ui.actionImport.triggered.connect(self._import_script)
         self.ui.actionSave.triggered.connect(self._save_current_tab)
+        self.ui.actionSaveAs.triggered.connect(self._save_as)
         self.ui.actionSetHotkey.triggered.connect(self._set_hotkey)
         self.ui.actionExportPython.triggered.connect(self._export_python)
         self.ui.actionSearch.triggered.connect(self._focus_search)
@@ -208,6 +210,7 @@ class MainWindow(QMainWindow):
         self.ui.editorTabs.tabMoved.connect(self._on_tab_moved)
 
         self.ui.btnNewScript.clicked.connect(self._new_script)
+        self.ui.btnImportHotkey.clicked.connect(self._import_script)
         self.ui.btnSaveScript.clicked.connect(self._save_current_tab)
         self.ui.btnRunOnce.clicked.connect(self._run_script)
         self.ui.btnExportPython.clicked.connect(self._export_python)
@@ -332,6 +335,34 @@ class MainWindow(QMainWindow):
             return
         self._delete_script(row)
 
+    def _remove_selected(self) -> None:
+        row = self._selected_source_row()
+        if row is not None:
+            self._remove_script(row)
+
+    def _remove_script(self, row: int) -> None:
+        """从热键列表移除，但不删除文件；文件移动到 hks/removed/。"""
+        entry = self._model.entry(row)
+        answer = QMessageBox.question(
+            self,
+            "移除热键",
+            f"从列表移除「{entry.name or entry.key}」吗？\n"
+            f"文件会保留在 {self._library.directory / 'removed'}，不会删除。",
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        self._close_tab_for_id(entry.id, ask=False)
+        try:
+            self._library.remove(entry)
+        except storage.StorageError as exc:
+            QMessageBox.critical(self, "移除失败", str(exc))
+            return
+        self._model.remove(row)
+        self._persist_tabs()
+        self._update_window_title()
+        self.statusBar().showMessage(f"已移除 {entry.name}，文件保留在 removed/", 5000)
+
     def _delete_script(self, row: int) -> None:
         entry = self._model.entry(row)
         answer = QMessageBox.question(
@@ -399,7 +430,8 @@ class MainWindow(QMainWindow):
         menu = QMenu(self)
 
         if not index.isValid():
-            menu.addAction("新建脚本", self._new_script)
+            menu.addAction("新建热键", self._new_script)
+            menu.addAction("导入热键", self._import_script)
             menu.exec(table.viewport().mapToGlobal(position))
             return
 
@@ -418,9 +450,11 @@ class MainWindow(QMainWindow):
             "停用" if entry.enabled else "启用", lambda: self._toggle_script(row)
         )
         menu.addSeparator()
-        menu.addAction("删除", lambda: self._delete_script(row))
+        menu.addAction("移除（保留文件）", lambda: self._remove_script(row))
+        menu.addAction("删除文件", lambda: self._delete_script(row))
         menu.addSeparator()
-        menu.addAction("新建脚本", self._new_script)
+        menu.addAction("新建热键", self._new_script)
+        menu.addAction("导入热键", self._import_script)
         menu.exec(table.viewport().mapToGlobal(position))
 
     # ---------------------------------------------------------------- 编辑标签
@@ -537,6 +571,79 @@ class MainWindow(QMainWindow):
 
     def _save_current_tab(self) -> None:
         self._save_tab(self._active_tab)
+
+    def _save_as(self) -> None:
+        """把当前热键另存为一个新的 .hk 文件。"""
+        index = self._active_tab
+        if not 0 <= index < len(self._editor_tabs):
+            return
+        self._commit_tab()
+        tab = self._editor_tabs[index]
+        row = self._model.row_of(tab.hotkey_id)
+        if row is None:
+            return
+        entry = self._model.entry(row)
+
+        script = blocks_to_code(tab.blocks)
+        issues = validator.validate(script)
+        errors = [issue for issue in issues if issue.level is IssueLevel.ERROR]
+        if errors:
+            detail = "\n".join(str(issue) for issue in errors[:8])
+            QMessageBox.critical(
+                self,
+                "无法另存为",
+                "积木组合出的脚本有问题（通常是参数没填）：\n\n" + detail,
+            )
+            return
+
+        default = self._library.directory / f"{entry.name or '热键'}-副本.hk"
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "另存为",
+            str(default),
+            "HotKey 热键 (*.hk);;所有文件 (*)",
+        )
+        if not path:
+            return
+        target = Path(path)
+        if self._library.directory.resolve() != target.resolve().parent:
+            QMessageBox.warning(
+                self,
+                "路径不支持",
+                f"热键必须直接保存在热键目录里：\n{self._library.directory}",
+            )
+            return
+        if target.suffix.lower() != ".hk":
+            target = target.with_suffix(".hk")
+        if entry.path is not None and target.resolve() == entry.path.resolve():
+            self._save_tab(index)
+            return
+        if target.exists():
+            answer = QMessageBox.question(
+                self,
+                "文件已存在",
+                f"{target.name} 已存在，要覆盖吗？",
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+
+        new_entry = HotKey(
+            key="",
+            description=(entry.description + " 副本").strip(),
+            name=target.stem,
+            path=target,
+            blocks=deepcopy(tab.blocks),
+            script=script,
+        )
+        try:
+            self._library.save(new_entry)
+        except storage.StorageError as exc:
+            QMessageBox.critical(self, "另存为失败", str(exc))
+            return
+
+        self._model.add(new_entry)
+        self._open_editor_for_id(new_entry.id)
+        self.statusBar().showMessage(f"已另存为 {target.name}", 5000)
 
     def _save_tab(self, index: int) -> bool:
         """校验并保存一个标签；返回 False 表示用户取消或校验失败。"""

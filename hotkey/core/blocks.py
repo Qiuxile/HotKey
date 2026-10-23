@@ -83,6 +83,14 @@ def _format_snippet(block: Block, snippet: catalog.Snippet) -> str:
                 )
         elif param.kind in ("number", "code"):
             values[param.name] = block.params.get(param.name, "").strip()
+        elif param.kind == "key":
+            values[param.name] = catalog.key_literal(
+                block.params.get(param.name, "")
+            )
+        elif param.kind == "hotkey":
+            values[param.name] = catalog.hotkey_literal(
+                block.params.get(param.name, "")
+            )
         else:
             values[param.name] = repr(block.params.get(param.name, ""))
     return snippet.code.format(**values)

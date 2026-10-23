@@ -32,6 +32,17 @@ def _literal_text(text: str, mode: str = "auto") -> str:
     return raw
 
 
+def key_literal(text: str) -> str:
+    """单个实体按键 -> pyautogui 的字符串参数。"""
+    return repr(text.strip())
+
+
+def hotkey_literal(text: str) -> str:
+    """Ctrl+C -> 'ctrl', 'c'。"""
+    parts = [part.strip() for part in text.split("+") if part.strip()]
+    return ", ".join(repr(part) for part in parts)
+
+
 @dataclass(frozen=True)
 class Category:
     id: str
@@ -121,6 +132,10 @@ class Snippet:
                 formatted[param.name] = str(raw).strip()
             elif param.kind == "value":
                 formatted[param.name] = _literal_text(str(raw), param.mode)
+            elif param.kind == "key":
+                formatted[param.name] = key_literal(str(raw))
+            elif param.kind == "hotkey":
+                formatted[param.name] = hotkey_literal(str(raw))
             else:
                 formatted[param.name] = repr(str(raw))
         return self.code.format(**formatted)

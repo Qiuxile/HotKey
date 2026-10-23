@@ -190,3 +190,12 @@ def test_script_roundtrip_through_window(qtbot, tmp_path):
     assert blocks_[0].kind == "empty"
     assert blocks_[0].text == "x = 1"
     assert blocks.blocks_to_code(blocks_) == "x = 1"
+
+
+def test_new_list_actions_and_keyboard_capture_ui(qtbot, tmp_path):
+    window = make_window(qtbot, tmp_path)
+
+    assert "新建热键" in window.ui.btnNewScript.text()
+    assert "导入热键" in window.ui.btnImportHotkey.text()
+    assert window.ui.actionSaveAs.text() == "另存为..."
+    assert "移除" in window.ui.actionRemove.text()

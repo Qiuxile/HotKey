@@ -1,5 +1,8 @@
 """单栏积木编辑器：参数、顺序、容器、判断、删除。"""
 
+from PySide6.QtCore import Qt
+from PySide6.QtTest import QTest
+
 from hotkey.core import blocks as block_ops
 from hotkey.core.models import Block
 from hotkey.ui.widgets.block_editor import BlockListEditor, BlockWidget
@@ -177,3 +180,23 @@ def test_load_blocks_roundtrip(qtbot):
     assert loaded[1].children[0].kind == "mouse_double_click"
     assert loaded[1].else_children[0].kind == "key_type_text"
     assert "else:" in block_ops.blocks_to_code(loaded)
+
+
+def test_key_capture_single_and_combo(qtbot):
+    editor = make_editor(qtbot)
+    widget = editor.add_snippet("key_press")
+    field = widget.key_field("key")
+    assert field is not None
+    field.start_capture()
+    QTest.keyClick(field, Qt.Key.Key_Y)
+    assert field.value() == "y"
+    assert block_ops.blocks_to_code(editor.blocks()) == "pyautogui.press('y')"
+
+    editor.load_blocks([])
+    combo = editor.add_snippet("key_hotkey")
+    field = combo.key_field("keys")
+    assert field is not None
+    field.start_capture()
+    QTest.keyClick(field, Qt.Key.Key_C, Qt.KeyboardModifier.ControlModifier)
+    assert field.value() == "ctrl+c"
+    assert block_ops.blocks_to_code(editor.blocks()) == "pyautogui.hotkey('ctrl', 'c')"

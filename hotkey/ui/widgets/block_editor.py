@@ -5,7 +5,7 @@ from __future__ import annotations
 from uuid import uuid4
 
 from PySide6.QtCore import QEvent, QMimeData, QRegularExpression, Qt, Signal
-from PySide6.QtGui import QDrag, QRegularExpressionValidator
+from PySide6.QtGui import QDrag, QKeySequence, QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QPushButton,
     QScrollArea,
     QSizePolicy,
     QToolButton,
@@ -20,7 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from hotkey.core import catalog
+from hotkey.core import catalog, keymap
 from hotkey.core.blocks import expression_code, literal_code
 from hotkey.core.models import Block
 from hotkey.ui.widgets.statement_tree import SNIPPET_MIME
@@ -201,6 +202,89 @@ class _DragHandle(QLabel):
         super().mouseReleaseEvent(event)
 
 
+class KeyCapture(QPushButton):
+    """点击后直接按实体键盘，显示捕获到的键。"""
+
+    changed = Signal(str)
+
+    def __init__(self, mode: str, value: str = "", parent=None) -> None:
+        super().__init__(parent)
+        self._mode = mode
+        self._value = value
+        self._capturing = False
+        self.setObjectName("keyCapture")
+        self.setFixedHeight(26)
+        self.setMinimumWidth(130)
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+        )
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip("点击后直接按实体键盘；按 Esc 取消")
+        self.clicked.connect(self.start_capture)
+        self._refresh()
+
+    def value(self) -> str:
+        return self._value
+
+    def set_value(self, value: str) -> None:
+        self._value = value
+        self._refresh()
+
+    def _refresh(self) -> None:
+        if self._value:
+            self.setText(keymap.keyboard_to_qt(self._value))
+        else:
+            self.setText("点击后按键" if self._mode == "key" else "点击后组合键")
+
+    def start_capture(self) -> None:
+        self._capturing = True
+        self.setText("请按键盘…")
+        self.setFocus(Qt.FocusReason.MouseFocusReason)
+        self.grabKeyboard()
+
+    def cancel_capture(self) -> None:
+        if self._capturing:
+            self._capturing = False
+            self.releaseKeyboard()
+            self._refresh()
+
+    def keyPressEvent(self, event) -> None:  # noqa: N802
+        if not self._capturing:
+            super().keyPressEvent(event)
+            return
+        if event.key() == Qt.Key.Key_Escape:
+            self.cancel_capture()
+            event.accept()
+            return
+        if event.key() in (
+            Qt.Key.Key_Control,
+            Qt.Key.Key_Shift,
+            Qt.Key.Key_Alt,
+            Qt.Key.Key_Meta,
+        ):
+            return
+        sequence = QKeySequence(event.keyCombination()).toString(
+            QKeySequence.SequenceFormat.PortableText
+        )
+        converted = keymap.qt_to_keyboard(sequence)
+        if converted is None or keymap.is_modifier_only(converted):
+            return
+        if self._mode == "key" and "+" in converted:
+            self.setText("请只按一个键…")
+            return
+
+        self._value = converted
+        self._capturing = False
+        self.releaseKeyboard()
+        self._refresh()
+        self.changed.emit(self._value)
+        event.accept()
+
+    def focusOutEvent(self, event) -> None:  # noqa: N802
+        self.cancel_capture()
+        super().focusOutEvent(event)
+
+
 class BlockWidget(QFrame):
     """单栏里的一个积木；``compact`` 时作为值槽里的表达式片段。"""
 
@@ -225,6 +309,7 @@ class BlockWidget(QFrame):
 
         self._fields: dict[str, QLineEdit] = {}
         self._value_slots: dict[str, ValueSlot] = {}
+        self._key_fields: dict[str, KeyCapture] = {}
         self.bodies: list[BodyArea] = []
 
         self.setObjectName("blockWidget")
@@ -302,6 +387,22 @@ class BlockWidget(QFrame):
                     has_growing_field = True
                     continue
 
+                if segment.kind in ("key", "hotkey"):
+                    key_field = KeyCapture(
+                        segment.kind,
+                        self.block.params.get(segment.name, ""),
+                        self.header,
+                    )
+                    key_field.changed.connect(
+                        lambda text, name=segment.name: self._on_param_changed(
+                            name, text
+                        )
+                    )
+                    layout.addWidget(key_field, 1)
+                    self._key_fields[segment.name] = key_field
+                    has_growing_field = True
+                    continue
+
                 edit = QLineEdit(self.block.params.get(segment.name, ""), self.header)
                 edit.setPlaceholderText(segment.placeholder)
                 edit.setFixedHeight(26)
@@ -355,6 +456,9 @@ class BlockWidget(QFrame):
 
     def value_slot(self, name: str) -> "ValueSlot | None":
         return self._value_slots.get(name)
+
+    def key_field(self, name: str) -> KeyCapture | None:
+        return self._key_fields.get(name)
 
     def code_edit(self) -> QLineEdit | None:
         return self._fields.get("")

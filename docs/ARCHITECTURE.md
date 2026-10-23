@@ -37,7 +37,7 @@ hotkey/
 │   ├── theme.py          # 深色调色板、QSS 渲染、QSettings
 │   ├── theme.qss         # 使用 $变量 的 QSS 模板
 │   └── widgets/
-│       ├── block_editor.py     # 单栏积木编辑器（含拖拽排序、值槽）
+│       ├── block_editor.py     # 单栏积木编辑器（拖拽、值槽、按键捕获）
 │       ├── statement_tree.py   # 积木柜：分类 + 搜索 + 拖出积木/值积木
 │       ├── title_bar.py        # 自定义标题栏 + 菜单按钮
 │       └── frameless_resize.py # 无边框窗口四边/四角缩放
@@ -52,7 +52,7 @@ hotkey/
 |---|---|---|
 | 外观 | `_setup_chrome`、`_apply_button_icons` | 标题栏、菜单、固定深色图标 |
 | 初始化 | `_configure_table`、`_connect_signals`、`_load_library` | 建模型、连信号、加载脚本库 |
-| 脚本库 | `_new_script`、`_import_script`、`_delete_script`、`_edit_hotkey` | 脚本文件与列表操作 |
+| 脚本库 | `_new_script`、`_import_script`、`_remove_script`、`_delete_script`、`_save_as` | 新建/导入/移除/删除/另存为 |
 | 编辑标签 | `_open_editor_for_id`、`_activate_tab`、`_save_tab`、`_close_tab` | 多标签编辑与保存 |
 | 运行/导出 | `_run_script`、`_export_python` | 试运行 / 生成 `.py` |
 | 监听进程 | `_start_listening`、`_stop_listening`、`_verify_listener_start` | 启动/停止独立监听器进程 |

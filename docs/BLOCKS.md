@@ -11,13 +11,12 @@
 | 定义函数 函数名（参数 a） | `logic_func_def` | 语句 | name:code（函数名）, params:code（a, b） | `def {name}({params}):` |
 | 调用 函数名（参数） | `logic_func_plain` | 语句 | name:code（函数名）, args:code（参数） | `{name}({args})` |
 
-## 流程控制（17）
+## 流程控制（16）
 
 | 积木 | id | 可用作 | 参数（类型 / 默认值） | Python |
 |---|---|---|---|---|
 | 等待 秒数 秒 | `flow_wait` | 语句 | seconds:value = 1（秒数，如 0.5） | `time.sleep({seconds})` |
 | 如果 条件 那么 | `flow_if_else` | 语句 | condition:value（条件） | `if {condition}:` |
-| 否则如果 条件 那么 | `flow_elif` | 语句 | condition:value（条件） | `elif {condition}:` |
 | 当 条件 时重复 | `flow_while` | 语句 | condition:value（条件） | `while {condition}:` |
 | 对 i 从 0 到 10 步长 1 重复 | `flow_for_range` | 语句 | name:code = i（i）, start:value = 0（0）, end:value = 10（10）, step:value = 1（1） | `for {name} in range({start}, {end}, {step}):` |
 | 跳出循环 | `flow_break` | 语句 | — | `break` |
@@ -49,19 +48,16 @@
 | 拖拽到（x, y） | `mouse_drag` | 语句 | x:value（x）, y:value（y） | `pyautogui.dragTo({x}, {y}, duration=0.5)` |
 | 鼠标坐标（可当值） | `mouse_position` | 语句 / 值 | — | `pyautogui.position()` |
 
-## 键盘操作（9）
+## 键盘操作（6）
 
 | 积木 | id | 可用作 | 参数（类型 / 默认值） | Python |
 |---|---|---|---|---|
-| 按下 Enter | `key_press_enter` | 语句 | — | `pyautogui.press('enter')` |
 | 输入文本「要输入的文本」 | `key_type_text` | 语句 | text:value（要输入的文本） | `pyautogui.typewrite({text})` |
 | 逐字输入「要输入的文本」（间隔 0.1 秒） | `key_type_interval` | 语句 | text:value（要输入的文本） | `pyautogui.typewrite({text}, interval=0.1)` |
-| 组合键 Ctrl+C | `key_hotkey_copy` | 语句 | — | `pyautogui.hotkey('ctrl', 'c')` |
-| 组合键 Ctrl+V | `key_hotkey_paste` | 语句 | — | `pyautogui.hotkey('ctrl', 'v')` |
-| 组合键 Alt+Tab | `key_hotkey_alt_tab` | 语句 | — | `pyautogui.hotkey('alt', 'tab')` |
-| 组合键 Win+R | `key_hotkey_win_r` | 语句 | — | `pyautogui.hotkey('win', 'r')` |
-| 按住 Shift | `key_down_shift` | 语句 | — | `pyautogui.keyDown('shift')` |
-| 松开 Shift | `key_up_shift` | 语句 | — | `pyautogui.keyUp('shift')` |
+| 按下按键 点击后按实体键盘 | `key_press` | 语句 | key:key（点击后按实体键盘） | `pyautogui.press({key})` |
+| 按下组合键 点击后按组合键 | `key_hotkey` | 语句 | keys:hotkey（点击后按组合键） | `pyautogui.hotkey({keys})` |
+| 按住按键 点击后按实体键盘 | `key_down` | 语句 | key:key（点击后按实体键盘） | `pyautogui.keyDown({key})` |
+| 松开按键 点击后按实体键盘 | `key_up` | 语句 | key:key（点击后按实体键盘） | `pyautogui.keyUp({key})` |
 
 ## 屏幕操作（7）
 
@@ -85,7 +81,15 @@
 
 ## 旧版隐藏积木
 
+- `flow_elif`：否则如果 条件 那么（不在积木柜显示，旧配置兼容用）
 - `flow_if`：如果条件成立（True）（不在积木柜显示，旧配置兼容用）
+- `key_press_enter`：按下 Enter（不在积木柜显示，旧配置兼容用）
+- `key_hotkey_copy`：组合键 Ctrl+C（不在积木柜显示，旧配置兼容用）
+- `key_hotkey_paste`：组合键 Ctrl+V（不在积木柜显示，旧配置兼容用）
+- `key_hotkey_alt_tab`：组合键 Alt+Tab（不在积木柜显示，旧配置兼容用）
+- `key_hotkey_win_r`：组合键 Win+R（不在积木柜显示，旧配置兼容用）
+- `key_down_shift`：按住 Shift（不在积木柜显示，旧配置兼容用）
+- `key_up_shift`：松开 Shift（不在积木柜显示，旧配置兼容用）
 - `flow_sleep_05`：等待 0.5 秒（不在积木柜显示，旧配置兼容用）
 - `flow_sleep_1`：等待 1 秒（不在积木柜显示，旧配置兼容用）
 - `flow_sleep_2`：等待 2 秒（不在积木柜显示，旧配置兼容用）
@@ -102,4 +106,4 @@
 - `logic_screen_size`：读取屏幕尺寸存入 结果变量（不在积木柜显示，旧配置兼容用）
 - `logic_return`：返回 返回值（不在积木柜显示，旧配置兼容用）
 
-共 **51** 个可见积木，另有「空」块和 16 个隐藏旧积木。
+共 **47** 个可见积木，另有「空」块和 24 个隐藏旧积木。
