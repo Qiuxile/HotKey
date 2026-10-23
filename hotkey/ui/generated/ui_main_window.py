@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QHBoxLayout, QHe
     QLabel, QLineEdit, QMainWindow, QMenu,
     QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
     QSplitter, QStatusBar, QTabBar, QTableView,
-    QTreeWidgetItem, QVBoxLayout, QWidget)
+    QToolButton, QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from hotkey.ui.widgets.block_editor import BlockListEditor
 from hotkey.ui.widgets.statement_tree import StatementTree
@@ -127,11 +127,25 @@ class Ui_MainWindow(object):
         self.paletteLayout.setSpacing(6)
         self.paletteLayout.setObjectName(u"paletteLayout")
         self.paletteLayout.setContentsMargins(0, 0, 0, 0)
+        self.paletteSearchRow = QHBoxLayout()
+        self.paletteSearchRow.setSpacing(4)
+        self.paletteSearchRow.setObjectName(u"paletteSearchRow")
         self.paletteSearch = QLineEdit(self.palettePanel)
         self.paletteSearch.setObjectName(u"paletteSearch")
+        self.paletteSearch.setMaximumSize(QSize(160, 16777215))
         self.paletteSearch.setClearButtonEnabled(True)
 
-        self.paletteLayout.addWidget(self.paletteSearch)
+        self.paletteSearchRow.addWidget(self.paletteSearch)
+
+        self.btnTogglePalette = QToolButton(self.palettePanel)
+        self.btnTogglePalette.setObjectName(u"btnTogglePalette")
+        self.btnTogglePalette.setMinimumSize(QSize(42, 0))
+        self.btnTogglePalette.setMaximumSize(QSize(42, 16777215))
+
+        self.paletteSearchRow.addWidget(self.btnTogglePalette)
+
+
+        self.paletteLayout.addLayout(self.paletteSearchRow)
 
         self.statementTree = StatementTree(self.palettePanel)
         self.statementTree.setObjectName(u"statementTree")
@@ -294,6 +308,10 @@ class Ui_MainWindow(object):
         self.btnNewScript.setText(QCoreApplication.translate("MainWindow", u"\uff0b \u65b0\u5efa\u811a\u672c", None))
         self.lblEditing.setText(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c\u7f16\u8f91", None))
         self.paletteSearch.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22\u79ef\u6728...", None))
+#if QT_CONFIG(tooltip)
+        self.btnTogglePalette.setToolTip(QCoreApplication.translate("MainWindow", u"\u5c55\u5f00 / \u6536\u8d77\u6240\u6709\u79ef\u6728\u5206\u7c7b", None))
+#endif // QT_CONFIG(tooltip)
+        self.btnTogglePalette.setText(QCoreApplication.translate("MainWindow", u"\u6536\u8d77", None))
         self.btnCapturePos.setText(QCoreApplication.translate("MainWindow", u"\u590d\u5236\u5750\u6807", None))
         self.btnCaptureColor.setText(QCoreApplication.translate("MainWindow", u"\u590d\u5236\u989c\u8272", None))
         self.btnScreenSize.setText(QCoreApplication.translate("MainWindow", u"\u590d\u5236\u5c3a\u5bf8", None))

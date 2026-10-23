@@ -41,7 +41,7 @@ from hotkey.ui.widgets.title_bar import TitleBar
 
 logger = logging.getLogger("HotKey.Window")
 
-WINDOW_HEIGHT = 600
+WINDOW_HEIGHT = 800
 NARROW_WIDTH = 400
 WIDE_WIDTH = 1240
 SETTINGS_OPEN_TABS = "open_scripts"
@@ -202,6 +202,7 @@ class MainWindow(QMainWindow):
         self.ui.paletteSearch.textChanged.connect(
             self.ui.statementTree.set_filter
         )
+        self.ui.btnTogglePalette.clicked.connect(self._toggle_palette)
         table = self.ui.hotkeyTable
         table.doubleClicked.connect(self._open_editor_from_index)
         table.customContextMenuRequested.connect(self._show_context_menu)
@@ -933,6 +934,10 @@ class MainWindow(QMainWindow):
         self._copy_value(f"{width}, {height}", "屏幕尺寸")
 
     # ---------------------------------------------------------------- 窗口/托盘
+
+    def _toggle_palette(self) -> None:
+        expanded = self.ui.statementTree.toggle_all_expanded()
+        self.ui.btnTogglePalette.setText("收起" if expanded else "展开")
 
     def _focus_search(self) -> None:
         self.ui.searchEdit.setFocus()

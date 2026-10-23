@@ -105,6 +105,21 @@ class StatementTree(QTreeWidget):
         if self._no_result_item is not None:
             self._no_result_item.setHidden(True)
 
+    def all_expanded(self) -> bool:
+        return all(
+            category_item.isExpanded()
+            for category_item, _children in self._category_items
+        )
+
+    def set_all_expanded(self, expanded: bool) -> None:
+        for category_item, _children in self._category_items:
+            category_item.setExpanded(expanded)
+
+    def toggle_all_expanded(self) -> bool:
+        expanded = not self.all_expanded()
+        self.set_all_expanded(expanded)
+        return expanded
+
     def startDrag(self, supported_actions) -> None:  # noqa: N802 - Qt 接口
         item = self.currentItem()
         if item is None:

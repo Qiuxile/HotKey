@@ -56,3 +56,14 @@ def test_statement_tree_empty_item_can_be_searched(qtbot):
     assert tree._empty_item is not None
     assert not tree._empty_item.isHidden()
     assert tree._empty_item.data(0, Qt.ItemDataRole.UserRole) == "empty"
+
+
+def test_statement_tree_toggle_all_categories(qtbot):
+    tree = StatementTree()
+    qtbot.addWidget(tree)
+
+    assert tree.all_expanded()
+    assert tree.toggle_all_expanded() is False
+    assert not tree.all_expanded()
+    assert tree.toggle_all_expanded() is True
+    assert tree.all_expanded()

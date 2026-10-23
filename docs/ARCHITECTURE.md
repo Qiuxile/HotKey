@@ -110,7 +110,7 @@ jsons/*.hk ──ScriptLibrary.load()──► 有热键且启用的脚本
 
 只改 `core/catalog.json`：`id`、`category`、`label`、`code`、`params`、`slots`。
 `label` 里的 `{name}` 会变成常驻输入框；不需要改 UI 代码。
-加完跑 `pytest tests/test_catalog.py`。
+加完跑 `pytest tests/test_catalog.py`。全部积木清单见 [BLOCKS.md](BLOCKS.md)。
 
 ### 改主窗口布局
 

@@ -26,13 +26,13 @@ def test_main_window_builds(qtbot, tmp_path):
     assert window.menuWidget() is not None
 
 
-def test_default_narrow_window_is_400x600(qtbot, tmp_path):
+def test_default_narrow_window_is_400x800(qtbot, tmp_path):
     window = make_window(qtbot, tmp_path)
     window.show()
     qtbot.wait(50)
 
     assert window.width() == 400
-    assert window.height() == 600
+    assert window.height() == 800
     assert window.ui.editorPanel.isHidden()
 
 
@@ -43,10 +43,10 @@ def test_editor_expands_only_from_default_size(qtbot, tmp_path):
 
     window._set_editor_visible(True)
     assert not window.ui.editorPanel.isHidden()
-    assert window.size() == QSize(1240, 600)
+    assert window.size() == QSize(1240, 800)
 
     window._set_editor_visible(False)
-    assert window.size() == QSize(400, 600)
+    assert window.size() == QSize(400, 800)
 
 
 def test_editor_does_not_reset_user_window(qtbot, tmp_path):
@@ -70,6 +70,21 @@ def test_promoted_widgets_are_used(qtbot, tmp_path):
     assert isinstance(window.ui.statementTree, StatementTree)
     # 顶部「空」+ 6 个分类 + 隐藏的“无结果”提示
     assert window.ui.statementTree.topLevelItemCount() == 8
+
+
+def test_palette_toggle_button(qtbot, tmp_path):
+    window = make_window(qtbot, tmp_path)
+
+    assert window.ui.btnTogglePalette.text() == "收起"
+    assert window.ui.statementTree.all_expanded()
+
+    window.ui.btnTogglePalette.click()
+    assert window.ui.btnTogglePalette.text() == "展开"
+    assert not window.ui.statementTree.all_expanded()
+
+    window.ui.btnTogglePalette.click()
+    assert window.ui.btnTogglePalette.text() == "收起"
+    assert window.ui.statementTree.all_expanded()
 
 
 def test_editor_toggle(qtbot, tmp_path):

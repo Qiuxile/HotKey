@@ -75,6 +75,18 @@ QToolButton#titleMenuButton::menu-indicator {
     width: 0;
 }
 
+QToolButton#paletteToggle {
+    background-color: $surface_alt;
+    color: $text;
+    border: 1px solid $border;
+    border-radius: 4px;
+    font-size: 9pt;
+}
+
+QToolButton#paletteToggle:hover {
+    background-color: $surface_high;
+}
+
 QMenuBar {
     background: transparent;
     color: $text;
