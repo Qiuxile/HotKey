@@ -190,35 +190,3 @@ def test_script_roundtrip_through_window(qtbot, tmp_path):
     assert blocks_[0].kind == "empty"
     assert blocks_[0].text == "x = 1"
     assert blocks.blocks_to_code(blocks_) == "x = 1"
-
-
-def test_file_with_multiple_hotkeys_opens_all_tabs(qtbot, tmp_path):
-    from hotkey.core import storage
-    from hotkey.core.models import HotKey
-
-    storage.save(
-        tmp_path / "group.hk",
-        [HotKey(key="ctrl+1", id="one"), HotKey(key="ctrl+2", id="two")],
-    )
-    window = make_window(qtbot, tmp_path)
-
-    assert window.ui.hotkeyTable.model().rowCount() == 2
-    assert window.ui.listPanel.maximumWidth() == 400
-    window._open_file_entries(window._model.entry(0))
-    assert window.ui.editorTabs.count() == 2
-
-
-def test_new_hotkey_appends_to_current_file(qtbot, tmp_path):
-    from hotkey.core import storage
-    from hotkey.core.models import HotKey
-
-    path = tmp_path / "group.hk"
-    storage.save(path, [HotKey(key="", description="第一个", id="one")])
-    window = make_window(qtbot, tmp_path)
-    window._open_file_entries(window._model.entry(0))
-
-    window._new_hotkey()
-
-    assert window.ui.hotkeyTable.model().rowCount() == 2
-    entries, _warnings = storage.load_document(path, allow_empty_key=True)
-    assert len(entries) == 2

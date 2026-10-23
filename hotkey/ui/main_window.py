@@ -29,7 +29,7 @@ from hotkey.core.library import (
     default_script_dir,
     safe_stem,
 )
-from hotkey.core.models import Block, HotKey, IssueLevel
+from hotkey.core.models import Block, HotKey, IssueLevel, new_id
 from hotkey.core.program import render_program
 from hotkey.core.runner import ScriptRunner
 from hotkey.ui import theme as theme_module
@@ -47,8 +47,6 @@ NARROW_WIDTH = 400
 WIDE_WIDTH = 1240
 SETTINGS_OPEN_TABS = "open_scripts"
 SETTINGS_ACTIVE_TAB = "active_script"
-SETTINGS_OPEN_IDS = "open_hotkeys"
-SETTINGS_ACTIVE_ID = "active_hotkey"
 
 
 @dataclass
@@ -210,7 +208,6 @@ class MainWindow(QMainWindow):
         self.ui.editorTabs.tabMoved.connect(self._on_tab_moved)
 
         self.ui.btnNewScript.clicked.connect(self._new_script)
-        self.ui.btnNewHotkey.clicked.connect(self._new_hotkey)
         self.ui.btnSaveScript.clicked.connect(self._save_current_tab)
         self.ui.btnRunOnce.clicked.connect(self._run_script)
         self.ui.btnExportPython.clicked.connect(self._export_python)
@@ -232,7 +229,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(warnings[0], 10000)
         else:
             self.statusBar().showMessage(
-                f"脚本库：{self._library.directory} · {len(scripts)} 个热键",
+                f"脚本库：{self._library.directory} · {len(scripts)} 个脚本",
                 8000,
             )
         self._update_window_title()
@@ -271,32 +268,8 @@ class MainWindow(QMainWindow):
             return
 
         self._model.add(script)
-        self._open_file_entries(script)
+        self._open_editor_for_id(script.id)
         self.statusBar().showMessage(f"已新建脚本 {target.name}", 5000)
-
-    def _new_hotkey(self) -> None:
-        """在最近编辑的 .hk 文件里追加一个热键。"""
-        active = self._active_entry()
-        if active is None or active.path is None:
-            self._new_script()
-            return
-
-        entry = HotKey(
-            key="",
-            description="新热键",
-            name="新热键",
-            path=active.path,
-            blocks=[],
-        )
-        try:
-            self._library.save(entry)
-        except storage.StorageError as exc:
-            QMessageBox.critical(self, "新建失败", str(exc))
-            return
-
-        self._model.add(entry)
-        self._open_file_entries(entry)
-        self.statusBar().showMessage(f"已在新文件中添加热键 {active.path.name}", 5000)
 
     def _choose_new_script_path(self) -> Path | None:
         default = self._library.directory / "新脚本.hk"
@@ -341,15 +314,17 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            scripts = self._library.import_copy(Path(path))
+            script = self._library.import_copy(Path(path))
         except storage.StorageError as exc:
             QMessageBox.critical(self, "导入失败", str(exc))
             return
 
-        for script in scripts:
-            self._model.add(script)
-        self._open_file_entries(scripts[0])
-        self.statusBar().showMessage(f"已导入 {len(scripts)} 个热键 {scripts[0].name}", 5000)
+        if self._model.row_of(script.id) is not None:
+            script.id = new_id()
+            self._library.save(script)
+        self._model.add(script)
+        self._open_editor_for_id(script.id)
+        self.statusBar().showMessage(f"已导入脚本 {script.name}", 5000)
 
     def _delete_selected(self) -> None:
         row = self._selected_source_row()
@@ -359,21 +334,10 @@ class MainWindow(QMainWindow):
 
     def _delete_script(self, row: int) -> None:
         entry = self._model.entry(row)
-        siblings = [
-            other
-            for other in self._model.entries()
-            if other.path is not None
-            and entry.path is not None
-            and other.path.resolve() == entry.path.resolve()
-        ]
-        if len(siblings) > 1:
-            detail = f"只从 {entry.path.name} 里移除这个热键，文件不会删除。"
-        else:
-            detail = f"磁盘上的 {entry.path.name if entry.path else '脚本文件'} 也会被删除。"
         answer = QMessageBox.question(
             self,
-            "删除热键",
-            f"确定删除「{entry.name or entry.key}」吗？\n{detail}",
+            "删除脚本",
+            f"确定删除「{entry.name or entry.key}」吗？\n磁盘上的 {entry.path.name if entry.path else '脚本文件'} 也会被删除。",
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
@@ -465,22 +429,7 @@ class MainWindow(QMainWindow):
         source = self._proxy.mapToSource(index)
         if not source.isValid():
             return
-        self._open_file_entries(self._model.entry(source.row()))
-
-    def _open_file_entries(self, entry: HotKey) -> None:
-        """打开同一个 .hk 文件里的全部热键，并激活被点击的那个。"""
-        if entry.path is None:
-            self._open_editor_for_id(entry.id)
-            return
-        path = entry.path.resolve()
-        siblings = [
-            other
-            for other in self._model.entries()
-            if other.path is not None and other.path.resolve() == path
-        ]
-        for sibling in siblings:
-            self._open_editor_for_id(sibling.id)
-        self._open_editor_for_id(entry.id)
+        self._open_editor_for_id(self._model.entry(source.row()).id)
 
     def _open_editor_for_id(self, hotkey_id: str) -> None:
         row = self._model.row_of(hotkey_id)
@@ -1006,45 +955,26 @@ class MainWindow(QMainWindow):
             self.ui.editorTabs.setTabText(index, self._tab_label(tab))
 
     def _persist_tabs(self) -> None:
-        """把打开的热键 ID 写入 settings.ini，供下次启动恢复。"""
+        """把打开的标签路径写入 settings.ini，供下次启动恢复。"""
         settings = theme_module.settings()
-        ids = []
-        active_id = ""
+        paths = []
+        active_path = ""
         for index, tab in enumerate(self._editor_tabs):
-            if self._model.row_of(tab.hotkey_id) is None:
+            row = self._model.row_of(tab.hotkey_id)
+            if row is None:
                 continue
-            ids.append(tab.hotkey_id)
+            entry = self._model.entry(row)
+            if entry.path is None:
+                continue
+            paths.append(str(entry.path))
             if index == self._active_tab:
-                active_id = tab.hotkey_id
-        settings.setValue(SETTINGS_OPEN_IDS, ids)
-        settings.setValue(SETTINGS_ACTIVE_ID, active_id)
+                active_path = str(entry.path)
+        settings.setValue(SETTINGS_OPEN_TABS, paths)
+        settings.setValue(SETTINGS_ACTIVE_TAB, active_path)
 
     def _restore_tabs(self) -> None:
-        """恢复上次打开的标签；ID 已不存在时静默跳过。"""
+        """恢复上次打开的标签；路径已不存在的静默跳过。"""
         settings = theme_module.settings()
-        has_id_config = settings.contains(SETTINGS_OPEN_IDS)
-        raw_ids = settings.value(SETTINGS_OPEN_IDS, [])
-        if isinstance(raw_ids, str):
-            ids = [raw_ids]
-        elif isinstance(raw_ids, (list, tuple)):
-            ids = [str(item) for item in raw_ids]
-        else:
-            ids = []
-
-        if ids or has_id_config:
-            active_id = str(settings.value(SETTINGS_ACTIVE_ID, ""))
-            for hotkey_id in ids:
-                self._open_editor_for_id(hotkey_id)
-            if active_id:
-                row = self._model.row_of(active_id)
-                if row is not None:
-                    index = self._tab_index(active_id)
-                    if index >= 0:
-                        self._set_editor_visible(True)
-                        self._activate_tab(index)
-            return
-
-        # 兼容旧版只保存文件路径的设置：打开该文件里的全部热键
         raw = settings.value(SETTINGS_OPEN_TABS, [])
         if isinstance(raw, str):
             paths = [raw]
@@ -1052,6 +982,7 @@ class MainWindow(QMainWindow):
             paths = [str(path) for path in raw]
         else:
             paths = []
+
         for path_text in paths:
             path = Path(path_text)
             row = next(
@@ -1064,7 +995,7 @@ class MainWindow(QMainWindow):
             )
             if row is None:
                 continue
-            self._open_file_entries(self._model.entry(row))
+            self._open_editor_for_id(self._model.entry(row).id)
 
         active_path = str(settings.value(SETTINGS_ACTIVE_TAB, ""))
         if active_path:

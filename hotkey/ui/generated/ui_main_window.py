@@ -89,21 +89,10 @@ class Ui_MainWindow(object):
 
         self.listLayout.addWidget(self.hotkeyTable)
 
-        self.newScriptRow = QHBoxLayout()
-        self.newScriptRow.setSpacing(6)
-        self.newScriptRow.setObjectName(u"newScriptRow")
         self.btnNewScript = QPushButton(self.listPanel)
         self.btnNewScript.setObjectName(u"btnNewScript")
 
-        self.newScriptRow.addWidget(self.btnNewScript)
-
-        self.btnNewHotkey = QPushButton(self.listPanel)
-        self.btnNewHotkey.setObjectName(u"btnNewHotkey")
-
-        self.newScriptRow.addWidget(self.btnNewHotkey)
-
-
-        self.listLayout.addLayout(self.newScriptRow)
+        self.listLayout.addWidget(self.btnNewScript)
 
         self.centralSplitter.addWidget(self.listPanel)
         self.editorPanel = QWidget(self.centralSplitter)
@@ -313,10 +302,6 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(shortcut)
         self.searchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22\u70ed\u952e...", None))
         self.btnNewScript.setText(QCoreApplication.translate("MainWindow", u"\uff0b \u65b0\u5efa\u811a\u672c", None))
-        self.btnNewHotkey.setText(QCoreApplication.translate("MainWindow", u"\uff0b \u65b0\u5efa\u70ed\u952e", None))
-#if QT_CONFIG(tooltip)
-        self.btnNewHotkey.setToolTip(QCoreApplication.translate("MainWindow", u"\u5728\u5f53\u524d .hk \u6587\u4ef6\u4e2d\u8ffd\u52a0\u4e00\u4e2a\u70ed\u952e", None))
-#endif // QT_CONFIG(tooltip)
         self.lblEditing.setText(QCoreApplication.translate("MainWindow", u"\u64cd\u4f5c\u7f16\u8f91", None))
         self.paletteSearch.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u641c\u7d22\u79ef\u6728...", None))
 #if QT_CONFIG(tooltip)

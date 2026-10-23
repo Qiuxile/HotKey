@@ -1,4 +1,4 @@
-"""脚本库：一个 .hk 文件可以包含多个热键，每个热键有自己的积木。"""
+"""脚本库：一个脚本 = 一个 JSON 文件，热键可选。"""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 from hotkey.core import storage
-from hotkey.core.models import HotKey, new_id
+from hotkey.core.models import HotKey
 
 INVALID_NAME = re.compile(r'[<>:"/\\|?*\x00-\x1f]+')
 SCRIPT_SUFFIX = ".hk"
@@ -71,27 +71,26 @@ class ScriptLibrary:
             self.warnings.extend(f"{path.name}: {w}" for w in warnings if w)
             if not entries:
                 continue
+            if len(entries) > 1:
+                self.warnings.append(
+                    f"{path.name}: 一个文件里有 {len(entries)} 个脚本，只载入第一个"
+                )
 
-            for index, script in enumerate(entries):
-                script.path = path
-                if len(entries) == 1:
-                    script.name = path.stem
-                elif script.description.strip():
-                    script.name = script.description.strip()
+            script = entries[0]
+            script.path = path
+            script.name = path.stem
+
+            if script.key:
+                if script.key in seen_keys:
+                    script.enabled = False
+                    self.warnings.append(
+                        f"{path.name}: 热键 {script.key} 与 "
+                        f"{seen_keys[script.key].name} 重复，已停用"
+                    )
                 else:
-                    script.name = f"{path.stem} #{index + 1}"
+                    seen_keys[script.key] = script
 
-                if script.key:
-                    if script.key in seen_keys:
-                        script.enabled = False
-                        self.warnings.append(
-                            f"{script.name}: 热键 {script.key} 与 "
-                            f"{seen_keys[script.key].name} 重复，已停用"
-                        )
-                    else:
-                        seen_keys[script.key] = script
-
-                scripts.append(script)
+            scripts.append(script)
 
         scripts.sort(key=lambda script: script.name.lower())
         return scripts
@@ -205,73 +204,29 @@ class ScriptLibrary:
             target = self.path_for(script)
         else:
             target = script.path
-
-        entries: list[HotKey] = []
-        if target.exists():
-            try:
-                existing, _warnings = storage.load_document(
-                    target, allow_empty_key=True
-                )
-            except storage.StorageError:
-                existing = []
-            replaced = False
-            for old in existing:
-                if old.id == script.id:
-                    entries.append(script)
-                    replaced = True
-                else:
-                    entries.append(old)
-            if not replaced:
-                entries.append(script)
-        else:
-            entries.append(script)
-
-        self.save_all(target, entries)
+        storage.save(target, [script])
         return target
-
-    def save_all(self, path: Path, scripts: list[HotKey]) -> None:
-        for script in scripts:
-            script.path = path
-        storage.save(path, scripts)
 
     def delete(self, script: HotKey) -> None:
         if script.path is None:
             return
-        path = script.path
-        remaining: list[HotKey] = []
-        try:
-            entries, _warnings = storage.load_document(
-                path, allow_empty_key=True
-            )
-            remaining = [entry for entry in entries if entry.id != script.id]
-        except (storage.StorageError, FileNotFoundError):
-            remaining = []
-
-        if remaining:
-            self.save_all(path, remaining)
-            return
-
-        for target in (path, path.with_name(path.name + ".bak")):
+        for path in (
+            script.path,
+            script.path.with_name(script.path.name + ".bak"),
+        ):
             try:
-                target.unlink()
+                path.unlink()
             except FileNotFoundError:
                 pass
             except OSError:
                 pass
 
-    def import_copy(self, source: Path) -> list[HotKey]:
+    def import_copy(self, source: Path) -> HotKey:
         entries, _warnings = storage.load_document(source, allow_empty_key=True)
         if not entries:
-            raise storage.StorageError("文件里没有热键")
-
-        target = self.unique_path(source.stem)
-        for index, entry in enumerate(entries):
-            entry.id = new_id()
-            if entry.description.strip():
-                entry.name = entry.description.strip()
-            elif len(entries) == 1:
-                entry.name = source.stem
-            else:
-                entry.name = f"{source.stem} #{index + 1}"
-        self.save_all(target, entries)
-        return entries
+            raise storage.StorageError("文件里没有脚本")
+        script = entries[0]
+        script.name = safe_stem(source.stem)
+        script.path = self.unique_path(script.name)
+        storage.save(script.path, [script])
+        return script

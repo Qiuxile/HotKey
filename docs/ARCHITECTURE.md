@@ -4,7 +4,7 @@
 
 ## 1. 一句话模型
 
-**一个 `.hk` 文件包含多个热键（JSON 列表）**。每个热键有自己的名称、可选热键、启用状态和积木。
+**一个脚本 = 一个 `.hk` 文件（JSON 内容）**。脚本包含积木、可选热键、启用状态。
 热键只是运行脚本的一种方式；脚本也可以手动运行或导出成独立 `.py`。
 
 代码里的 `HotKey` 是脚本对象的历史命名，不要把它只理解成"热键"。
@@ -52,8 +52,8 @@ hotkey/
 |---|---|---|
 | 外观 | `_setup_chrome`、`_apply_button_icons` | 标题栏、菜单、固定深色图标 |
 | 初始化 | `_configure_table`、`_connect_signals`、`_load_library` | 建模型、连信号、加载脚本库 |
-| 脚本库 | `_new_script`、`_new_hotkey`、`_import_script`、`_delete_script`、`_edit_hotkey` | 文件与热键列表操作 |
-| 编辑标签 | `_open_file_entries`、`_open_editor_for_id`、`_activate_tab`、`_save_tab` | 打开整文件标签与保存 |
+| 脚本库 | `_new_script`、`_import_script`、`_delete_script`、`_edit_hotkey` | 脚本文件与列表操作 |
+| 编辑标签 | `_open_editor_for_id`、`_activate_tab`、`_save_tab`、`_close_tab` | 多标签编辑与保存 |
 | 运行/导出 | `_run_script`、`_export_python` | 试运行 / 生成 `.py` |
 | 监听进程 | `_start_listening`、`_stop_listening`、`_verify_listener_start` | 启动/停止独立监听器进程 |
 | 编辑器工具 | `_capture_coordinate`、`_insert_pixel_color` | 复制坐标/颜色/尺寸 |
@@ -69,9 +69,9 @@ hotkey/
 jsons/*.hk
    │ ScriptLibrary.load()
    ▼
-HotKey 列表 ──► HotKeyTableModel ──► 左侧热键列表（最大 400px）
+HotKey 列表 ──► HotKeyTableModel ──► 左侧列表（最大 400px）
    │
-   │ 双击 / 右键“编辑”：打开同一 .hk 的全部热键标签
+   │ 双击 / 右键“编辑”
    ▼
 EditorTab（右侧标签，内存中的 blocks）
    │ 拖积木 / 改参数
@@ -99,12 +99,10 @@ jsons/*.hk ──ScriptLibrary.load()──► 有热键且启用的脚本
 
 关键不变量：
 
-- 一个 `.hk` 文件包含多个热键；左侧列表展示**全部热键**，右侧标签只表示**正在编辑**的热键。
-- 双击任意热键会打开同一文件里的全部热键标签。
+- 左侧列表保存**全部脚本**；右侧标签只表示**正在编辑**的脚本。
 - 标签里的积木修改只在内存，点保存才写文件；`*` 表示有未保存修改。
-- 保存/删除单个热键必须保留同文件其他热键；删除最后一个热键才删除文件。
-- 没有热键（`key == ""`）的条目不注册全局热键，但仍可运行/导出。
-- 所有热键（跨文件）不能重复；加载时会停用重复项。
+- 没有热键（`key == ""`）的脚本不会注册全局热键，但仍可运行/导出。
+- 不同脚本文件不能使用同一个热键；加载时会停用重复项。
 - 值槽存 `Block.expressions[name]`（返回积木）和 `Block.value_modes[name]`（手填类型）；
   `blocks.expression_code()` 负责把值积木转成表达式。
 
