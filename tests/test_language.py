@@ -3,7 +3,7 @@
 from PySide6.QtCore import QMimeData, QPointF, Qt
 from PySide6.QtGui import QDropEvent
 
-from hotkey.core import blocks as codegen
+from hotkey.core import blocks as codegen, catalog
 from hotkey.core.models import Block
 from hotkey.ui.widgets.block_editor import BlockListEditor, SNIPPET_MIME
 
@@ -144,3 +144,9 @@ def test_function_assignments_are_global():
 def test_wait_block_has_parameter():
     wait = Block("flow_wait", params={"seconds": "0.5"})
     assert codegen.blocks_to_code([wait]) == "time.sleep(0.5)"
+
+
+def test_dialog_prompt_returns_input_value():
+    snippet = catalog.snippet("value_prompt")
+    assert snippet.expression is True
+    assert snippet.code_for_values({"text": "名字"}) == "pyautogui.prompt('名字')"

@@ -618,7 +618,8 @@
       "id": "mouse_position",
       "category": "mouse",
       "label": "读取鼠标坐标到变量 x, y",
-      "code": "x, y = pyautogui.position()"
+      "code": "x, y = pyautogui.position()",
+      "hidden": true
     },
     {
       "id": "key_press_enter",
@@ -732,7 +733,8 @@
       "id": "screen_size",
       "category": "screen",
       "label": "读取屏幕尺寸到变量 w, h",
-      "code": "w, h = pyautogui.size()"
+      "code": "w, h = pyautogui.size()",
+      "hidden": true
     },
     {
       "id": "screen_locate",
@@ -746,7 +748,8 @@
           "kind": "text",
           "width": 150
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "id": "screen_locate_center",
@@ -760,7 +763,8 @@
           "kind": "text",
           "width": 150
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "id": "screen_pixel",
@@ -780,7 +784,8 @@
           "kind": "number",
           "width": 60
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "id": "screen_pixel_matches",
@@ -818,7 +823,8 @@
           "kind": "number",
           "width": 52
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "id": "dialog_alert",
@@ -846,7 +852,8 @@
           "kind": "text",
           "width": 180
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "id": "dialog_prompt",
@@ -860,7 +867,8 @@
           "kind": "text",
           "width": 180
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "id": "flow_sleep_05",
@@ -1122,6 +1130,75 @@
         }
       ],
       "hidden": true
+    },
+    {
+      "id": "value_prompt",
+      "category": "flow",
+      "label": "输入框「{text}」返回的内容",
+      "code": "pyautogui.prompt({text})",
+      "params": [
+        {
+          "name": "text",
+          "placeholder": "提示文字",
+          "kind": "text",
+          "width": 160
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_confirm",
+      "category": "flow",
+      "label": "确认框「{text}」返回的按钮",
+      "code": "pyautogui.confirm({text})",
+      "params": [
+        {
+          "name": "text",
+          "placeholder": "提示文字",
+          "kind": "text",
+          "width": 160
+        }
+      ],
+      "expression": true
+    },
+    {
+      "id": "value_pixel_matches",
+      "category": "flow",
+      "label": "坐标（{x}, {y}）是否为颜色（{r}, {g}, {b}）",
+      "code": "pyautogui.pixelMatchesColor({x}, {y}, ({r}, {g}, {b}))",
+      "params": [
+        {
+          "name": "x",
+          "placeholder": "x",
+          "kind": "number",
+          "width": 55
+        },
+        {
+          "name": "y",
+          "placeholder": "y",
+          "kind": "number",
+          "width": 55
+        },
+        {
+          "name": "r",
+          "placeholder": "R",
+          "kind": "number",
+          "width": 55
+        },
+        {
+          "name": "g",
+          "placeholder": "G",
+          "kind": "number",
+          "width": 55
+        },
+        {
+          "name": "b",
+          "placeholder": "B",
+          "kind": "number",
+          "width": 55
+        }
+      ],
+      "expression": true
     }
   ]
 }

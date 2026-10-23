@@ -657,3 +657,17 @@ v1/v2 的纯脚本会迁移成一个「空」积木。
 - 打包不再内置 `jsons/example.hk`，脚本目录由程序首次启动创建
 - `.gitignore` 改为忽略 `hks/*.bak`、`hks/.hotkey/`
 - 测试：旧目录改名；`pytest` 200 项通过
+
+
+## 30. 清理无意义积木：返回值不再被丢弃（2026-10-23）
+
+- 审计所有可见积木，隐藏只产生返回值却不保存的旧块：
+  `dialog_prompt`、`dialog_confirm`、`mouse_position`、`screen_size`、
+  `screen_locate`、`screen_locate_center`、`screen_pixel`、`screen_pixel_matches`
+- 新增值积木：
+  - `value_prompt`：输入框返回用户输入内容
+  - `value_confirm`：确认框返回按钮
+  - `value_pixel_matches`：坐标颜色判断返回布尔值
+- 这些值积木可以拖进「设置变量」或条件槽，不再出现“弹窗输入完内容丢了”的情况
+- 旧块保留 hidden 兼容旧脚本，但不再出现在积木柜
+- 测试：隐藏旧块、值积木存在、目录计数；`pytest` 205 项通过

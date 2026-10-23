@@ -7,9 +7,9 @@ from hotkey.core.models import Block
 
 
 def test_catalog_shape():
-    assert len(catalog.SNIPPETS) == 71
+    assert len(catalog.SNIPPETS) == 74
     assert len(catalog.CATEGORIES) == 6
-    assert sum(snippet.hidden for snippet in catalog.SNIPPETS) == 16
+    assert sum(snippet.hidden for snippet in catalog.SNIPPETS) == 24
     ids = [snippet.id for snippet in catalog.SNIPPETS]
     assert len(ids) == len(set(ids))
 
@@ -32,7 +32,7 @@ def test_logic_category_has_function_and_value_blocks():
         for snippet in catalog.SNIPPETS
         if snippet.category == "flow" and snippet.expression
     ]
-    assert len(values) == 13
+    assert len(values) == 16
     assert all(snippet.expression for snippet in values)
 
 
@@ -151,3 +151,21 @@ def test_every_snippet_renders_and_parses(snippet):
     text = snippet.render(snippet.blank_values())
     assert snippet.parse_text(text) is not None
     assert snippet.code_for_values(snippet.blank_values()) is not None
+
+
+def test_no_op_blocks_are_hidden_and_value_versions_exist():
+    for block_id in (
+        "dialog_prompt",
+        "dialog_confirm",
+        "mouse_position",
+        "screen_size",
+        "screen_locate",
+        "screen_locate_center",
+        "screen_pixel",
+        "screen_pixel_matches",
+    ):
+        assert catalog.snippet(block_id).hidden is True
+
+    assert catalog.snippet("value_prompt").expression is True
+    assert catalog.snippet("value_confirm").expression is True
+    assert catalog.snippet("value_pixel_matches").expression is True

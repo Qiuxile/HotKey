@@ -11,7 +11,7 @@
 | 定义函数 函数名（参数 a） | `logic_func_def` | name:code（函数名）, params:code（a, b） | 函数体 | `def {name}({params}):` |
 | 调用 函数名（参数） | `logic_func_plain` | name:code（函数名）, args:code（参数） | — | `{name}({args})` |
 
-## 流程控制（21）
+## 流程控制（24）
 
 | 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
 |---|---|---|---|---|
@@ -36,8 +36,11 @@
 | 坐标（x, y）的颜色 | `value_pixel` | x:number = 0（x）, y:number = 0（y） | — | `pyautogui.pixel({x}, {y})` |
 | 鼠标坐标 | `value_mouse_pos` | — | — | `pyautogui.position()` |
 | 屏幕尺寸 | `value_screen_size` | — | — | `pyautogui.size()` |
+| 输入框「提示文字」返回的内容 | `value_prompt` | text:text（提示文字） | — | `pyautogui.prompt({text})` |
+| 确认框「提示文字」返回的按钮 | `value_confirm` | text:text（提示文字） | — | `pyautogui.confirm({text})` |
+| 坐标（x, y）是否为颜色（R, G, B） | `value_pixel_matches` | x:number（x）, y:number（y）, r:number（R）, g:number（G）, b:number（B） | — | `pyautogui.pixelMatchesColor({x}, {y}, ({r}, {g}, {b}))` |
 
-## 鼠标操作（11）
+## 鼠标操作（10）
 
 | 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
 |---|---|---|---|---|
@@ -51,7 +54,6 @@
 | 鼠标滚轮向上滚 | `mouse_scroll_up` | — | — | `pyautogui.scroll(10)` |
 | 鼠标滚轮向下滚 | `mouse_scroll_down` | — | — | `pyautogui.scroll(-10)` |
 | 拖拽到（x, y） | `mouse_drag` | x:number（x）, y:number（y） | — | `pyautogui.dragTo({x}, {y}, duration=0.5)` |
-| 读取鼠标坐标到变量 x, y | `mouse_position` | — | — | `x, y = pyautogui.position()` |
 
 ## 键盘操作（9）
 
@@ -67,29 +69,30 @@
 | 按住 Shift | `key_down_shift` | — | — | `pyautogui.keyDown('shift')` |
 | 松开 Shift | `key_up_shift` | — | — | `pyautogui.keyUp('shift')` |
 
-## 屏幕操作（7）
+## 屏幕操作（2）
 
 | 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
 |---|---|---|---|---|
 | 截取全屏到 screenshot.png | `screen_screenshot` | — | — | `pyautogui.screenshot('screenshot.png')` |
 | 截取区域（x, y, w, h） | `screen_screenshot_region` | left:number（x）, top:number（y）, width:number（w）, height:number（h） | — | `pyautogui.screenshot('region.png', region=({left}, {top}, {width}, {height}))` |
-| 读取屏幕尺寸到变量 w, h | `screen_size` | — | — | `w, h = pyautogui.size()` |
-| 在屏幕上查找图片「图片路径」 | `screen_locate` | image:text（图片路径） | — | `pyautogui.locateOnScreen({image})` |
-| 查找图片并取中心坐标「图片路径」 | `screen_locate_center` | image:text（图片路径） | — | `pyautogui.locateCenterOnScreen({image})` |
-| 读取坐标（x, y）的颜色 | `screen_pixel` | x:number（x）, y:number（y） | — | `pyautogui.pixel({x}, {y})` |
-| 判断（x, y）是否为颜色（R, G, B） | `screen_pixel_matches` | x:number（x）, y:number（y）, r:number（R）, g:number（G）, b:number（B） | — | `pyautogui.pixelMatchesColor({x}, {y}, ({r}, {g}, {b}))` |
 
-## 弹窗交互（3）
+## 弹窗交互（1）
 
 | 积木 | id | 参数（类型 / 默认值） | 槽位 | Python |
 |---|---|---|---|---|
 | 弹出提示：提示文字 | `dialog_alert` | text:text（提示文字） | — | `pyautogui.alert({text})` |
-| 弹出确认框：提示文字 | `dialog_confirm` | text:text（提示文字） | — | `pyautogui.confirm({text})` |
-| 弹出输入框：提示文字 | `dialog_prompt` | text:text（提示文字） | — | `pyautogui.prompt({text})` |
 
 ## 旧版隐藏积木
 
 - `flow_if`：如果条件成立（True）（不在积木柜显示，旧配置兼容用）
+- `mouse_position`：读取鼠标坐标到变量 x, y（不在积木柜显示，旧配置兼容用）
+- `screen_size`：读取屏幕尺寸到变量 w, h（不在积木柜显示，旧配置兼容用）
+- `screen_locate`：在屏幕上查找图片「图片路径」（不在积木柜显示，旧配置兼容用）
+- `screen_locate_center`：查找图片并取中心坐标「图片路径」（不在积木柜显示，旧配置兼容用）
+- `screen_pixel`：读取坐标（x, y）的颜色（不在积木柜显示，旧配置兼容用）
+- `screen_pixel_matches`：判断（x, y）是否为颜色（R, G, B）（不在积木柜显示，旧配置兼容用）
+- `dialog_confirm`：弹出确认框：提示文字（不在积木柜显示，旧配置兼容用）
+- `dialog_prompt`：弹出输入框：提示文字（不在积木柜显示，旧配置兼容用）
 - `flow_sleep_05`：等待 0.5 秒（不在积木柜显示，旧配置兼容用）
 - `flow_sleep_1`：等待 1 秒（不在积木柜显示，旧配置兼容用）
 - `flow_sleep_2`：等待 2 秒（不在积木柜显示，旧配置兼容用）
@@ -106,4 +109,4 @@
 - `logic_screen_size`：读取屏幕尺寸存入 结果变量（不在积木柜显示，旧配置兼容用）
 - `logic_return`：返回 返回值（不在积木柜显示，旧配置兼容用）
 
-共 **55** 个可见积木，另有「空」块和 16 个隐藏旧积木。
+共 **50** 个可见积木，另有「空」块和 24 个隐藏旧积木。
