@@ -157,7 +157,7 @@ def test_dual_block_works_as_statement_and_value(qtbot):
     editor = make_editor(qtbot)
     statement = editor.add_snippet("dialog_prompt")
     assert statement is not None
-    statement.field("text").setText("名字")
+    statement.value_slot("text").edit.setText("名字")
     assert codegen.blocks_to_code(editor.blocks()) == "pyautogui.prompt('名字')"
 
     editor.load_blocks([])
@@ -167,3 +167,22 @@ def test_dual_block_works_as_statement_and_value(qtbot):
     assert slot is not None
     slot.set_expression(Block("dialog_prompt", params={"text": "名字"}))
     assert codegen.blocks_to_code(editor.blocks()) == "name = pyautogui.prompt('名字')"
+
+
+def test_value_slots_are_recursive(qtbot):
+    editor = make_editor(qtbot)
+    assign = editor.add_snippet("logic_set")
+    assign.field("name").setText("ok")
+    outer = assign.value_slot("value")
+    outer.set_expression(Block("value_compare", params={"operator": ">"}))
+
+    compact = outer.expression_widget()
+    assert compact is not None
+    left = compact.value_slot("left")
+    right = compact.value_slot("right")
+    assert left is not None and right is not None
+
+    left.set_expression(Block("value_variable", params={"name": "count"}))
+    right.edit.setText("0")
+
+    assert codegen.blocks_to_code(editor.blocks()) == "ok = (count > 0)"

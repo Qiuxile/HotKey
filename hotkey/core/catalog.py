@@ -12,6 +12,26 @@ INDENT = "    "
 CATALOG_PATH = Path(__file__).with_name("catalog.json")
 
 
+def _literal_text(text: str, mode: str = "auto") -> str:
+    """值槽手填内容的 Python 形式；与 blocks.literal_code 保持同一规则。"""
+    raw = text.strip()
+    if mode in ("code", "raw"):
+        return raw
+    if mode == "number":
+        return raw or "0"
+    if mode == "bool":
+        return "True" if raw.lower() in ("true", "1", "是", "真") else "False"
+    if mode == "text":
+        return repr(text)
+    if raw in ("True", "False", "None"):
+        return raw
+    try:
+        float(raw)
+    except ValueError:
+        return repr(text)
+    return raw
+
+
 @dataclass(frozen=True)
 class Category:
     id: str
@@ -27,6 +47,8 @@ class Param:
     kind: str = "text"  # text | number | code | value
     width: int = 72
     default: str = ""
+    mode: str = "auto"  # 新值槽默认的输入类型
+    legacy_mode: str = "auto"  # 旧配置没有 mode 时的解释方式
 
 
 @dataclass(frozen=True)
@@ -95,8 +117,10 @@ class Snippet:
         formatted: dict[str, str] = {}
         for param in self.params:
             raw = values.get(param.name, "")
-            if param.kind in ("number", "code", "value"):
+            if param.kind in ("number", "code"):
                 formatted[param.name] = str(raw).strip()
+            elif param.kind == "value":
+                formatted[param.name] = _literal_text(str(raw), param.mode)
             else:
                 formatted[param.name] = repr(str(raw))
         return self.code.format(**formatted)
@@ -145,6 +169,8 @@ def _load_catalog(path: Path = CATALOG_PATH) -> tuple[tuple[Category, ...], tupl
                 kind=param.get("kind", "text"),
                 width=int(param.get("width", 72)),
                 default=str(param.get("default", "")),
+                mode=str(param.get("mode", "auto")),
+                legacy_mode=str(param.get("legacy_mode", param.get("mode", "auto"))),
             )
             for param in item.get("params", [])
         )

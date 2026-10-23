@@ -26,8 +26,8 @@ def test_add_snippet_and_fill_params(qtbot):
     widget = editor.add_snippet("mouse_move_to")
 
     assert isinstance(widget, BlockWidget)
-    widget.field("x").setText("800")
-    widget.field("y").setText("600")
+    widget.value_slot("x").edit.setText("800")
+    widget.value_slot("y").edit.setText("600")
 
     blocks = editor.blocks()
     assert blocks[0].params == {"x": "800", "y": "600"}
@@ -81,9 +81,9 @@ def test_container_holds_children(qtbot):
     editor = make_editor(qtbot)
     loop = editor.add_snippet("flow_for_range")
     loop.field("name").setText("i")
-    loop.field("start").setText("0")
-    loop.field("end").setText("3")
-    loop.field("step").setText("1")
+    set_value_slot(loop, "start", "0", mode="auto")
+    set_value_slot(loop, "end", "3", mode="auto")
+    set_value_slot(loop, "step", "1", mode="auto")
     editor.add_snippet("mouse_click", body=loop.bodies[0])
 
     assert loop.height() > loop.header.height()
@@ -98,7 +98,7 @@ def test_if_else_branches(qtbot):
     set_value_slot(branch, "condition", "x > 0")
     editor.add_snippet("mouse_click", body=branch.bodies[0])
     typed = editor.add_snippet("key_type_text", body=branch.bodies[1])
-    typed.field("text").setText("hi")
+    typed.value_slot("text").edit.setText("hi")
 
     code = block_ops.blocks_to_code(editor.blocks())
     assert code == (

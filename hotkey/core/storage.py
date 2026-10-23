@@ -110,10 +110,10 @@ def _hydrate_block(block: Block) -> None:
     if not block.params:
         block.params = snippet.blank_values()
 
-    # 旧配置里的条件/值都是手写 Python；没有 mode 时按代码处理
+    # 旧配置里的条件/值都是手写 Python；没有 mode 时按参数定义的旧解释方式处理
     for param in snippet.params:
         if param.kind == "value":
-            block.value_modes.setdefault(param.name, "code")
+            block.value_modes.setdefault(param.name, param.legacy_mode)
 
     # 旧版函数定义把返回表达式放在 result 参数里，迁移成“返回”积木
     if block.kind == "logic_func_def":

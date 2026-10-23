@@ -471,7 +471,7 @@ class ValueSlot(QFrame):
         self.editor = owner.editor
         self.param = param
         self.literal = owner.block.params.get(param.name, "")
-        self.mode = owner.block.value_modes.get(param.name, "auto")
+        self.mode = owner.block.value_modes.get(param.name, param.mode)
         self.expression: Block | None = None
         self._expression_widget: BlockWidget | None = None
 
@@ -535,6 +535,9 @@ class ValueSlot(QFrame):
         if self._expression_widget is not None:
             return self._expression_widget.to_block()
         return self.expression
+
+    def expression_widget(self) -> "BlockWidget | None":
+        return self._expression_widget
 
     # ---------------------------------------------------------------- 表达式
 

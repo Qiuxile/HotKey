@@ -48,9 +48,11 @@
         {
           "name": "seconds",
           "placeholder": "秒数，如 0.5",
-          "kind": "number",
+          "kind": "value",
           "width": 80,
-          "default": "1"
+          "default": "1",
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ]
     },
@@ -64,7 +66,9 @@
           "name": "condition",
           "placeholder": "条件",
           "kind": "value",
-          "width": 180
+          "width": 180,
+          "mode": "code",
+          "legacy_mode": "code"
         }
       ],
       "block": true,
@@ -83,7 +87,9 @@
           "name": "condition",
           "placeholder": "条件",
           "kind": "value",
-          "width": 180
+          "width": 180,
+          "mode": "code",
+          "legacy_mode": "code"
         }
       ],
       "block": true,
@@ -102,7 +108,9 @@
           "name": "condition",
           "placeholder": "条件",
           "kind": "value",
-          "width": 180
+          "width": 180,
+          "mode": "code",
+          "legacy_mode": "code"
         }
       ],
       "block": true,
@@ -126,23 +134,29 @@
         {
           "name": "start",
           "placeholder": "0",
-          "kind": "number",
+          "kind": "value",
           "width": 50,
-          "default": "0"
+          "default": "0",
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "end",
           "placeholder": "10",
-          "kind": "number",
+          "kind": "value",
           "width": 50,
-          "default": "10"
+          "default": "10",
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "step",
           "placeholder": "1",
-          "kind": "number",
+          "kind": "value",
           "width": 50,
-          "default": "1"
+          "default": "1",
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ],
       "block": true,
@@ -172,7 +186,9 @@
           "name": "value",
           "placeholder": "返回值",
           "kind": "value",
-          "width": 150
+          "width": 150,
+          "mode": "auto",
+          "legacy_mode": "code"
         }
       ]
     },
@@ -203,7 +219,9 @@
           "name": "value",
           "placeholder": "值或返回值",
           "kind": "value",
-          "width": 170
+          "width": 170,
+          "mode": "auto",
+          "legacy_mode": "code"
         }
       ]
     },
@@ -224,7 +242,9 @@
           "placeholder": "值",
           "kind": "value",
           "width": 150,
-          "default": "1"
+          "default": "1",
+          "mode": "auto",
+          "legacy_mode": "code"
         }
       ]
     },
@@ -296,8 +316,10 @@
         {
           "name": "left",
           "placeholder": "左值",
-          "kind": "code",
-          "width": 70
+          "kind": "value",
+          "width": 70,
+          "mode": "code",
+          "legacy_mode": "code"
         },
         {
           "name": "operator",
@@ -309,8 +331,10 @@
         {
           "name": "right",
           "placeholder": "右值",
-          "kind": "code",
-          "width": 70
+          "kind": "value",
+          "width": 70,
+          "mode": "code",
+          "legacy_mode": "code"
         }
       ],
       "expression": true
@@ -324,8 +348,10 @@
         {
           "name": "left",
           "placeholder": "条件",
-          "kind": "code",
-          "width": 70
+          "kind": "value",
+          "width": 70,
+          "mode": "code",
+          "legacy_mode": "code"
         },
         {
           "name": "operator",
@@ -337,8 +363,10 @@
         {
           "name": "right",
           "placeholder": "条件",
-          "kind": "code",
-          "width": 70
+          "kind": "value",
+          "width": 70,
+          "mode": "code",
+          "legacy_mode": "code"
         }
       ],
       "expression": true
@@ -352,8 +380,10 @@
         {
           "name": "value",
           "placeholder": "条件",
-          "kind": "code",
-          "width": 120
+          "kind": "value",
+          "width": 120,
+          "mode": "code",
+          "legacy_mode": "code"
         }
       ],
       "expression": true
@@ -367,8 +397,10 @@
         {
           "name": "left",
           "placeholder": "左值",
-          "kind": "code",
-          "width": 70
+          "kind": "value",
+          "width": 70,
+          "mode": "code",
+          "legacy_mode": "code"
         },
         {
           "name": "operator",
@@ -380,8 +412,10 @@
         {
           "name": "right",
           "placeholder": "右值",
-          "kind": "code",
-          "width": 70
+          "kind": "value",
+          "width": 70,
+          "mode": "code",
+          "legacy_mode": "code"
         }
       ],
       "expression": true
@@ -395,16 +429,20 @@
         {
           "name": "low",
           "placeholder": "最小值",
-          "kind": "number",
+          "kind": "value",
           "width": 55,
-          "default": "1"
+          "default": "1",
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "high",
           "placeholder": "最大值",
-          "kind": "number",
+          "kind": "value",
           "width": 55,
-          "default": "10"
+          "default": "10",
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ],
       "expression": true
@@ -454,8 +492,10 @@
         {
           "name": "image",
           "placeholder": "图片路径",
-          "kind": "text",
-          "width": 140
+          "kind": "value",
+          "width": 140,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ],
       "expression": true
@@ -469,14 +509,18 @@
         {
           "name": "x",
           "placeholder": "x",
-          "kind": "number",
-          "width": 60
+          "kind": "value",
+          "width": 60,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "y",
           "placeholder": "y",
-          "kind": "number",
-          "width": 60
+          "kind": "value",
+          "width": 60,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ]
     },
@@ -489,14 +533,18 @@
         {
           "name": "dx",
           "placeholder": "dx",
-          "kind": "number",
-          "width": 60
+          "kind": "value",
+          "width": 60,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "dy",
           "placeholder": "dy",
-          "kind": "number",
-          "width": 60
+          "kind": "value",
+          "width": 60,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ]
     },
@@ -551,14 +599,18 @@
         {
           "name": "x",
           "placeholder": "x",
-          "kind": "number",
-          "width": 60
+          "kind": "value",
+          "width": 60,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "y",
           "placeholder": "y",
-          "kind": "number",
-          "width": 60
+          "kind": "value",
+          "width": 60,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ]
     },
@@ -586,8 +638,10 @@
         {
           "name": "text",
           "placeholder": "要输入的文本",
-          "kind": "text",
-          "width": 140
+          "kind": "value",
+          "width": 140,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ]
     },
@@ -600,8 +654,10 @@
         {
           "name": "text",
           "placeholder": "要输入的文本",
-          "kind": "text",
-          "width": 140
+          "kind": "value",
+          "width": 140,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ]
     },
@@ -656,26 +712,34 @@
         {
           "name": "left",
           "placeholder": "x",
-          "kind": "number",
-          "width": 56
+          "kind": "value",
+          "width": 56,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "top",
           "placeholder": "y",
-          "kind": "number",
-          "width": 56
+          "kind": "value",
+          "width": 56,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "width",
           "placeholder": "w",
-          "kind": "number",
-          "width": 56
+          "kind": "value",
+          "width": 56,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "height",
           "placeholder": "h",
-          "kind": "number",
-          "width": 56
+          "kind": "value",
+          "width": 56,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ]
     },
@@ -697,8 +761,10 @@
         {
           "name": "image",
           "placeholder": "图片路径",
-          "kind": "text",
-          "width": 150
+          "kind": "value",
+          "width": 150,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ],
       "hidden": false,
@@ -714,8 +780,10 @@
         {
           "name": "image",
           "placeholder": "图片路径",
-          "kind": "text",
-          "width": 150
+          "kind": "value",
+          "width": 150,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ],
       "hidden": false,
@@ -731,14 +799,18 @@
         {
           "name": "x",
           "placeholder": "x",
-          "kind": "number",
-          "width": 60
+          "kind": "value",
+          "width": 60,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "y",
           "placeholder": "y",
-          "kind": "number",
-          "width": 60
+          "kind": "value",
+          "width": 60,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ],
       "hidden": false,
@@ -754,32 +826,42 @@
         {
           "name": "x",
           "placeholder": "x",
-          "kind": "number",
-          "width": 56
+          "kind": "value",
+          "width": 56,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "y",
           "placeholder": "y",
-          "kind": "number",
-          "width": 56
+          "kind": "value",
+          "width": 56,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "r",
           "placeholder": "R",
-          "kind": "number",
-          "width": 52
+          "kind": "value",
+          "width": 52,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "g",
           "placeholder": "G",
-          "kind": "number",
-          "width": 52
+          "kind": "value",
+          "width": 52,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "b",
           "placeholder": "B",
-          "kind": "number",
-          "width": 52
+          "kind": "value",
+          "width": 52,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ],
       "hidden": false,
@@ -795,8 +877,10 @@
         {
           "name": "text",
           "placeholder": "提示文字",
-          "kind": "text",
-          "width": 180
+          "kind": "value",
+          "width": 180,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ]
     },
@@ -809,8 +893,10 @@
         {
           "name": "text",
           "placeholder": "提示文字",
-          "kind": "text",
-          "width": 180
+          "kind": "value",
+          "width": 180,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ],
       "hidden": false,
@@ -826,8 +912,10 @@
         {
           "name": "text",
           "placeholder": "提示文字",
-          "kind": "text",
-          "width": 180
+          "kind": "value",
+          "width": 180,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ],
       "hidden": false,
@@ -882,8 +970,10 @@
         {
           "name": "left",
           "placeholder": "左值",
-          "kind": "code",
-          "width": 90
+          "kind": "value",
+          "width": 90,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "operator",
@@ -894,8 +984,10 @@
         {
           "name": "right",
           "placeholder": "右值",
-          "kind": "code",
-          "width": 90
+          "kind": "value",
+          "width": 90,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "variable",
@@ -936,14 +1028,18 @@
         {
           "name": "low",
           "placeholder": "最小值",
-          "kind": "number",
-          "width": 60
+          "kind": "value",
+          "width": 60,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "high",
           "placeholder": "最大值",
-          "kind": "number",
-          "width": 60
+          "kind": "value",
+          "width": 60,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "variable",
@@ -990,8 +1086,10 @@
         {
           "name": "image",
           "placeholder": "图片路径",
-          "kind": "text",
-          "width": 140
+          "kind": "value",
+          "width": 140,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "variable",
@@ -1011,8 +1109,10 @@
         {
           "name": "image",
           "placeholder": "图片路径",
-          "kind": "text",
-          "width": 140
+          "kind": "value",
+          "width": 140,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "variable",
@@ -1032,14 +1132,18 @@
         {
           "name": "x",
           "placeholder": "x",
-          "kind": "number",
-          "width": 56
+          "kind": "value",
+          "width": 56,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "y",
           "placeholder": "y",
-          "kind": "number",
-          "width": 56
+          "kind": "value",
+          "width": 56,
+          "mode": "auto",
+          "legacy_mode": "auto"
         },
         {
           "name": "variable",
@@ -1089,8 +1193,10 @@
         {
           "name": "value",
           "placeholder": "返回值",
-          "kind": "code",
-          "width": 170
+          "kind": "value",
+          "width": 170,
+          "mode": "auto",
+          "legacy_mode": "auto"
         }
       ],
       "hidden": true
