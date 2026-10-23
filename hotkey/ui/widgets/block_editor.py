@@ -767,7 +767,7 @@ class BlockListEditor(QScrollArea):
         body: BodyArea | None = None,
         after: BlockWidget | None = None,
     ) -> BlockWidget | None:
-        if snippet_id != EMPTY_KIND and catalog.snippet(snippet_id).expression:
+        if snippet_id != EMPTY_KIND and not catalog.snippet(snippet_id).statement:
             return None
         block = self._new_block(snippet_id)
         widget = self.add_block(block, body, after)

@@ -7,9 +7,9 @@ from hotkey.core.models import Block
 
 
 def test_catalog_shape():
-    assert len(catalog.SNIPPETS) == 74
+    assert len(catalog.SNIPPETS) == 67
     assert len(catalog.CATEGORIES) == 6
-    assert sum(snippet.hidden for snippet in catalog.SNIPPETS) == 24
+    assert sum(snippet.hidden for snippet in catalog.SNIPPETS) == 16
     ids = [snippet.id for snippet in catalog.SNIPPETS]
     assert len(ids) == len(set(ids))
 
@@ -30,10 +30,12 @@ def test_logic_category_has_function_and_value_blocks():
     values = [
         snippet
         for snippet in catalog.SNIPPETS
-        if snippet.category == "flow" and snippet.expression
+        if snippet.category == "flow"
+        and snippet.expression
+        and not snippet.dual
     ]
-    assert len(values) == 16
-    assert all(snippet.expression for snippet in values)
+    assert len(values) == 9
+    assert all(snippet.expression and not snippet.statement for snippet in values)
 
 
 def test_return_value_blocks_generate_code():
@@ -153,7 +155,7 @@ def test_every_snippet_renders_and_parses(snippet):
     assert snippet.code_for_values(snippet.blank_values()) is not None
 
 
-def test_no_op_blocks_are_hidden_and_value_versions_exist():
+def test_dual_blocks_can_be_statement_or_expression():
     for block_id in (
         "dialog_prompt",
         "dialog_confirm",
@@ -164,8 +166,11 @@ def test_no_op_blocks_are_hidden_and_value_versions_exist():
         "screen_pixel",
         "screen_pixel_matches",
     ):
-        assert catalog.snippet(block_id).hidden is True
+        snippet = catalog.snippet(block_id)
+        assert snippet.hidden is False
+        assert snippet.expression is True
+        assert snippet.dual is True
+        assert snippet.statement is True
 
-    assert catalog.snippet("value_prompt").expression is True
-    assert catalog.snippet("value_confirm").expression is True
-    assert catalog.snippet("value_pixel_matches").expression is True
+    assert catalog.snippet("mouse_position").code == "pyautogui.position()"
+    assert catalog.snippet("screen_size").code == "pyautogui.size()"

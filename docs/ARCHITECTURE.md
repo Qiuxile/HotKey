@@ -105,6 +105,8 @@ hks/*.hk ──ScriptLibrary.load()──► 有热键且启用的脚本
 - 不同脚本文件不能使用同一个热键；加载时会停用重复项。
 - 值槽存 `Block.expressions[name]`（返回积木）和 `Block.value_modes[name]`（手填类型）；
   `blocks.expression_code()` 负责把值积木转成表达式。
+- 双用途积木：`Snippet.expression = true` 且 `Snippet.dual = true`；`statement` 属性允许它同时作为代码行
+  （弹窗输入、鼠标坐标、屏幕尺寸、找图、像素等）。
 
 ## 5. 改哪里
 

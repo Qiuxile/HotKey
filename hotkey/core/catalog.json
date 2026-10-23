@@ -461,58 +461,6 @@
       "expression": true
     },
     {
-      "id": "value_locate",
-      "category": "flow",
-      "label": "图片 {image} 的中心坐标",
-      "code": "pyautogui.locateCenterOnScreen({image})",
-      "params": [
-        {
-          "name": "image",
-          "placeholder": "图片路径",
-          "kind": "text",
-          "width": 140
-        }
-      ],
-      "expression": true
-    },
-    {
-      "id": "value_pixel",
-      "category": "flow",
-      "label": "坐标（{x}, {y}）的颜色",
-      "code": "pyautogui.pixel({x}, {y})",
-      "params": [
-        {
-          "name": "x",
-          "placeholder": "x",
-          "kind": "number",
-          "width": 50,
-          "default": "0"
-        },
-        {
-          "name": "y",
-          "placeholder": "y",
-          "kind": "number",
-          "width": 50,
-          "default": "0"
-        }
-      ],
-      "expression": true
-    },
-    {
-      "id": "value_mouse_pos",
-      "category": "flow",
-      "label": "鼠标坐标",
-      "code": "pyautogui.position()",
-      "expression": true
-    },
-    {
-      "id": "value_screen_size",
-      "category": "flow",
-      "label": "屏幕尺寸",
-      "code": "pyautogui.size()",
-      "expression": true
-    },
-    {
       "id": "mouse_move_to",
       "category": "mouse",
       "label": "移动鼠标到（{x}, {y}）",
@@ -617,9 +565,11 @@
     {
       "id": "mouse_position",
       "category": "mouse",
-      "label": "读取鼠标坐标到变量 x, y",
-      "code": "x, y = pyautogui.position()",
-      "hidden": true
+      "label": "鼠标坐标（可当值）",
+      "code": "pyautogui.position()",
+      "hidden": false,
+      "expression": true,
+      "dual": true
     },
     {
       "id": "key_press_enter",
@@ -732,14 +682,16 @@
     {
       "id": "screen_size",
       "category": "screen",
-      "label": "读取屏幕尺寸到变量 w, h",
-      "code": "w, h = pyautogui.size()",
-      "hidden": true
+      "label": "屏幕尺寸（可当值）",
+      "code": "pyautogui.size()",
+      "hidden": false,
+      "expression": true,
+      "dual": true
     },
     {
       "id": "screen_locate",
       "category": "screen",
-      "label": "在屏幕上查找图片「{image}」",
+      "label": "查找图片位置 {image}（可当值）",
       "code": "pyautogui.locateOnScreen({image})",
       "params": [
         {
@@ -749,12 +701,14 @@
           "width": 150
         }
       ],
-      "hidden": true
+      "hidden": false,
+      "expression": true,
+      "dual": true
     },
     {
       "id": "screen_locate_center",
       "category": "screen",
-      "label": "查找图片并取中心坐标「{image}」",
+      "label": "查找图片中心 {image}（可当值）",
       "code": "pyautogui.locateCenterOnScreen({image})",
       "params": [
         {
@@ -764,12 +718,14 @@
           "width": 150
         }
       ],
-      "hidden": true
+      "hidden": false,
+      "expression": true,
+      "dual": true
     },
     {
       "id": "screen_pixel",
       "category": "screen",
-      "label": "读取坐标（{x}, {y}）的颜色",
+      "label": "坐标（{x}, {y}）颜色（可当值）",
       "code": "pyautogui.pixel({x}, {y})",
       "params": [
         {
@@ -785,12 +741,14 @@
           "width": 60
         }
       ],
-      "hidden": true
+      "hidden": false,
+      "expression": true,
+      "dual": true
     },
     {
       "id": "screen_pixel_matches",
       "category": "screen",
-      "label": "判断（{x}, {y}）是否为颜色（{r}, {g}, {b}）",
+      "label": "坐标（{x}, {y}）是否为颜色（{r}, {g}, {b}）（可当值）",
       "code": "pyautogui.pixelMatchesColor({x}, {y}, ({r}, {g}, {b}))",
       "params": [
         {
@@ -824,7 +782,9 @@
           "width": 52
         }
       ],
-      "hidden": true
+      "hidden": false,
+      "expression": true,
+      "dual": true
     },
     {
       "id": "dialog_alert",
@@ -843,7 +803,7 @@
     {
       "id": "dialog_confirm",
       "category": "dialog",
-      "label": "弹出确认框：{text}",
+      "label": "弹出确认框：{text}（可当值）",
       "code": "pyautogui.confirm({text})",
       "params": [
         {
@@ -853,12 +813,14 @@
           "width": 180
         }
       ],
-      "hidden": true
+      "hidden": false,
+      "expression": true,
+      "dual": true
     },
     {
       "id": "dialog_prompt",
       "category": "dialog",
-      "label": "弹出输入框：{text}",
+      "label": "弹出输入框：{text}（可当值）",
       "code": "pyautogui.prompt({text})",
       "params": [
         {
@@ -868,7 +830,9 @@
           "width": 180
         }
       ],
-      "hidden": true
+      "hidden": false,
+      "expression": true,
+      "dual": true
     },
     {
       "id": "flow_sleep_05",
@@ -1130,75 +1094,6 @@
         }
       ],
       "hidden": true
-    },
-    {
-      "id": "value_prompt",
-      "category": "flow",
-      "label": "输入框「{text}」返回的内容",
-      "code": "pyautogui.prompt({text})",
-      "params": [
-        {
-          "name": "text",
-          "placeholder": "提示文字",
-          "kind": "text",
-          "width": 160
-        }
-      ],
-      "expression": true
-    },
-    {
-      "id": "value_confirm",
-      "category": "flow",
-      "label": "确认框「{text}」返回的按钮",
-      "code": "pyautogui.confirm({text})",
-      "params": [
-        {
-          "name": "text",
-          "placeholder": "提示文字",
-          "kind": "text",
-          "width": 160
-        }
-      ],
-      "expression": true
-    },
-    {
-      "id": "value_pixel_matches",
-      "category": "flow",
-      "label": "坐标（{x}, {y}）是否为颜色（{r}, {g}, {b}）",
-      "code": "pyautogui.pixelMatchesColor({x}, {y}, ({r}, {g}, {b}))",
-      "params": [
-        {
-          "name": "x",
-          "placeholder": "x",
-          "kind": "number",
-          "width": 55
-        },
-        {
-          "name": "y",
-          "placeholder": "y",
-          "kind": "number",
-          "width": 55
-        },
-        {
-          "name": "r",
-          "placeholder": "R",
-          "kind": "number",
-          "width": 55
-        },
-        {
-          "name": "g",
-          "placeholder": "G",
-          "kind": "number",
-          "width": 55
-        },
-        {
-          "name": "b",
-          "placeholder": "B",
-          "kind": "number",
-          "width": 55
-        }
-      ],
-      "expression": true
     }
   ]
 }

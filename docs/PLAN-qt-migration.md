@@ -671,3 +671,18 @@ v1/v2 的纯脚本会迁移成一个「空」积木。
 - 这些值积木可以拖进「设置变量」或条件槽，不再出现“弹窗输入完内容丢了”的情况
 - 旧块保留 hidden 兼容旧脚本，但不再出现在积木柜
 - 测试：隐藏旧块、值积木存在、目录计数；`pytest` 205 项通过
+
+
+## 31. 纠正：双用途积木，而不是隐藏（2026-10-23）
+
+- 用户指出上一节隐藏旧块不对；改为**同一块既可作为语句行，也可作为值拖入参数**
+- `Snippet` 新增 `dual`：`expression=True` + `dual=True` 的块既可 `add_snippet()` 放代码行，也可拖进值槽
+- 8 个块恢复显示并改为双用途：
+  `dialog_prompt`、`dialog_confirm`、`mouse_position`、`screen_size`、
+  `screen_locate`、`screen_locate_center`、`screen_pixel`、`screen_pixel_matches`
+- `mouse_position`/`screen_size` 的代码从赋值语句改成表达式
+  `pyautogui.position()` / `pyautogui.size()`
+- 移除上一节新增的重复 `value_prompt`/`value_confirm`/`value_pixel_matches` 等值块，
+  同类能力只保留一个双用途块
+- 纯值积木（比较/数学/变量等）仍然只能进值槽，不能当语句行
+- 测试：双用途块可走两条路径；`pytest` 199 项通过

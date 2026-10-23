@@ -38,8 +38,14 @@ class Snippet:
     params: tuple[Param, ...] = ()
     block: bool = False
     expression: bool = False
+    dual: bool = False
     slots: tuple[str, ...] = ()
     hidden: bool = False
+
+    @property
+    def statement(self) -> bool:
+        """能否作为普通代码行使用。"""
+        return not self.expression or self.dual
 
     # ---------------------------------------------------------------- 渲染
 
@@ -150,6 +156,7 @@ def _load_catalog(path: Path = CATALOG_PATH) -> tuple[tuple[Category, ...], tupl
             params=params,
             block=bool(item.get("block", False)),
             expression=bool(item.get("expression", False)),
+            dual=bool(item.get("dual", False)),
             slots=tuple(item.get("slots", ())),
             hidden=bool(item.get("hidden", False)),
         )

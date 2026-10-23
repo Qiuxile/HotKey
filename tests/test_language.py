@@ -147,6 +147,23 @@ def test_wait_block_has_parameter():
 
 
 def test_dialog_prompt_returns_input_value():
-    snippet = catalog.snippet("value_prompt")
+    snippet = catalog.snippet("dialog_prompt")
     assert snippet.expression is True
+    assert snippet.dual is True
     assert snippet.code_for_values({"text": "名字"}) == "pyautogui.prompt('名字')"
+
+
+def test_dual_block_works_as_statement_and_value(qtbot):
+    editor = make_editor(qtbot)
+    statement = editor.add_snippet("dialog_prompt")
+    assert statement is not None
+    statement.field("text").setText("名字")
+    assert codegen.blocks_to_code(editor.blocks()) == "pyautogui.prompt('名字')"
+
+    editor.load_blocks([])
+    assign = editor.add_snippet("logic_set")
+    assign.field("name").setText("name")
+    slot = assign.value_slot("value")
+    assert slot is not None
+    slot.set_expression(Block("dialog_prompt", params={"text": "名字"}))
+    assert codegen.blocks_to_code(editor.blocks()) == "name = pyautogui.prompt('名字')"
