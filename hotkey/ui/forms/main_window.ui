@@ -414,7 +414,7 @@
   </action>
   <action name="actionRemove">
    <property name="text">
-    <string>隐藏热键（保留文件）</string>
+    <string>移除热键（保留文件）</string>
    </property>
   </action>
   <action name="actionImport">

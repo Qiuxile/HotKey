@@ -290,7 +290,7 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(shortcut)
         self.actionSaveAs.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+Shift+S", None))
 #endif // QT_CONFIG(shortcut)
-        self.actionRemove.setText(QCoreApplication.translate("MainWindow", u"\u9690\u85cf\u70ed\u952e\uff08\u4fdd\u7559\u6587\u4ef6\uff09", None))
+        self.actionRemove.setText(QCoreApplication.translate("MainWindow", u"\u79fb\u9664\u70ed\u952e\uff08\u4fdd\u7559\u6587\u4ef6\uff09", None))
         self.actionImport.setText(QCoreApplication.translate("MainWindow", u"\u5bfc\u5165\u70ed\u952e...", None))
 #if QT_CONFIG(shortcut)
         self.actionImport.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+O", None))
