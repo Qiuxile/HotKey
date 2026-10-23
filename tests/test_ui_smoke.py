@@ -198,4 +198,4 @@ def test_new_list_actions_and_keyboard_capture_ui(qtbot, tmp_path):
     assert "新建热键" in window.ui.btnNewScript.text()
     assert "导入热键" in window.ui.btnImportHotkey.text()
     assert window.ui.actionSaveAs.text() == "另存为..."
-    assert "移除" in window.ui.actionRemove.text()
+    assert "隐藏" in window.ui.actionRemove.text()

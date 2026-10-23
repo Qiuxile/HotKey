@@ -90,13 +90,17 @@ def test_legacy_jsons_folder_is_renamed_to_hks(tmp_path):
     assert (tmp_path / "hks" / "demo.hk").exists()
 
 
-def test_remove_moves_file_without_deleting(tmp_path):
+def test_hide_keeps_file_and_can_unhide(tmp_path):
     library = ScriptLibrary(tmp_path)
     script = HotKey(key="", name="keep", blocks=[Block("mouse_click")])
     path = library.save(script)
 
-    library.remove(script)
+    library.hide(script)
 
-    assert not path.exists()
-    assert (tmp_path / "removed" / path.name).exists()
+    assert path.exists()
     assert library.load() == []
+    assert library.load(include_hidden=True)[0].hidden is True
+
+    loaded = library.load(include_hidden=True)[0]
+    library.unhide(loaded)
+    assert library.load()[0].path == path

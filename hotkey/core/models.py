@@ -147,6 +147,7 @@ class HotKey:
     blocks: list[Block] = field(default_factory=list)
     name: str = ""
     path: Path | None = field(default=None, compare=False, repr=False)
+    hidden: bool = field(default=False, compare=False, repr=False)
 
     def to_dict(self) -> dict[str, Any]:
         return {

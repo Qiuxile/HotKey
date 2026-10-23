@@ -379,6 +379,7 @@
     </property>
     <addaction name="actionSearch"/>
     <addaction name="actionToggleEditor"/>
+    <addaction name="actionShowHidden"/>
     <addaction name="separator"/>
     <addaction name="actionStart"/>
     <addaction name="actionStop"/>
@@ -414,7 +415,15 @@
   </action>
   <action name="actionRemove">
    <property name="text">
-    <string>移除热键（保留文件）</string>
+    <string>隐藏热键（保留文件）</string>
+   </property>
+  </action>
+  <action name="actionShowHidden">
+   <property name="text">
+    <string>显示隐藏的热键</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
    </property>
   </action>
   <action name="actionImport">

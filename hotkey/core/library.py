@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -14,6 +15,7 @@ SCRIPT_SUFFIX = ".hk"
 LEGACY_SUFFIX = ".json"
 SCRIPT_DIR_NAME = "hks"
 LEGACY_DIR_NAME = "jsons"
+HIDDEN_FILE = ".hidden.json"
 
 
 def app_root() -> Path:
@@ -75,7 +77,7 @@ class ScriptLibrary:
 
     # ---------------------------------------------------------------- 读取
 
-    def load(self) -> list[HotKey]:
+    def load(self, include_hidden: bool = False) -> list[HotKey]:
         self.warnings = []
         self.directory.mkdir(parents=True, exist_ok=True)
         self._migrate_extensions()
@@ -83,8 +85,11 @@ class ScriptLibrary:
 
         scripts: list[HotKey] = []
         seen_keys: dict[str, HotKey] = {}
+        hidden = self._read_hidden()
 
         for path in self._script_paths():
+            if path.name in hidden and not include_hidden:
+                continue
             try:
                 entries, warnings = storage.load_document(
                     path, allow_empty_key=True
@@ -104,6 +109,7 @@ class ScriptLibrary:
             script = entries[0]
             script.path = path
             script.name = path.stem
+            script.hidden = path.name in hidden
 
             if script.key:
                 if script.key in seen_keys:
@@ -130,14 +136,15 @@ class ScriptLibrary:
         paths.extend(
             path
             for path in self.directory.glob(f"*{LEGACY_SUFFIX}")
-            if path.is_file() and path.name != "hotkeys.json"
+            if path.is_file()
+            and path.name not in ("hotkeys.json", HIDDEN_FILE)
         )
         return sorted(paths)
 
     def _migrate_extensions(self) -> None:
         renamed = 0
         for path in sorted(self.directory.glob(f"*{LEGACY_SUFFIX}")):
-            if path.name == "hotkeys.json":
+            if path.name in ("hotkeys.json", HIDDEN_FILE):
                 continue
             target = path.with_suffix(SCRIPT_SUFFIX)
             if target.exists():
@@ -232,22 +239,46 @@ class ScriptLibrary:
         storage.save(target, [script])
         return target
 
-    def remove(self, script: HotKey) -> None:
-        """从列表移除但不删除文件：移动到脚本库的 removed/ 子目录。"""
+    def _hidden_path(self) -> Path:
+        return self.directory / HIDDEN_FILE
+
+    def _read_hidden(self) -> set[str]:
+        path = self._hidden_path()
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return set()
+        if not isinstance(data, list):
+            return set()
+        return {str(name) for name in data if isinstance(name, str)}
+
+    def _write_hidden(self, names: set[str]) -> None:
+        path = self._hidden_path()
+        path.write_text(
+            json.dumps(sorted(names), ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+    def hide(self, script: HotKey) -> None:
+        """只在列表中隐藏；文件、内容和位置都不变。"""
         if script.path is None:
             return
-        target_dir = self.directory / "removed"
-        target_dir.mkdir(parents=True, exist_ok=True)
-        target = target_dir / script.path.name
-        index = 2
-        while target.exists():
-            target = target_dir / f"{script.path.stem}-{index}{script.path.suffix}"
-            index += 1
-        try:
-            script.path.replace(target)
-        except OSError as exc:
-            raise storage.StorageError(f"无法移除 {script.path.name}: {exc}") from exc
-        script.path = None
+        names = self._read_hidden()
+        names.add(script.path.name)
+        self._write_hidden(names)
+        script.hidden = True
+
+    def unhide(self, script: HotKey) -> None:
+        if script.path is None:
+            return
+        names = self._read_hidden()
+        names.discard(script.path.name)
+        self._write_hidden(names)
+        script.hidden = False
+
+    def remove(self, script: HotKey) -> None:
+        """旧名称，保留给已有调用；现在等同于隐藏。"""
+        self.hide(script)
 
     def delete(self, script: HotKey) -> None:
         if script.path is None:
